@@ -48,6 +48,12 @@ nav {
   color: var(--primary);
 }
 
+/* Hide hamburger menu by default (desktop view) */
+nav .menu-toggle {
+  display: none !important;
+  /* Added !important to override any conflicting styles */
+}
+
 .nav-links {
   display: flex;
   gap: 2rem;
