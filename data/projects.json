@@ -24,9 +24,9 @@
     "statusIcon": "fa-clock",
     "description": "A Discord bot that works in partnership with the Tub-Takes website to provide tier list functionality within Discord servers.",
     "tags": [
-      "JavaScript",
-      "Discord API",
-      "Node.js"
+      "Python",
+      "PM2",
+      "Cloud Server"
     ],
     "links": [
       {
