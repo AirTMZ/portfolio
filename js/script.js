@@ -1,4 +1,13 @@
 document.addEventListener('DOMContentLoaded', async function() {
+  // Load personal data
+  try {
+    const personalResponse = await fetch('data/personal.json');
+    const personalData = await personalResponse.json();
+    renderPersonalData(personalData);
+  } catch (error) {
+    console.error('Error loading personal data:', error);
+  }
+
   // Load project data
   try {
     const projectsResponse = await fetch('data/projects.json');
@@ -45,6 +54,80 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   });
 });
+
+// Function to render personal data
+function renderPersonalData(data) {
+  // Update hero section
+  if (data.hero) {
+    const heroTitle = document.querySelector('.hero-content h1');
+    const heroDescription = document.querySelector('.hero-content p');
+
+    if (heroTitle) heroTitle.textContent = data.hero.title;
+    if (heroDescription) heroDescription.textContent = data.hero.description;
+  }
+
+  // Update about section
+  if (data.about) {
+    // Update "Who am I?" paragraphs
+    const aboutTextElements = document.querySelectorAll('.about-content .about-text');
+    const aboutContent = document.querySelector('.about-content');
+
+    // Clear existing paragraphs
+    aboutTextElements.forEach(el => el.remove());
+
+    // Find the first skill title (Who am I?)
+    const whoAmITitle = aboutContent.querySelector('.skill-title');
+
+    // Insert paragraphs after the title
+    let currentElement = whoAmITitle;
+    data.about.intro.forEach(text => {
+      const p = document.createElement('p');
+      p.className = 'about-text';
+      p.textContent = text;
+      currentElement.after(p);
+      currentElement = p; // Update reference for next insertion
+    });
+
+    // Update technical skills
+    const skillTitles = aboutContent.querySelectorAll('.skill-title');
+    if (skillTitles.length >= 2) {
+      const techSkillsTitle = skillTitles[1];
+      const skillsContainer = techSkillsTitle.nextElementSibling;
+
+      if (skillsContainer && skillsContainer.classList.contains('skills')) {
+        skillsContainer.innerHTML = '';
+        data.about.skills.forEach(skill => {
+          const span = document.createElement('span');
+          span.className = 'skill';
+          span.textContent = skill;
+          skillsContainer.appendChild(span);
+        });
+      }
+    }
+
+    // Update certifications
+    if (skillTitles.length >= 3) {
+      const certTitle = skillTitles[2];
+      const certContainer = certTitle.nextElementSibling;
+
+      if (certContainer && certContainer.classList.contains('skills')) {
+        certContainer.innerHTML = '';
+        data.about.certifications.forEach(cert => {
+          const span = document.createElement('span');
+          span.className = 'skill';
+          span.textContent = cert;
+          certContainer.appendChild(span);
+        });
+      }
+    }
+
+    // Update CV link
+    const cvLink = aboutContent.querySelector('.hero-links a:first-child');
+    if (cvLink && data.about.cvUrl) {
+      cvLink.href = data.about.cvUrl;
+    }
+  }
+}
 
 // Function to render project cards
 function renderProjects(projects) {

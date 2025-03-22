@@ -1,0 +1,33 @@
+{
+  "hero": {
+    "title": "Cyberecurity Student & Full-Stack .NET Dev",
+    "description": "Enthusiastic Cyber Security student and aspiring Financial Threat Intelligence Specialist who is driven by accomplishment. Well-rounded and professional team player dedicated to continuing academic pursuits."
+  },
+  "about": {
+    "intro": [
+      "I'm an enthusiastic Cyber Security student and aspiring Financial Threat Intelligence Specialist currently pursuing a Bachelor's Degree in Computer Security at Cardiff Metropolitan University. As an out-of-the-box problem solver, I'm passionate about CyberSecurity, Computer Science, and Music.",
+      "Beyond my academic pursuits, I'm a Principal Clarinettist for national orchestras, a BBC Young Musician of the Year clarinet finalist, and have been a private music tutor since 2016. I've completed the South West Coastal Path challenge with my father and earned my Gold Duke of Edinburgh Award."
+    ],
+    "skills": [
+      "Python",
+      "Software Engineering",
+      "Team Leadership",
+      "Windows, Linux, MacOS",
+      "Report Writing",
+      "Legal Compliance",
+      "SAT Training",
+      "Project Management",
+      "Teaching",
+      "Figma"
+    ],
+    "certifications": [
+      "PaloAlto Level 2 Security",
+      "CyberFirst Defenders",
+      "CyberFirst Advanced",
+      "Microsoft Career Essentials in Cybersecurity",
+      "Advanced C#: OOP",
+      "Clarinet ARSM Distinction"
+    ],
+    "cvUrl": "https://docs.google.com/document/u/0/export?format=pdf&id=1wELI5Wbf41rFZbf_DhGimQZM1H_IAMcYpjTuBrVuch8&token=AC4w5Vg3knIzmRiuJS4zviu1vPYpy0P73Q%3A1742596723316&ouid=107190701232291018606&includes_info_params=true&usp=docs_home&cros_files=false&tab=t.0"
+  }
+}
