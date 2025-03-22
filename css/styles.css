@@ -1,3 +1,4 @@
+/* Core variables for consistent theming */
 :root {
   --primary: #00ADFF;
   --primary-dark: #2c5282;
@@ -29,7 +30,7 @@ body {
   padding: 0 2rem;
 }
 
-/* Header Section */
+/* Header and Navigation */
 header {
   padding: 2rem 0;
   position: relative;
@@ -50,7 +51,7 @@ nav {
 
 .menu-toggle {
   display: none;
-  /* Hide by default on larger screens */
+  /* Shown on mobile via media query */
 }
 
 .nav-links {
@@ -78,6 +79,7 @@ nav {
   height: 20px;
 }
 
+/* Animated underline effect for nav links */
 .nav-links a::after {
   content: '';
   position: absolute;
@@ -126,6 +128,7 @@ nav {
   opacity: 0;
 }
 
+/* Button styles with hover effects */
 .btn {
   padding: 0.8rem 1.5rem;
   border-radius: 9999px;
@@ -139,7 +142,6 @@ nav {
   position: relative;
   overflow: hidden;
   z-index: 1;
-  transition: all 0.4s ease;
 }
 
 .btn::before {
@@ -186,6 +188,7 @@ nav {
   background-color: var(--bg-hover);
 }
 
+/* Animated hero image with floating shapes */
 .hero-image {
   flex: 1;
   position: relative;
@@ -223,7 +226,7 @@ nav {
   animation-delay: 2s;
 }
 
-/* Section Styling */
+/* Section common styling */
 section {
   padding: 4rem 0;
 }
@@ -235,6 +238,7 @@ section {
   display: inline-block;
 }
 
+/* Animated underline effect for section titles */
 .section-title::after {
   content: '';
   position: absolute;
@@ -251,14 +255,14 @@ section {
   width: 100%;
 }
 
-/* Project Cards */
+/* Project Cards Grid */
 .projects-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
   margin-top: 2rem;
   grid-auto-rows: 1fr;
-  /* Make all rows the same height */
+  /* Equal height cards */
 }
 
 .project-card {
@@ -272,7 +276,6 @@ section {
   display: flex;
   flex-direction: column;
   height: 100%;
-  /* Ensure the card fills the grid cell */
 }
 
 .project-card:hover {
@@ -332,7 +335,7 @@ section {
   font-size: 0.8rem;
 }
 
-/* Project status styling */
+/* Project status indicators */
 .project-status {
   display: inline-flex;
   align-items: center;
@@ -350,13 +353,11 @@ section {
 .project-status.complete {
   background-color: rgba(72, 187, 120, 0.2);
   color: #48bb78;
-  /* Green color */
 }
 
 .project-status.in-development {
   background-color: rgba(237, 137, 54, 0.2);
   color: #ed8936;
-  /* Orange color */
 }
 
 .project-links {
@@ -370,7 +371,7 @@ section {
 }
 
 .project-link:hover {
-  color: var(--primary);
+  color: var (--primary);
 }
 
 .project-buttons {
@@ -378,7 +379,7 @@ section {
   padding-top: 1rem;
 }
 
-/* Portfolio buttons section */
+/* Portfolio buttons layout */
 .portfolio-buttons {
   display: flex;
   justify-content: center;
@@ -386,7 +387,7 @@ section {
   margin-top: 3rem;
 }
 
-/* About Section */
+/* About Section Layout */
 .about-container {
   display: flex;
   gap: 3rem;
@@ -398,6 +399,7 @@ section {
   position: relative;
 }
 
+/* Profile image with hover effect */
 .profile-bg {
   width: 300px;
   height: 300px;
@@ -423,6 +425,7 @@ section {
   transform: scale(1.05);
 }
 
+/* Decorative shape behind profile image */
 .about-shape {
   position: absolute;
   border-radius: 1rem;
@@ -452,6 +455,7 @@ section {
   margin: 1.5rem 0 1rem;
 }
 
+/* Skills and certifications tags */
 .skills {
   display: flex;
   flex-wrap: wrap;
@@ -482,6 +486,7 @@ section {
   position: relative;
 }
 
+/* Decorative background shape */
 .contact-shape {
   position: absolute;
   background-color: var(--primary);
@@ -502,6 +507,7 @@ section {
   z-index: 1;
 }
 
+/* Contact links grid */
 .contact-links {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -520,12 +526,36 @@ section {
   color: var(--text-primary);
   text-decoration: none;
   transition: transform 0.3s ease, background-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Animated highlight effect on hover */
+.contact-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.4s ease;
+  z-index: -1;
+}
+
+.contact-link:hover::before {
+  left: 0;
+  width: 100%;
 }
 
 .contact-link:hover {
   transform: translateY(-3px);
   background-color: var(--bg-hover);
-  animation: pulse 1.5s infinite;
+}
+
+.contact-link:active {
+  transform: scale(0.97);
 }
 
 .contact-icon {
@@ -536,7 +566,7 @@ section {
   min-width: 24px;
 }
 
-/* Education Section */
+/* Timeline for Education Section */
 .timeline {
   position: relative;
   max-width: 800px;
@@ -544,6 +574,7 @@ section {
   padding-top: 2rem;
 }
 
+/* Vertical timeline line */
 .timeline::after {
   content: '';
   position: absolute;
@@ -562,6 +593,7 @@ section {
   box-sizing: border-box;
 }
 
+/* Timeline node indicator */
 .timeline-item::after {
   content: '';
   position: absolute;
@@ -574,6 +606,7 @@ section {
   z-index: 1;
 }
 
+/* Left and right positioning for alternating items */
 .timeline-item.left {
   left: 0;
 }
@@ -623,7 +656,7 @@ footer {
   font-size: 0.9rem;
 }
 
-/* Responsive Design */
+/* Responsive Design for mobile devices */
 @media (max-width: 768px) {
   .hero {
     flex-direction: column;
@@ -642,6 +675,7 @@ footer {
     margin-bottom: 2rem;
   }
 
+  /* Adjust timeline for mobile */
   .timeline::after {
     left: 31px;
   }
@@ -670,7 +704,7 @@ footer {
   }
 }
 
-/* Add to your existing CSS */
+/* Animations for hero section */
 .animated-title {
   overflow: hidden;
 }
@@ -687,11 +721,6 @@ footer {
   opacity: 0;
 }
 
-.hero-links {
-  animation: fadeIn 1.5s ease 0.6s forwards;
-  opacity: 0;
-}
-
 @keyframes slideInUp {
   to {
     transform: translateY(0);
@@ -705,9 +734,7 @@ footer {
   }
 }
 
-/* Add to the end of your existing CSS */
-
-/* Scroll Reveal Animations */
+/* Scroll reveal animations */
 .reveal {
   opacity: 0;
   transform: translateY(30px);
@@ -719,6 +746,7 @@ footer {
   transform: translateY(0);
 }
 
+/* Staggered animation delays */
 .reveal-delay-1 {
   transition-delay: 0.1s;
 }
@@ -731,7 +759,7 @@ footer {
   transition-delay: 0.3s;
 }
 
-/* Staggered Animations */
+/* Staggered entrance animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -752,24 +780,12 @@ footer {
   animation: fadeInUp 0.6s ease forwards;
 }
 
-/* Smooth section transitions */
+/* Smooth scrolling behavior */
 html {
   scroll-behavior: smooth;
 }
 
-/* Enhanced shape animations */
-.shape {
-  animation: float 8s ease-in-out infinite;
-}
-
-.shape-1 {
-  animation-delay: 0s;
-}
-
-.shape-2 {
-  animation-delay: 2s;
-}
-
+/* Floating animation for shape elements */
 @keyframes float {
   0% {
     transform: translateY(0px);
@@ -784,157 +800,24 @@ html {
   }
 }
 
-/* Button hover effects */
-.btn {
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-  transition: all 0.4s ease;
-}
-
-.btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  transition: all 0.4s ease;
-  z-index: -1;
-}
-
-.btn:hover::before {
-  left: 0;
-  width: 100%;
-}
-
-.btn:active {
-  transform: scale(0.97);
-}
-
-/* Card hover effects */
-.project-card {
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-    box-shadow 0.4s ease,
-    background-color 0.4s ease;
-}
-
-.project-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-  background-color: var(--bg-hover);
-}
-
-/* Skill tag hover effect */
-.skill {
-  transition: all 0.3s ease;
-}
-
-.skill:hover {
-  background-color: var(--primary);
-  color: white;
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 173, 255, 0.3);
-}
-
-/* Timeline hover effects */
-.timeline-content {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.timeline-content:hover {
-  transform: scale(1.02);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-/* Nav link hover effect */
-.nav-links a {
-  position: relative;
-}
-
-.nav-links a::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background-color: var(--primary);
-  transition: width 0.3s ease;
-}
-
-.nav-links a:hover::after {
-  width: 100%;
-}
-
-/* Add image and content animations */
-
-/* Profile image animation */
-.profile-bg {
-  overflow: hidden;
-}
-
-.profile-img {
-  transition: transform 0.8s ease;
-}
-
-.profile-bg:hover .profile-img {
-  transform: scale(1.05);
-}
-
-/* Section title highlight effect */
-.section-title {
-  position: relative;
-}
-
-.section-title::after {
-  transition: width 0.6s ease;
-  width: 60px;
-}
-
-.section-title:hover::after {
-  width: 100%;
-}
-
-/* Contact link pulse effect */
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(0, 173, 255, 0.4);
-  }
-
-  70% {
-    box-shadow: 0 0 0 10px rgba(0, 173, 255, 0);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(0, 173, 255, 0);
-  }
-}
-
-.contact-link:hover {
-  animation: pulse 1.5s infinite;
-}
-
-/* Add to the end of your existing CSS */
-
-/* Enhanced Reveal Animations */
+/* Enhanced reveal animation effects */
 .reveal,
 .stagger-animation,
 .reveal-child {
   opacity: 0;
   transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   will-change: opacity, transform;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
 }
 
-/* Base reveal state - active */
 .reveal.active,
 .stagger-animation.active,
 .reveal-child.active {
   opacity: 1;
 }
 
-/* Different reveal effects */
+/* Animation effect variations */
 .fade-up {
   transform: translateY(30px);
 }
@@ -984,12 +867,6 @@ html {
   transform: perspective(800px) rotateX(0);
 }
 
-/* Staggered delays for children */
-.reveal-child {
-  transition-delay: 0.1s;
-  /* Base delay */
-}
-
 /* Sequential timing for better flow */
 section:nth-child(odd) .reveal-child {
   transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -999,15 +876,22 @@ section:nth-child(even) .reveal-child {
   transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Optimize performance */
-.reveal,
-.stagger-animation,
-.reveal-child {
-  backface-visibility: hidden;
-  transform-style: preserve-3d;
-}
-
-/* Add to the end of your existing CSS */
+/* Prevent background scrolling when mobile menu is open */
 body.menu-open {
   overflow: hidden;
+}
+
+/* Contact link pulse animation effect (currently disabled) */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 173, 255, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 173, 255, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 173, 255, 0);
+  }
 }

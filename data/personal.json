@@ -1,12 +1,12 @@
 {
   "hero": {
-    "title": "Full-Stack .NET Dev & Cyber Security Student",
+    "title": "Full-Stack .NET Dev & CyberSec Student",
     "description": "Enthusiastic Cyber Security student and aspiring Financial Threat Intelligence Analyst."
   },
   "about": {
     "intro": [
       "I'm an enthusiastic Cyber Security student and aspiring Financial Threat Intelligence Analyst currently pursuing a Bachelor's Degree in Computer Security at Cardiff Metropolitan University. As an out-of-the-box problem solver, I'm passionate about CyberSecurity, Computer Science, and Music.",
-      "Beyond my academic pursuits, I was the Principal Clarinettist for many national orchestras, a BBC Young Musician of the Year clarinet finalist, and was a private music tutor since 2016 to 2023. I've almost completed the South West Coastal Path challenge with my father and earned my Gold Duke of Edinburgh Award."
+      "Beyond my academic pursuits, I was the Principal Clarinettist for many national orchestras, a BBC Young Musician of the Year clarinet finalist, and was a private music tutor from 2016 until the start of University in 2023. I've almost completed the South West Coastal Path challenge with my father and earned my Gold Duke of Edinburgh Award."
     ],
     "skills": [
       "Python",
