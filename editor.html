@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Editor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body {
+      background-color: #1a202c;
+      color: #f7fafc;
+      font-family: 'Ubuntu', sans-serif;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .card {
+      background-color: #2d3748;
+      border: 1px solid #4a5568;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+      background-color: #2c5282;
+      color: white;
+      font-weight: 500;
+    }
+
+    .form-control,
+    .form-select {
+      background-color: #4a5568;
+      border: 1px solid #718096;
+      color: #f7fafc;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      background-color: #4a5568;
+      color: #f7fafc;
+      border-color: #00ADFF;
+      box-shadow: 0 0 0 0.25rem rgba(0, 173, 255, 0.25);
+    }
+
+    .btn-primary {
+      background-color: #00ADFF;
+      border-color: #00ADFF;
+    }
+
+    .btn-primary:hover {
+      background-color: #2c5282;
+      border-color: #2c5282;
+    }
+
+    .btn-outline-secondary {
+      color: #f7fafc;
+      border-color: #718096;
+    }
+
+    .btn-outline-secondary:hover {
+      background-color: #4a5568;
+      border-color: #718096;
+    }
+
+    .error {
+      color: #fc8181;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .tab-content {
+      padding-top: 1.5rem;
+    }
+
+    pre {
+      background-color: #4a5568;
+      color: #f7fafc;
+      padding: 1rem;
+      border-radius: 0.5rem;
+    }
+
+    .json-editor {
+      min-height: 300px;
+      font-family: monospace;
+      overflow-y: hidden;
+      /* Hide scrollbar when auto-resizing */
+      resize: none;
+      /* Disable manual resizing since we're handling it automatically */
+    }
+
+    .list-group-item {
+      background-color: #4a5568;
+      color: #f7fafc;
+      border-color: #718096;
+    }
+
+    .list-group-item.active {
+      background-color: #2c5282;
+      border-color: #2c5282;
+    }
+
+    .section-header {
+      background-color: #2d3748;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid #4a5568;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .item-control {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      background-color: #4a5568;
+      border: 1px solid #718096;
+      border-radius: 0.25rem;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .list-item input {
+      flex-grow: 1;
+      margin-right: 0.5rem;
+    }
+
+    .item-badge {
+      background-color: #2c5282;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      margin-right: 0.5rem;
+    }
+
+    .tab-toggle {
+      margin-bottom: 1rem;
+    }
+
+    .project-selector,
+    .education-selector {
+      margin-bottom: 1.5rem;
+    }
+
+    .remove-btn {
+      color: #fc8181;
+      cursor: pointer;
+    }
+
+    .add-btn {
+      cursor: pointer;
+    }
+
+    #rawJsonToggle {
+      margin-bottom: 1rem;
+    }
+
+    .mode-toggle {
+      margin-bottom: 1rem;
+    }
+
+    .form-check-input {
+      background-color: #4a5568;
+      border-color: #718096;
+    }
+
+    .form-check-input:checked {
+      background-color: #00ADFF;
+      border-color: #00ADFF;
+    }
+
+    .project-card,
+    .education-card {
+      border: 1px solid #4a5568;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background-color: #2d3748;
+    }
+
+    .project-header,
+    .education-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .link-section {
+      background-color: #1a202c;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="mb-4 text-center">Portfolio Editor</h1>
+
+    <div class="d-flex justify-content-end mode-toggle">
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="rawJsonToggle">
+        <label class="form-check-label" for="rawJsonToggle">Raw JSON Mode</label>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="editorTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button"
+          role="tab" aria-controls="personal" aria-selected="true">Personal Info</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects" type="button"
+          role="tab" aria-controls="projects" aria-selected="false">Projects</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="education-tab" data-bs-toggle="tab" data-bs-target="#education" type="button"
+          role="tab" aria-controls="education" aria-selected="false">Education</button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="editorTabContent">
+      <!-- Personal Info Tab -->
+      <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Personal Information (personal.json)</span>
+            <div>
+              <button class="btn btn-sm btn-outline-secondary me-2" id="loadPersonalBtn">
+                <i class="fas fa-upload me-1"></i> Import
+              </button>
+              <button class="btn btn-sm btn-primary" id="exportPersonalBtn">
+                <i class="fas fa-download me-1"></i> Export
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="personalError" class="error mb-3" style="display: none;"></div>
+
+            <!-- Form View -->
+            <div id="personalForm">
+              <div class="section-header">
+                <h4>Hero Section</h4>
+              </div>
+              <div class="form-group">
+                <label for="heroTitle">Title</label>
+                <input type="text" class="form-control" id="heroTitle">
+              </div>
+              <div class="form-group">
+                <label for="heroDescription">Description</label>
+                <textarea class="form-control" id="heroDescription" rows="3"></textarea>
+              </div>
+
+              <div class="section-header mt-4">
+                <h4>About Section</h4>
+              </div>
+              <div class="form-group">
+                <label>Introduction Paragraphs</label>
+                <div id="introParagraphs">
+                  <!-- Intro paragraphs will be added here -->
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="addIntroParagraph">
+                  <i class="fas fa-plus me-1"></i> Add Paragraph
+                </button>
+              </div>
+
+              <div class="form-group">
+                <label>Skills</label>
+                <div id="skillsList">
+                  <!-- Skills will be added here -->
+                </div>
+                <div class="input-group mb-2">
+                  <input type="text" class="form-control" id="newSkill" placeholder="New skill">
+                  <button class="btn btn-outline-secondary" type="button" id="addSkill">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Certifications</label>
+                <div id="certificationsList">
+                  <!-- Certifications will be added here -->
+                </div>
+                <div class="input-group mb-2">
+                  <input type="text" class="form-control" id="newCertification" placeholder="New certification">
+                  <button class="btn btn-outline-secondary" type="button" id="addCertification">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="cvUrl">CV URL</label>
+                <input type="text" class="form-control" id="cvUrl">
+              </div>
+            </div>
+
+            <!-- JSON View -->
+            <textarea id="personalEditor" class="form-control json-editor" style="display: none;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projects Tab -->
+      <div class="tab-pane fade" id="projects" role="tabpanel" aria-labelledby="projects-tab">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Projects (projects.json)</span>
+            <div>
+              <button class="btn btn-sm btn-outline-secondary me-2" id="loadProjectsBtn">
+                <i class="fas fa-upload me-1"></i> Import
+              </button>
+              <button class="btn btn-sm btn-primary" id="exportProjectsBtn">
+                <i class="fas fa-download me-1"></i> Export
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="projectsError" class="error mb-3" style="display: none;"></div>
+
+            <!-- Form View -->
+            <div id="projectsForm">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Projects</h4>
+                <button class="btn btn-sm btn-outline-secondary" id="addProject">
+                  <i class="fas fa-plus me-1"></i> Add Project
+                </button>
+              </div>
+
+              <div id="projectsList">
+                <!-- Projects will be added here -->
+              </div>
+            </div>
+
+            <!-- JSON View -->
+            <textarea id="projectsEditor" class="form-control json-editor" style="display: none;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Education Tab -->
+      <div class="tab-pane fade" id="education" role="tabpanel" aria-labelledby="education-tab">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Education (education.json)</span>
+            <div>
+              <button class="btn btn-sm btn-outline-secondary me-2" id="loadEducationBtn">
+                <i class="fas fa-upload me-1"></i> Import
+              </button>
+              <button class="btn btn-sm btn-primary" id="exportEducationBtn">
+                <i class="fas fa-download me-1"></i> Export
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="educationError" class="error mb-3" style="display: none;"></div>
+
+            <!-- Form View -->
+            <div id="educationForm">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Education & Experience</h4>
+                <button class="btn btn-sm btn-outline-secondary" id="addEducation">
+                  <i class="fas fa-plus me-1"></i> Add Entry
+                </button>
+              </div>
+
+              <div id="educationList">
+                <!-- Education entries will be added here -->
+              </div>
+            </div>
+
+            <!-- JSON View -->
+            <textarea id="educationEditor" class="form-control json-editor" style="display: none;"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden file inputs for importing -->
+    <input type="file" id="personalFileInput" accept=".json" style="display: none;">
+    <input type="file" id="projectsFileInput" accept=".json" style="display: none;">
+    <input type="file" id="educationFileInput" accept=".json" style="display: none;">
+
+    <!-- Back to main site button -->
+    <div class="d-flex justify-content-center mt-4 mb-3">
+      <a href="index.html" class="btn btn-primary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Main Site
+      </a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Default data from current JSON files
+    const defaultPersonalData = {
+      "hero": {
+        "title": "Cyberecurity Student & Full-Stack .NET Dev",
+        "description": "Enthusiastic Cyber Security student and aspiring Financial Threat Intelligence Analyst."
+      },
+      "about": {
+        "intro": [
+          "I'm an enthusiastic Cyber Security student and aspiring Financial Threat Intelligence Analyst currently pursuing a Bachelor's Degree in Computer Security at Cardiff Metropolitan University. As an out-of-the-box problem solver, I'm passionate about CyberSecurity, Computer Science, and Music.",
+          "Beyond my academic pursuits, I was the Principal Clarinettist for many national orchestras, a BBC Young Musician of the Year clarinet finalist, and was a private music tutor since 2016 to 2023. I've almost completed the South West Coastal Path challenge with my father and earned my Gold Duke of Edinburgh Award."
+        ],
+        "skills": [
+          "Python",
+          "Software Engineering",
+          "Team Leadership",
+          "Windows, Linux, MacOS",
+          "Report Writing",
+          "Legal Compliance",
+          "SAT Training",
+          "Project Management",
+          "Teaching",
+          "Figma"
+        ],
+        "certifications": [
+          "PaloAlto Level 2 Security",
+          "CyberFirst Defenders",
+          "CyberFirst Advanced",
+          "Microsoft Career Essentials in Cybersecurity",
+          "Advanced C#: OOP",
+          "Clarinet ARSM Distinction"
+        ],
+        "cvUrl": "https://docs.google.com/document/u/0/export?format=pdf&id=1wELI5Wbf41rFZbf_DhGimQZM1H_IAMcYpjTuBrVuch8&token=AC4w5Vg3knIzmRiuJS4zviu1vPYpy0P73Q%3A1742596723316&ouid=107190701232291018606&includes_info_params=true&usp=docs_home&cros_files=false&tab=t.0"
+      }
+    };
+
+    const defaultProjectsData = [
+      {
+        "title": "Portfolio Website",
+        "status": "complete",
+        "statusIcon": "fa-check-circle",
+        "description": "Personal portfolio website showcasing my projects, skills, and professional experience using modern web technologies.",
+        "tags": [
+          "HTML",
+          "CSS",
+          "JavaScript"
+        ],
+        "links": [
+          {
+            "url": "https://github.com/AirTMZ/Portfolio-Website",
+            "icon": "fa-brands fa-github",
+            "text": "GitHub",
+            "type": "outline"
+          }
+        ]
+      }
+    ];
+
+    const defaultEducationData = [
+      {
+        "date": "Sep 2023 - Present",
+        "title": "Cardiff Metropolitan University",
+        "description": "Bachelor's Degree in Computer Security",
+        "position": "left"
+      }
+    ];
+
+    // DOM elements
+    const personalEditor = document.getElementById('personalEditor');
+    const projectsEditor = document.getElementById('projectsEditor');
+    const educationEditor = document.getElementById('educationEditor');
+
+    const personalForm = document.getElementById('personalForm');
+    const projectsForm = document.getElementById('projectsForm');
+    const educationForm = document.getElementById('educationForm');
+
+    const personalError = document.getElementById('personalError');
+    const projectsError = document.getElementById('projectsError');
+    const educationError = document.getElementById('educationError');
+
+    const loadPersonalBtn = document.getElementById('loadPersonalBtn');
+    const loadProjectsBtn = document.getElementById('loadProjectsBtn');
+    const loadEducationBtn = document.getElementById('loadEducationBtn');
+
+    const exportPersonalBtn = document.getElementById('exportPersonalBtn');
+    const exportProjectsBtn = document.getElementById('exportProjectsBtn');
+    const exportEducationBtn = document.getElementById('exportEducationBtn');
+
+    const personalFileInput = document.getElementById('personalFileInput');
+    const projectsFileInput = document.getElementById('projectsFileInput');
+    const educationFileInput = document.getElementById('educationFileInput');
+
+    const rawJsonToggle = document.getElementById('rawJsonToggle');
+
+    // Personal form elements
+    const heroTitle = document.getElementById('heroTitle');
+    const heroDescription = document.getElementById('heroDescription');
+    const introParagraphs = document.getElementById('introParagraphs');
+    const skillsList = document.getElementById('skillsList');
+    const certificationsList = document.getElementById('certificationsList');
+    const cvUrl = document.getElementById('cvUrl');
+    const addIntroParagraph = document.getElementById('addIntroParagraph');
+    const addSkill = document.getElementById('addSkill');
+    const addCertification = document.getElementById('addCertification');
+    const newSkill = document.getElementById('newSkill');
+    const newCertification = document.getElementById('newCertification');
+
+    // Project and Education form elements
+    const projectsList = document.getElementById('projectsList');
+    const educationList = document.getElementById('educationList');
+    const addProject = document.getElementById('addProject');
+    const addEducation = document.getElementById('addEducation');
+
+    // Current data
+    let personalData = JSON.parse(JSON.stringify(defaultPersonalData));
+    let projectsData = JSON.parse(JSON.stringify(defaultProjectsData));
+    let educationData = JSON.parse(JSON.stringify(defaultEducationData));
+
+    // Initialize editors with default data
+    function initEditors() {
+      // Set up personal data
+      personalData = JSON.parse(JSON.stringify(defaultPersonalData));
+      updatePersonalFormFromJson();
+      personalEditor.value = JSON.stringify(personalData, null, 2);
+      autoResizeTextarea(personalEditor);
+
+      // Set up projects data
+      projectsData = JSON.parse(JSON.stringify(defaultProjectsData));
+      updateProjectsFormFromJson();
+      projectsEditor.value = JSON.stringify(projectsData, null, 2);
+      autoResizeTextarea(projectsEditor);
+
+      // Set up education data
+      educationData = JSON.parse(JSON.stringify(defaultEducationData));
+      updateEducationFormFromJson();
+      educationEditor.value = JSON.stringify(educationData, null, 2);
+      autoResizeTextarea(educationEditor);
+    }
+
+    // Auto-resize textarea to fit content
+    function autoResizeTextarea(textarea) {
+      // Reset height to allow proper calculation
+      textarea.style.height = 'auto';
+
+      // Set the height to match the scroll height (content height)
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
+    // Update raw JSON toggle event listener
+    rawJsonToggle.addEventListener('change', (e) => {
+      const isRawJson = e.target.checked;
+
+      // Update Personal tab
+      personalForm.style.display = isRawJson ? 'none' : 'block';
+      personalEditor.style.display = isRawJson ? 'block' : 'none';
+      if (isRawJson) {
+        personalEditor.value = JSON.stringify(personalData, null, 2);
+        autoResizeTextarea(personalEditor);
+      } else {
+        updatePersonalFormFromJson();
+      }
+
+      // Update Projects tab
+      projectsForm.style.display = isRawJson ? 'none' : 'block';
+      projectsEditor.style.display = isRawJson ? 'block' : 'none';
+      if (isRawJson) {
+        projectsEditor.value = JSON.stringify(projectsData, null, 2);
+        autoResizeTextarea(projectsEditor);
+      } else {
+        updateProjectsFormFromJson();
+      }
+
+      // Update Education tab
+      educationForm.style.display = isRawJson ? 'none' : 'block';
+      educationEditor.style.display = isRawJson ? 'block' : 'none';
+      if (isRawJson) {
+        educationEditor.value = JSON.stringify(educationData, null, 2);
+        autoResizeTextarea(educationEditor);
+      } else {
+        updateEducationFormFromJson();
+      }
+    });
+
+    // Auto-validate and auto-resize on input in raw JSON mode
+    personalEditor.addEventListener('input', () => {
+      validateJson(personalEditor.value, personalError);
+      autoResizeTextarea(personalEditor);
+    });
+
+    projectsEditor.addEventListener('input', () => {
+      validateJson(projectsEditor.value, projectsError);
+      autoResizeTextarea(projectsEditor);
+    });
+
+    educationEditor.addEventListener('input', () => {
+      validateJson(educationEditor.value, educationError);
+      autoResizeTextarea(educationEditor);
+    });
+
+    // Update personal form from JSON
+    function updatePersonalFormFromJson() {
+      // Update hero section
+      heroTitle.value = personalData.hero.title;
+      heroDescription.value = personalData.hero.description;
+
+      // Update intro paragraphs
+      introParagraphs.innerHTML = '';
+      personalData.about.intro.forEach((paragraph, index) => {
+        const paragraphDiv = document.createElement('div');
+        paragraphDiv.className = 'list-item mb-2';
+
+        const textarea = document.createElement('textarea');
+        textarea.className = 'form-control';
+        textarea.value = paragraph;
+        textarea.rows = 3;
+        textarea.addEventListener('input', (e) => {
+          personalData.about.intro[index] = e.target.value;
+        });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn btn-sm btn-outline-danger ms-2';
+        removeBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        removeBtn.addEventListener('click', () => {
+          personalData.about.intro.splice(index, 1);
+          updatePersonalFormFromJson();
+        });
+
+        paragraphDiv.appendChild(textarea);
+        paragraphDiv.appendChild(removeBtn);
+        introParagraphs.appendChild(paragraphDiv);
+      });
+
+      // Update skills
+      skillsList.innerHTML = '';
+      personalData.about.skills.forEach((skill, index) => {
+        const skillDiv = document.createElement('div');
+        skillDiv.className = 'd-flex align-items-center mb-2';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control';
+        input.value = skill;
+        input.addEventListener('input', (e) => {
+          personalData.about.skills[index] = e.target.value;
+        });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn btn-sm btn-outline-danger ms-2';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.addEventListener('click', () => {
+          personalData.about.skills.splice(index, 1);
+          updatePersonalFormFromJson();
+        });
+
+        skillDiv.appendChild(input);
+        skillDiv.appendChild(removeBtn);
+        skillsList.appendChild(skillDiv);
+      });
+
+      // Update certifications
+      certificationsList.innerHTML = '';
+      personalData.about.certifications.forEach((cert, index) => {
+        const certDiv = document.createElement('div');
+        certDiv.className = 'd-flex align-items-center mb-2';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'form-control';
+        input.value = cert;
+        input.addEventListener('input', (e) => {
+          personalData.about.certifications[index] = e.target.value;
+        });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn btn-sm btn-outline-danger ms-2';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.addEventListener('click', () => {
+          personalData.about.certifications.splice(index, 1);
+          updatePersonalFormFromJson();
+        });
+
+        certDiv.appendChild(input);
+        certDiv.appendChild(removeBtn);
+        certificationsList.appendChild(certDiv);
+      });
+
+      // Update CV URL
+      cvUrl.value = personalData.about.cvUrl;
+    }
+
+    // Update projects form from JSON
+    function updateProjectsFormFromJson() {
+      projectsList.innerHTML = '';
+
+      projectsData.forEach((project, index) => {
+        const projectCard = document.createElement('div');
+        projectCard.className = 'project-card mb-3';
+
+        // Create the header with title and controls
+        const header = document.createElement('div');
+        header.className = 'project-header';
+
+        const title = document.createElement('h5');
+        title.textContent = project.title || `Project ${index + 1}`;
+
+        const controls = document.createElement('div');
+
+        const moveUpBtn = document.createElement('button');
+        moveUpBtn.className = 'btn btn-sm btn-outline-secondary me-1';
+        moveUpBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        moveUpBtn.disabled = index === 0;
+        moveUpBtn.addEventListener('click', () => {
+          const temp = projectsData[index];
+          projectsData[index] = projectsData[index - 1];
+          projectsData[index - 1] = temp;
+          updateProjectsFormFromJson();
+        });
+
+        const moveDownBtn = document.createElement('button');
+        moveDownBtn.className = 'btn btn-sm btn-outline-secondary me-1';
+        moveDownBtn.innerHTML = '<i class="fas fa-arrow-down"></i>';
+        moveDownBtn.disabled = index === projectsData.length - 1;
+        moveDownBtn.addEventListener('click', () => {
+          const temp = projectsData[index];
+          projectsData[index] = projectsData[index + 1];
+          projectsData[index + 1] = temp;
+          updateProjectsFormFromJson();
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-sm btn-outline-danger';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.addEventListener('click', () => {
+          if (confirm(`Delete project "${project.title}"?`)) {
+            projectsData.splice(index, 1);
+            updateProjectsFormFromJson();
+          }
+        });
+
+        controls.appendChild(moveUpBtn);
+        controls.appendChild(moveDownBtn);
+        controls.appendChild(deleteBtn);
+
+        header.appendChild(title);
+        header.appendChild(controls);
+
+        // Create the project form
+        const form = document.createElement('div');
+        form.className = 'project-form';
+
+        // Title
+        const titleGroup = document.createElement('div');
+        titleGroup.className = 'form-group';
+
+        const titleLabel = document.createElement('label');
+        titleLabel.textContent = 'Title';
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.className = 'form-control';
+        titleInput.value = project.title;
+        titleInput.addEventListener('input', (e) => {
+          project.title = e.target.value;
+          title.textContent = e.target.value || `Project ${index + 1}`;
+        });
+
+        titleGroup.appendChild(titleLabel);
+        titleGroup.appendChild(titleInput);
+
+        // Status
+        const statusGroup = document.createElement('div');
+        statusGroup.className = 'form-group';
+
+        const statusLabel = document.createElement('label');
+        statusLabel.textContent = 'Status';
+
+        const statusSelect = document.createElement('select');
+        statusSelect.className = 'form-select';
+
+        const completeOption = document.createElement('option');
+        completeOption.value = 'complete';
+        completeOption.textContent = 'Complete';
+        completeOption.selected = project.status === 'complete';
+
+        const inDevOption = document.createElement('option');
+        inDevOption.value = 'in-development';
+        inDevOption.textContent = 'In Development';
+        inDevOption.selected = project.status === 'in-development';
+
+        statusSelect.appendChild(completeOption);
+        statusSelect.appendChild(inDevOption);
+
+        statusSelect.addEventListener('change', (e) => {
+          project.status = e.target.value;
+
+          // Update status icon based on selection
+          if (e.target.value === 'complete') {
+            project.statusIcon = 'fa-check-circle';
+          } else {
+            project.statusIcon = 'fa-clock';
+          }
+        });
+
+        statusGroup.appendChild(statusLabel);
+        statusGroup.appendChild(statusSelect);
+
+        // Description
+        const descGroup = document.createElement('div');
+        descGroup.className = 'form-group';
+
+        const descLabel = document.createElement('label');
+        descLabel.textContent = 'Description';
+
+        const descInput = document.createElement('textarea');
+        descInput.className = 'form-control';
+        descInput.rows = 3;
+        descInput.value = project.description;
+        descInput.addEventListener('input', (e) => {
+          project.description = e.target.value;
+        });
+
+        descGroup.appendChild(descLabel);
+        descGroup.appendChild(descInput);
+
+        // Tags
+        const tagsGroup = document.createElement('div');
+        tagsGroup.className = 'form-group';
+
+        const tagsLabel = document.createElement('label');
+        tagsLabel.textContent = 'Tags';
+
+        const tagsContainer = document.createElement('div');
+        tagsContainer.className = 'mb-2';
+
+        project.tags.forEach((tag, tagIndex) => {
+          const tagDiv = document.createElement('div');
+          tagDiv.className = 'd-flex align-items-center mb-2';
+
+          const tagInput = document.createElement('input');
+          tagInput.type = 'text';
+          tagInput.className = 'form-control';
+          tagInput.value = tag;
+          tagInput.addEventListener('input', (e) => {
+            project.tags[tagIndex] = e.target.value;
+          });
+
+          const removeTagBtn = document.createElement('button');
+          removeTagBtn.className = 'btn btn-sm btn-outline-danger ms-2';
+          removeTagBtn.innerHTML = '<i class="fas fa-times"></i>';
+          removeTagBtn.addEventListener('click', () => {
+            project.tags.splice(tagIndex, 1);
+            updateProjectsFormFromJson();
+          });
+
+          tagDiv.appendChild(tagInput);
+          tagDiv.appendChild(removeTagBtn);
+          tagsContainer.appendChild(tagDiv);
+        });
+
+        const addTagContainer = document.createElement('div');
+        addTagContainer.className = 'input-group mb-2';
+
+        const tagInput = document.createElement('input');
+        tagInput.type = 'text';
+        tagInput.className = 'form-control';
+        tagInput.placeholder = 'New tag';
+
+        const addTagBtn = document.createElement('button');
+        addTagBtn.className = 'btn btn-outline-secondary';
+        addTagBtn.innerHTML = '<i class="fas fa-plus"></i>';
+        addTagBtn.addEventListener('click', () => {
+          if (tagInput.value.trim()) {
+            project.tags.push(tagInput.value.trim());
+            tagInput.value = '';
+            updateProjectsFormFromJson();
+          }
+        });
+
+        addTagContainer.appendChild(tagInput);
+        addTagContainer.appendChild(addTagBtn);
+
+        tagsGroup.appendChild(tagsLabel);
+        tagsGroup.appendChild(tagsContainer);
+        tagsGroup.appendChild(addTagContainer);
+
+        // Links
+        const linksGroup = document.createElement('div');
+        linksGroup.className = 'form-group';
+
+        const linksLabel = document.createElement('label');
+        linksLabel.textContent = 'Links';
+
+        const linksContainer = document.createElement('div');
+        linksContainer.className = 'mb-2';
+
+        project.links.forEach((link, linkIndex) => {
+          const linkSection = document.createElement('div');
+          linkSection.className = 'link-section mb-3';
+
+          // URL
+          const urlGroup = document.createElement('div');
+          urlGroup.className = 'form-group';
+
+          const urlLabel = document.createElement('label');
+          urlLabel.textContent = 'URL';
+
+          const urlInput = document.createElement('input');
+          urlInput.type = 'text';
+          urlInput.className = 'form-control';
+          urlInput.value = link.url;
+          urlInput.addEventListener('input', (e) => {
+            link.url = e.target.value;
+          });
+
+          urlGroup.appendChild(urlLabel);
+          urlGroup.appendChild(urlInput);
+
+          // Text
+          const textGroup = document.createElement('div');
+          textGroup.className = 'form-group';
+
+          const textLabel = document.createElement('label');
+          textLabel.textContent = 'Text';
+
+          const textInput = document.createElement('input');
+          textInput.type = 'text';
+          textInput.className = 'form-control';
+          textInput.value = link.text;
+          textInput.addEventListener('input', (e) => {
+            link.text = e.target.value;
+          });
+
+          textGroup.appendChild(textLabel);
+          textGroup.appendChild(textInput);
+
+          // Icon
+          const iconGroup = document.createElement('div');
+          iconGroup.className = 'form-group';
+
+          const iconLabel = document.createElement('label');
+          iconLabel.textContent = 'Icon (Font Awesome class)';
+
+          const iconInput = document.createElement('input');
+          iconInput.type = 'text';
+          iconInput.className = 'form-control';
+          iconInput.value = link.icon;
+          iconInput.addEventListener('input', (e) => {
+            link.icon = e.target.value;
+          });
+
+          iconGroup.appendChild(iconLabel);
+          iconGroup.appendChild(iconInput);
+
+          // Type
+          const typeGroup = document.createElement('div');
+          typeGroup.className = 'form-group';
+
+          const typeLabel = document.createElement('label');
+          typeLabel.textContent = 'Button Type';
+
+          const typeSelect = document.createElement('select');
+          typeSelect.className = 'form-select';
+
+          const primaryOption = document.createElement('option');
+          primaryOption.value = 'primary';
+          primaryOption.textContent = 'Primary';
+          primaryOption.selected = link.type === 'primary';
+
+          const outlineOption = document.createElement('option');
+          outlineOption.value = 'outline';
+          outlineOption.textContent = 'Outline';
+          outlineOption.selected = link.type === 'outline';
+
+          typeSelect.appendChild(primaryOption);
+          typeSelect.appendChild(outlineOption);
+
+          typeSelect.addEventListener('change', (e) => {
+            link.type = e.target.value;
+          });
+
+          typeGroup.appendChild(typeLabel);
+          typeGroup.appendChild(typeSelect);
+
+          // Delete button
+          const delLinkBtn = document.createElement('button');
+          delLinkBtn.className = 'btn btn-sm btn-outline-danger mt-2';
+          delLinkBtn.innerHTML = '<i class="fas fa-trash me-1"></i> Remove Link';
+          delLinkBtn.addEventListener('click', () => {
+            project.links.splice(linkIndex, 1);
+            updateProjectsFormFromJson();
+          });
+
+          linkSection.appendChild(urlGroup);
+          linkSection.appendChild(textGroup);
+          linkSection.appendChild(iconGroup);
+          linkSection.appendChild(typeGroup);
+          linkSection.appendChild(delLinkBtn);
+
+          linksContainer.appendChild(linkSection);
+        });
+
+        // Add link button
+        const addLinkBtn = document.createElement('button');
+        addLinkBtn.className = 'btn btn-sm btn-outline-secondary';
+        addLinkBtn.innerHTML = '<i class="fas fa-plus me-1"></i> Add Link';
+        addLinkBtn.addEventListener('click', () => {
+          project.links.push({
+            url: "",
+            icon: "fa-solid fa-link",
+            text: "View",
+            type: "outline"
+          });
+          updateProjectsFormFromJson();
+        });
+
+        linksGroup.appendChild(linksLabel);
+        linksGroup.appendChild(linksContainer);
+        linksGroup.appendChild(addLinkBtn);
+
+        form.appendChild(titleGroup);
+        form.appendChild(statusGroup);
+        form.appendChild(descGroup);
+        form.appendChild(tagsGroup);
+        form.appendChild(linksGroup);
+
+        projectCard.appendChild(header);
+        projectCard.appendChild(form);
+
+        projectsList.appendChild(projectCard);
+      });
+    }
+
+    // Update education form from JSON
+    function updateEducationFormFromJson() {
+      educationList.innerHTML = '';
+
+      educationData.forEach((edu, index) => {
+        const eduCard = document.createElement('div');
+        eduCard.className = 'education-card mb-3';
+
+        // Create the header with title and controls
+        const header = document.createElement('div');
+        header.className = 'education-header';
+
+        const title = document.createElement('h5');
+        title.textContent = edu.title || `Entry ${index + 1}`;
+
+        const controls = document.createElement('div');
+
+        const moveUpBtn = document.createElement('button');
+        moveUpBtn.className = 'btn btn-sm btn-outline-secondary me-1';
+        moveUpBtn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        moveUpBtn.disabled = index === 0;
+        moveUpBtn.addEventListener('click', () => {
+          const temp = educationData[index];
+          educationData[index] = educationData[index - 1];
+          educationData[index - 1] = temp;
+          updateEducationFormFromJson();
+        });
+
+        const moveDownBtn = document.createElement('button');
+        moveDownBtn.className = 'btn btn-sm btn-outline-secondary me-1';
+        moveDownBtn.innerHTML = '<i class="fas fa-arrow-down"></i>';
+        moveDownBtn.disabled = index === educationData.length - 1;
+        moveDownBtn.addEventListener('click', () => {
+          const temp = educationData[index];
+          educationData[index] = educationData[index + 1];
+          educationData[index + 1] = temp;
+          updateEducationFormFromJson();
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-sm btn-outline-danger';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.addEventListener('click', () => {
+          if (confirm(`Delete education entry "${edu.title}"?`)) {
+            educationData.splice(index, 1);
+            updateEducationFormFromJson();
+          }
+        });
+
+        controls.appendChild(moveUpBtn);
+        controls.appendChild(moveDownBtn);
+        controls.appendChild(deleteBtn);
+
+        header.appendChild(title);
+        header.appendChild(controls);
+
+        // Create the education form
+        const form = document.createElement('div');
+        form.className = 'education-form';
+
+        // Title
+        const titleGroup = document.createElement('div');
+        titleGroup.className = 'form-group';
+
+        const titleLabel = document.createElement('label');
+        titleLabel.textContent = 'Title';
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.className = 'form-control';
+        titleInput.value = edu.title;
+        titleInput.addEventListener('input', (e) => {
+          edu.title = e.target.value;
+          title.textContent = e.target.value || `Entry ${index + 1}`;
+        });
+
+        titleGroup.appendChild(titleLabel);
+        titleGroup.appendChild(titleInput);
+
+        // Date
+        const dateGroup = document.createElement('div');
+        dateGroup.className = 'form-group';
+
+        const dateLabel = document.createElement('label');
+        dateLabel.textContent = 'Date';
+
+        const dateInput = document.createElement('input');
+        dateInput.type = 'text';
+        dateInput.className = 'form-control';
+        dateInput.value = edu.date;
+        dateInput.addEventListener('input', (e) => {
+          edu.date = e.target.value;
+        });
+
+        dateGroup.appendChild(dateLabel);
+        dateGroup.appendChild(dateInput);
+
+        // Description
+        const descGroup = document.createElement('div');
+        descGroup.className = 'form-group';
+
+        const descLabel = document.createElement('label');
+        descLabel.textContent = 'Description';
+
+        const descInput = document.createElement('textarea');
+        descInput.className = 'form-control';
+        descInput.rows = 3;
+        descInput.value = edu.description;
+        descInput.addEventListener('input', (e) => {
+          edu.description = e.target.value;
+        });
+
+        descGroup.appendChild(descLabel);
+        descGroup.appendChild(descInput);
+
+        // Position
+        const posGroup = document.createElement('div');
+        posGroup.className = 'form-group';
+
+        const posLabel = document.createElement('label');
+        posLabel.textContent = 'Position';
+
+        const posSelect = document.createElement('select');
+        posSelect.className = 'form-select';
+
+        const leftOption = document.createElement('option');
+        leftOption.value = 'left';
+        leftOption.textContent = 'Left';
+        leftOption.selected = edu.position === 'left';
+
+        const rightOption = document.createElement('option');
+        rightOption.value = 'right';
+        rightOption.textContent = 'Right';
+        rightOption.selected = edu.position === 'right';
+
+        posSelect.appendChild(leftOption);
+        posSelect.appendChild(rightOption);
+
+        posSelect.addEventListener('change', (e) => {
+          edu.position = e.target.value;
+        });
+
+        posGroup.appendChild(posLabel);
+        posGroup.appendChild(posSelect);
+
+        form.appendChild(titleGroup);
+        form.appendChild(dateGroup);
+        form.appendChild(descGroup);
+        form.appendChild(posGroup);
+
+        eduCard.appendChild(header);
+        eduCard.appendChild(form);
+
+        educationList.appendChild(eduCard);
+      });
+    }
+
+    // Validate JSON
+    function validateJson(jsonString, errorElement) {
+      try {
+        JSON.parse(jsonString);
+        errorElement.style.display = 'none';
+        return true;
+      } catch (e) {
+        errorElement.textContent = `JSON Error: ${e.message}`;
+        errorElement.style.display = 'block';
+        return false;
+      }
+    }
+
+    // Export JSON file
+    function exportJson(content, filename) {
+      const blob = new Blob([content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Event listeners for personal form
+    heroTitle.addEventListener('input', (e) => {
+      personalData.hero.title = e.target.value;
+    });
+
+    heroDescription.addEventListener('input', (e) => {
+      personalData.hero.description = e.target.value;
+    });
+
+    cvUrl.addEventListener('input', (e) => {
+      personalData.about.cvUrl = e.target.value;
+    });
+
+    addIntroParagraph.addEventListener('click', () => {
+      personalData.about.intro.push('New paragraph');
+      updatePersonalFormFromJson();
+    });
+
+    addSkill.addEventListener('click', () => {
+      const skill = newSkill.value.trim();
+      if (skill) {
+        personalData.about.skills.push(skill);
+        newSkill.value = '';
+        updatePersonalFormFromJson();
+      }
+    });
+
+    addCertification.addEventListener('click', () => {
+      const cert = newCertification.value.trim();
+      if (cert) {
+        personalData.about.certifications.push(cert);
+        newCertification.value = '';
+        updatePersonalFormFromJson();
+      }
+    });
+
+    // Event listeners for project and education forms
+    addProject.addEventListener('click', () => {
+      projectsData.push({
+        title: "New Project",
+        status: "in-development",
+        statusIcon: "fa-clock",
+        description: "Project description goes here",
+        tags: ["Tag 1", "Tag 2"],
+        links: [
+          {
+            url: "https://example.com",
+            icon: "fa-solid fa-link",
+            text: "View",
+            type: "outline"
+          }
+        ]
+      });
+      updateProjectsFormFromJson();
+    });
+
+    addEducation.addEventListener('click', () => {
+      educationData.push({
+        date: "Date",
+        title: "New Entry",
+        description: "Description goes here",
+        position: "left"
+      });
+      updateEducationFormFromJson();
+    });
+
+    // Event listeners for export buttons
+    exportPersonalBtn.addEventListener('click', () => {
+      if (rawJsonToggle.checked) {
+        // Raw JSON mode
+        if (validateJson(personalEditor.value, personalError)) {
+          personalData = JSON.parse(personalEditor.value);
+          exportJson(personalEditor.value, 'personal.json');
+        }
+      } else {
+        // Form mode
+        const json = JSON.stringify(personalData, null, 2);
+        exportJson(json, 'personal.json');
+      }
+    });
+
+    exportProjectsBtn.addEventListener('click', () => {
+      if (rawJsonToggle.checked) {
+        // Raw JSON mode
+        if (validateJson(projectsEditor.value, projectsError)) {
+          projectsData = JSON.parse(projectsEditor.value);
+          exportJson(projectsEditor.value, 'projects.json');
+        }
+      } else {
+        // Form mode
+        const json = JSON.stringify(projectsData, null, 2);
+        exportJson(json, 'projects.json');
+      }
+    });
+
+    exportEducationBtn.addEventListener('click', () => {
+      if (rawJsonToggle.checked) {
+        // Raw JSON mode
+        if (validateJson(educationEditor.value, educationError)) {
+          educationData = JSON.parse(educationEditor.value);
+          exportJson(educationEditor.value, 'education.json');
+        }
+      } else {
+        // Form mode
+        const json = JSON.stringify(educationData, null, 2);
+        exportJson(json, 'education.json');
+      }
+    });
+
+    // Event listeners for import buttons
+    loadPersonalBtn.addEventListener('click', () => {
+      personalFileInput.click();
+    });
+
+    loadProjectsBtn.addEventListener('click', () => {
+      projectsFileInput.click();
+    });
+
+    loadEducationBtn.addEventListener('click', () => {
+      educationFileInput.click();
+    });
+
+    // Handle file imports
+    personalFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target.result;
+          if (validateJson(content, personalError)) {
+            personalData = JSON.parse(content);
+
+            if (rawJsonToggle.checked) {
+              personalEditor.value = JSON.stringify(personalData, null, 2);
+            } else {
+              updatePersonalFormFromJson();
+            }
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    projectsFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target.result;
+          if (validateJson(content, projectsError)) {
+            projectsData = JSON.parse(content);
+
+            if (rawJsonToggle.checked) {
+              projectsEditor.value = JSON.stringify(projectsData, null, 2);
+            } else {
+              updateProjectsFormFromJson();
+            }
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    educationFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const content = e.target.result;
+          if (validateJson(content, educationError)) {
+            educationData = JSON.parse(content);
+
+            if (rawJsonToggle.checked) {
+              educationEditor.value = JSON.stringify(educationData, null, 2);
+            } else {
+              updateEducationFormFromJson();
+            }
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // Auto-validate on input in raw JSON mode
+    personalEditor.addEventListener('input', () => {
+      validateJson(personalEditor.value, personalError);
+    });
+
+    projectsEditor.addEventListener('input', () => {
+      validateJson(projectsEditor.value, projectsError);
+    });
+
+    educationEditor.addEventListener('input', () => {
+      validateJson(educationEditor.value, educationError);
+    });
+
+    // Initialize
+    initEditors();
+  </script>
+</body>
+
+</html>
