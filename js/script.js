@@ -69,14 +69,11 @@ function renderPersonalData(data) {
   // Update about section
   if (data.about) {
     // Update "Who am I?" paragraphs
-    const aboutTextElements = document.querySelectorAll('.about-content .about-text');
-    const aboutContent = document.querySelector('.about-content');
+    const whoAmITitle = document.querySelector('.about-content .skill-title');
 
-    // Clear existing paragraphs
-    aboutTextElements.forEach(el => el.remove());
-
-    // Find the first skill title (Who am I?)
-    const whoAmITitle = aboutContent.querySelector('.skill-title');
+    // Clear any existing paragraphs
+    let existingParagraphs = document.querySelectorAll('.about-content .about-text');
+    existingParagraphs.forEach(p => p.remove());
 
     // Insert paragraphs after the title
     let currentElement = whoAmITitle;
@@ -84,45 +81,36 @@ function renderPersonalData(data) {
       const p = document.createElement('p');
       p.className = 'about-text';
       p.textContent = text;
-      currentElement.after(p);
+      currentElement.insertAdjacentElement('afterend', p);
       currentElement = p; // Update reference for next insertion
     });
 
-    // Update technical skills
-    const skillTitles = aboutContent.querySelectorAll('.skill-title');
-    if (skillTitles.length >= 2) {
-      const techSkillsTitle = skillTitles[1];
-      const skillsContainer = techSkillsTitle.nextElementSibling;
-
-      if (skillsContainer && skillsContainer.classList.contains('skills')) {
-        skillsContainer.innerHTML = '';
-        data.about.skills.forEach(skill => {
-          const span = document.createElement('span');
-          span.className = 'skill';
-          span.textContent = skill;
-          skillsContainer.appendChild(span);
-        });
-      }
+    // Update technical skills - use ID for more reliable targeting
+    const skillsContainer = document.getElementById('skills-container');
+    if (skillsContainer) {
+      skillsContainer.innerHTML = ''; // Clear existing content
+      data.about.skills.forEach(skill => {
+        const span = document.createElement('span');
+        span.className = 'skill';
+        span.textContent = skill;
+        skillsContainer.appendChild(span);
+      });
     }
 
-    // Update certifications
-    if (skillTitles.length >= 3) {
-      const certTitle = skillTitles[2];
-      const certContainer = certTitle.nextElementSibling;
-
-      if (certContainer && certContainer.classList.contains('skills')) {
-        certContainer.innerHTML = '';
-        data.about.certifications.forEach(cert => {
-          const span = document.createElement('span');
-          span.className = 'skill';
-          span.textContent = cert;
-          certContainer.appendChild(span);
-        });
-      }
+    // Update certifications - use ID for more reliable targeting
+    const certContainer = document.getElementById('certifications-container');
+    if (certContainer) {
+      certContainer.innerHTML = ''; // Clear existing content
+      data.about.certifications.forEach(cert => {
+        const span = document.createElement('span');
+        span.className = 'skill';
+        span.textContent = cert;
+        certContainer.appendChild(span);
+      });
     }
 
     // Update CV link
-    const cvLink = aboutContent.querySelector('.hero-links a:first-child');
+    const cvLink = document.getElementById('cv-link');
     if (cvLink && data.about.cvUrl) {
       cvLink.href = data.about.cvUrl;
     }
