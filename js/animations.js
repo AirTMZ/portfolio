@@ -96,7 +96,7 @@ function checkVisibility() {
               child.classList.add('active');
               const childEffect = child.dataset.revealEffect || 'fade-up';
               child.classList.add(childEffect);
-            }, 200 + (index * 100));
+            }, 150 + (index * 70)); // Reduced from 200 + (index * 100)
           });
         }
       }
