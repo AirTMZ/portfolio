@@ -1,0 +1,32 @@
+[
+  {
+    "date": "Sep 2023 - Present",
+    "title": "Cardiff Metropolitan University",
+    "description": "Bachelor's Degree in Computer Security",
+    "position": "left"
+  },
+  {
+    "date": "2022",
+    "title": "UK Robotics Challenge",
+    "description": "First UK Robotics Challenge Winner & 2nd in Global League; designed & coded an autonomous robot.",
+    "position": "right"
+  },
+  {
+    "date": "April 2022",
+    "title": "OnSecurity, Bristol",
+    "description": "Worked alongside cybersecurity professional Calum Boal, gaining hands-on experience in penetration testing. Developed practical skills using BurpSuite, analyzing real-world vulnerabilities, and understanding exploit techniques.",
+    "position": "left"
+  },
+  {
+    "date": "Sep 2021 - 2023",
+    "title": "SGS Berkeley Green UTC",
+    "description": "A Level Computer Science and a Double Diploma in Cyber Security. PaloAlto CyberSecurity - Foundation Certificate (Full Marks). Personal Research Project in Mass Surveillance.",
+    "position": "right"
+  },
+  {
+    "date": "April 2020",
+    "title": "Pentest People, Leeds",
+    "description": "Completed a one-week penetration testing placement, gaining exposure to infrastructure, web, and mobile application security assessments. Learned industry-standard methodologies, vulnerability identification, and ethical hacking techniques.",
+    "position": "left"
+  }
+]
