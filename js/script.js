@@ -39,10 +39,20 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Mobile menu toggle
   const menuToggle = document.querySelector('.menu-toggle');
   const navLinks = document.querySelector('.nav-links');
+  const body = document.body;
 
   if (menuToggle) {
     menuToggle.addEventListener('click', () => {
+      menuToggle.classList.toggle('active');
       navLinks.classList.toggle('active');
+      body.classList.toggle('menu-open');
+
+      // Prevent background scrolling when menu is open
+      if (body.classList.contains('menu-open')) {
+        body.style.overflow = 'hidden';
+      } else {
+        body.style.overflow = '';
+      }
     });
   }
 
@@ -51,6 +61,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   links.forEach(link => {
     link.addEventListener('click', () => {
       navLinks.classList.remove('active');
+      menuToggle.classList.remove('active');
+      body.classList.remove('menu-open');
+      body.style.overflow = '';
     });
   });
 });

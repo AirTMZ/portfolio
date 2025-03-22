@@ -1006,3 +1006,8 @@ section:nth-child(even) .reveal-child {
   backface-visibility: hidden;
   transform-style: preserve-3d;
 }
+
+/* Add to the end of your existing CSS */
+body.menu-open {
+  overflow: hidden;
+}
