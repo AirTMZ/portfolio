@@ -48,10 +48,9 @@ nav {
   color: var(--primary);
 }
 
-/* Hide hamburger menu by default (desktop view) */
-nav .menu-toggle {
-  display: none !important;
-  /* Added !important to override any conflicting styles */
+.menu-toggle {
+  display: none;
+  /* Hide by default on larger screens */
 }
 
 .nav-links {
