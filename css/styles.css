@@ -377,6 +377,8 @@ section {
 .project-buttons {
   margin-top: auto;
   padding-top: 1rem;
+  display: flex;
+  gap: 0.5rem;
 }
 
 /* Portfolio buttons layout */
