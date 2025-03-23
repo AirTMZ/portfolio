@@ -81,7 +81,6 @@
     transform: translateY(0);
   }
 
-  /* Staggered animation for menu items */
   .nav-links.active a:nth-child(1) {
     transition-delay: 0.1s;
   }
@@ -98,7 +97,6 @@
     transition-delay: 0.4s;
   }
 
-  /* Hover effect for menu items */
   .nav-links a::after {
     bottom: -5px;
     height: 3px;
@@ -108,7 +106,6 @@
     transform: translateY(-3px);
   }
 
-  /* Hero section adjustments */
   .hero {
     flex-direction: column;
     text-align: center;
@@ -133,12 +130,10 @@
     max-width: 280px;
   }
 
-  /* Projects section */
   .projects-container {
     grid-template-columns: 1fr;
   }
 
-  /* About section */
   .about-container {
     flex-direction: column;
     gap: 2rem;
@@ -149,7 +144,6 @@
     width: 100%;
   }
 
-  /* Timeline adjustments */
   .timeline-item {
     width: 100%;
     margin-left: 0;
@@ -166,7 +160,6 @@
     left: 31px;
   }
 
-  /* Contact section */
   .contact-links {
     flex-direction: column;
   }

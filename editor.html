@@ -89,9 +89,7 @@
       min-height: 300px;
       font-family: monospace;
       overflow-y: hidden;
-      /* Hide scrollbar when auto-resizing */
       resize: none;
-      /* Disable manual resizing since we're handling it automatically */
     }
 
     .list-group-item {
@@ -236,7 +234,6 @@
     </ul>
 
     <div class="tab-content" id="editorTabContent">
-      <!-- Personal Info Tab -->
       <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
@@ -253,7 +250,6 @@
           <div class="card-body">
             <div id="personalError" class="error mb-3" style="display: none;"></div>
 
-            <!-- Form View -->
             <div id="personalForm">
               <div class="section-header">
                 <h4>Hero Section</h4>
@@ -273,7 +269,6 @@
               <div class="form-group">
                 <label>Introduction Paragraphs</label>
                 <div id="introParagraphs">
-                  <!-- Intro paragraphs will be added here -->
                 </div>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="addIntroParagraph">
                   <i class="fas fa-plus me-1"></i> Add Paragraph
@@ -283,7 +278,6 @@
               <div class="form-group">
                 <label>Skills</label>
                 <div id="skillsList">
-                  <!-- Skills will be added here -->
                 </div>
                 <div class="input-group mb-2">
                   <input type="text" class="form-control" id="newSkill" placeholder="New skill">
@@ -296,7 +290,6 @@
               <div class="form-group">
                 <label>Certifications</label>
                 <div id="certificationsList">
-                  <!-- Certifications will be added here -->
                 </div>
                 <div class="input-group mb-2">
                   <input type="text" class="form-control" id="newCertification" placeholder="New certification">
@@ -312,13 +305,11 @@
               </div>
             </div>
 
-            <!-- JSON View -->
             <textarea id="personalEditor" class="form-control json-editor" style="display: none;"></textarea>
           </div>
         </div>
       </div>
 
-      <!-- Projects Tab -->
       <div class="tab-pane fade" id="projects" role="tabpanel" aria-labelledby="projects-tab">
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
@@ -335,7 +326,6 @@
           <div class="card-body">
             <div id="projectsError" class="error mb-3" style="display: none;"></div>
 
-            <!-- Form View -->
             <div id="projectsForm">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4>Projects</h4>
@@ -345,17 +335,14 @@
               </div>
 
               <div id="projectsList">
-                <!-- Projects will be added here -->
               </div>
             </div>
 
-            <!-- JSON View -->
             <textarea id="projectsEditor" class="form-control json-editor" style="display: none;"></textarea>
           </div>
         </div>
       </div>
 
-      <!-- Education Tab -->
       <div class="tab-pane fade" id="education" role="tabpanel" aria-labelledby="education-tab">
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
@@ -372,7 +359,6 @@
           <div class="card-body">
             <div id="educationError" class="error mb-3" style="display: none;"></div>
 
-            <!-- Form View -->
             <div id="educationForm">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4>Education & Experience</h4>
@@ -382,23 +368,19 @@
               </div>
 
               <div id="educationList">
-                <!-- Education entries will be added here -->
               </div>
             </div>
 
-            <!-- JSON View -->
             <textarea id="educationEditor" class="form-control json-editor" style="display: none;"></textarea>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Hidden file inputs for importing -->
     <input type="file" id="personalFileInput" accept=".json" style="display: none;">
     <input type="file" id="projectsFileInput" accept=".json" style="display: none;">
     <input type="file" id="educationFileInput" accept=".json" style="display: none;">
 
-    <!-- Back to main site button -->
     <div class="d-flex justify-content-center mt-4 mb-3">
       <a href="index.html" class="btn btn-primary">
         <i class="fas fa-arrow-left me-2"></i>Back to Main Site
@@ -408,7 +390,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Default data from current JSON files
     const defaultPersonalData = {
       "hero": {
         "title": "Cyberecurity Student & Full-Stack .NET Dev",
@@ -474,7 +455,6 @@
       }
     ];
 
-    // DOM elements
     const personalEditor = document.getElementById('personalEditor');
     const projectsEditor = document.getElementById('projectsEditor');
     const educationEditor = document.getElementById('educationEditor');
@@ -501,7 +481,6 @@
 
     const rawJsonToggle = document.getElementById('rawJsonToggle');
 
-    // Personal form elements
     const heroTitle = document.getElementById('heroTitle');
     const heroDescription = document.getElementById('heroDescription');
     const introParagraphs = document.getElementById('introParagraphs');
@@ -514,52 +493,41 @@
     const newSkill = document.getElementById('newSkill');
     const newCertification = document.getElementById('newCertification');
 
-    // Project and Education form elements
     const projectsList = document.getElementById('projectsList');
     const educationList = document.getElementById('educationList');
     const addProject = document.getElementById('addProject');
     const addEducation = document.getElementById('addEducation');
 
-    // Current data
     let personalData = JSON.parse(JSON.stringify(defaultPersonalData));
     let projectsData = JSON.parse(JSON.stringify(defaultProjectsData));
     let educationData = JSON.parse(JSON.stringify(defaultEducationData));
 
-    // Initialize editors with default data
     function initEditors() {
-      // Set up personal data
       personalData = JSON.parse(JSON.stringify(defaultPersonalData));
       updatePersonalFormFromJson();
       personalEditor.value = JSON.stringify(personalData, null, 2);
       autoResizeTextarea(personalEditor);
 
-      // Set up projects data
       projectsData = JSON.parse(JSON.stringify(defaultProjectsData));
       updateProjectsFormFromJson();
       projectsEditor.value = JSON.stringify(projectsData, null, 2);
       autoResizeTextarea(projectsEditor);
 
-      // Set up education data
       educationData = JSON.parse(JSON.stringify(defaultEducationData));
       updateEducationFormFromJson();
       educationEditor.value = JSON.stringify(educationData, null, 2);
       autoResizeTextarea(educationEditor);
     }
 
-    // Auto-resize textarea to fit content
     function autoResizeTextarea(textarea) {
-      // Reset height to allow proper calculation
       textarea.style.height = 'auto';
 
-      // Set the height to match the scroll height (content height)
       textarea.style.height = textarea.scrollHeight + 'px';
     }
 
-    // Update raw JSON toggle event listener
     rawJsonToggle.addEventListener('change', (e) => {
       const isRawJson = e.target.checked;
 
-      // Update Personal tab
       personalForm.style.display = isRawJson ? 'none' : 'block';
       personalEditor.style.display = isRawJson ? 'block' : 'none';
       if (isRawJson) {
@@ -569,7 +537,6 @@
         updatePersonalFormFromJson();
       }
 
-      // Update Projects tab
       projectsForm.style.display = isRawJson ? 'none' : 'block';
       projectsEditor.style.display = isRawJson ? 'block' : 'none';
       if (isRawJson) {
@@ -579,7 +546,6 @@
         updateProjectsFormFromJson();
       }
 
-      // Update Education tab
       educationForm.style.display = isRawJson ? 'none' : 'block';
       educationEditor.style.display = isRawJson ? 'block' : 'none';
       if (isRawJson) {
@@ -590,7 +556,6 @@
       }
     });
 
-    // Auto-validate and auto-resize on input in raw JSON mode
     personalEditor.addEventListener('input', () => {
       validateJson(personalEditor.value, personalError);
       autoResizeTextarea(personalEditor);
@@ -606,13 +571,10 @@
       autoResizeTextarea(educationEditor);
     });
 
-    // Update personal form from JSON
     function updatePersonalFormFromJson() {
-      // Update hero section
       heroTitle.value = personalData.hero.title;
       heroDescription.value = personalData.hero.description;
 
-      // Update intro paragraphs
       introParagraphs.innerHTML = '';
       personalData.about.intro.forEach((paragraph, index) => {
         const paragraphDiv = document.createElement('div');
@@ -639,7 +601,6 @@
         introParagraphs.appendChild(paragraphDiv);
       });
 
-      // Update skills
       skillsList.innerHTML = '';
       personalData.about.skills.forEach((skill, index) => {
         const skillDiv = document.createElement('div');
@@ -666,7 +627,6 @@
         skillsList.appendChild(skillDiv);
       });
 
-      // Update certifications
       certificationsList.innerHTML = '';
       personalData.about.certifications.forEach((cert, index) => {
         const certDiv = document.createElement('div');
@@ -693,11 +653,9 @@
         certificationsList.appendChild(certDiv);
       });
 
-      // Update CV URL
       cvUrl.value = personalData.about.cvUrl;
     }
 
-    // Update projects form from JSON
     function updateProjectsFormFromJson() {
       projectsList.innerHTML = '';
 
@@ -705,7 +663,6 @@
         const projectCard = document.createElement('div');
         projectCard.className = 'project-card mb-3';
 
-        // Create the header with title and controls
         const header = document.createElement('div');
         header.className = 'project-header';
 
@@ -753,11 +710,9 @@
         header.appendChild(title);
         header.appendChild(controls);
 
-        // Create the project form
         const form = document.createElement('div');
         form.className = 'project-form';
 
-        // Title
         const titleGroup = document.createElement('div');
         titleGroup.className = 'form-group';
 
@@ -776,7 +731,6 @@
         titleGroup.appendChild(titleLabel);
         titleGroup.appendChild(titleInput);
 
-        // Status
         const statusGroup = document.createElement('div');
         statusGroup.className = 'form-group';
 
@@ -802,7 +756,6 @@
         statusSelect.addEventListener('change', (e) => {
           project.status = e.target.value;
 
-          // Update status icon based on selection
           if (e.target.value === 'complete') {
             project.statusIcon = 'fa-check-circle';
           } else {
@@ -813,7 +766,6 @@
         statusGroup.appendChild(statusLabel);
         statusGroup.appendChild(statusSelect);
 
-        // Description
         const descGroup = document.createElement('div');
         descGroup.className = 'form-group';
 
@@ -831,7 +783,6 @@
         descGroup.appendChild(descLabel);
         descGroup.appendChild(descInput);
 
-        // Tags
         const tagsGroup = document.createElement('div');
         tagsGroup.className = 'form-group';
 
@@ -892,7 +843,6 @@
         tagsGroup.appendChild(tagsContainer);
         tagsGroup.appendChild(addTagContainer);
 
-        // Links
         const linksGroup = document.createElement('div');
         linksGroup.className = 'form-group';
 
@@ -906,7 +856,6 @@
           const linkSection = document.createElement('div');
           linkSection.className = 'link-section mb-3';
 
-          // URL
           const urlGroup = document.createElement('div');
           urlGroup.className = 'form-group';
 
@@ -924,7 +873,6 @@
           urlGroup.appendChild(urlLabel);
           urlGroup.appendChild(urlInput);
 
-          // Text
           const textGroup = document.createElement('div');
           textGroup.className = 'form-group';
 
@@ -942,7 +890,6 @@
           textGroup.appendChild(textLabel);
           textGroup.appendChild(textInput);
 
-          // Icon
           const iconGroup = document.createElement('div');
           iconGroup.className = 'form-group';
 
@@ -960,7 +907,6 @@
           iconGroup.appendChild(iconLabel);
           iconGroup.appendChild(iconInput);
 
-          // Type
           const typeGroup = document.createElement('div');
           typeGroup.className = 'form-group';
 
@@ -990,7 +936,6 @@
           typeGroup.appendChild(typeLabel);
           typeGroup.appendChild(typeSelect);
 
-          // Delete button
           const delLinkBtn = document.createElement('button');
           delLinkBtn.className = 'btn btn-sm btn-outline-danger mt-2';
           delLinkBtn.innerHTML = '<i class="fas fa-trash me-1"></i> Remove Link';
@@ -1008,7 +953,6 @@
           linksContainer.appendChild(linkSection);
         });
 
-        // Add link button
         const addLinkBtn = document.createElement('button');
         addLinkBtn.className = 'btn btn-sm btn-outline-secondary';
         addLinkBtn.innerHTML = '<i class="fas fa-plus me-1"></i> Add Link';
@@ -1039,7 +983,6 @@
       });
     }
 
-    // Update education form from JSON
     function updateEducationFormFromJson() {
       educationList.innerHTML = '';
 
@@ -1047,7 +990,6 @@
         const eduCard = document.createElement('div');
         eduCard.className = 'education-card mb-3';
 
-        // Create the header with title and controls
         const header = document.createElement('div');
         header.className = 'education-header';
 

@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', async function() {
-  // Load personal data
   try {
     const personalResponse = await fetch('data/personal.json');
     const personalData = await personalResponse.json();
@@ -8,7 +7,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.error('Error loading personal data:', error);
   }
 
-  // Load project data
   try {
     const projectsResponse = await fetch('data/projects.json');
     const projects = await projectsResponse.json();
@@ -17,7 +15,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.error('Error loading projects:', error);
   }
 
-  // Load education data
   try {
     const educationResponse = await fetch('data/education.json');
     const education = await educationResponse.json();
@@ -26,7 +23,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.error('Error loading education data:', error);
   }
 
-  // Original code for smooth scrolling
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
       e.preventDefault();
@@ -36,7 +32,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   });
 
-  // Mobile menu toggle
   const menuToggle = document.querySelector('.menu-toggle');
   const navLinks = document.querySelector('.nav-links');
   const body = document.body;
@@ -47,7 +42,6 @@ document.addEventListener('DOMContentLoaded', async function() {
       navLinks.classList.toggle('active');
       body.classList.toggle('menu-open');
 
-      // Prevent background scrolling when menu is open
       if (body.classList.contains('menu-open')) {
         body.style.overflow = 'hidden';
       } else {
@@ -56,7 +50,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   }
 
-  // Close menu when clicking a link
   const links = document.querySelectorAll('.nav-links a');
   links.forEach(link => {
     link.addEventListener('click', () => {
@@ -68,9 +61,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
 });
 
-// Function to render personal data
 function renderPersonalData(data) {
-  // Update hero section
   if (data.hero) {
     const heroTitle = document.querySelector('.hero-content h1');
     const heroDescription = document.querySelector('.hero-content p');
@@ -79,29 +70,24 @@ function renderPersonalData(data) {
     if (heroDescription) heroDescription.textContent = data.hero.description;
   }
 
-  // Update about section
   if (data.about) {
-    // Update "Who am I?" paragraphs
     const whoAmITitle = document.querySelector('.about-content .skill-title');
 
-    // Clear any existing paragraphs
     let existingParagraphs = document.querySelectorAll('.about-content .about-text');
     existingParagraphs.forEach(p => p.remove());
 
-    // Insert paragraphs after the title
     let currentElement = whoAmITitle;
     data.about.intro.forEach(text => {
       const p = document.createElement('p');
       p.className = 'about-text';
       p.textContent = text;
       currentElement.insertAdjacentElement('afterend', p);
-      currentElement = p; // Update reference for next insertion
+      currentElement = p;
     });
 
-    // Update technical skills - use ID for more reliable targeting
     const skillsContainer = document.getElementById('skills-container');
     if (skillsContainer) {
-      skillsContainer.innerHTML = ''; // Clear existing content
+      skillsContainer.innerHTML = '';
       data.about.skills.forEach(skill => {
         const span = document.createElement('span');
         span.className = 'skill';
@@ -110,10 +96,9 @@ function renderPersonalData(data) {
       });
     }
 
-    // Update certifications - use ID for more reliable targeting
     const certContainer = document.getElementById('certifications-container');
     if (certContainer) {
-      certContainer.innerHTML = ''; // Clear existing content
+      certContainer.innerHTML = '';
       data.about.certifications.forEach(cert => {
         const span = document.createElement('span');
         span.className = 'skill';
@@ -122,7 +107,6 @@ function renderPersonalData(data) {
       });
     }
 
-    // Update CV link
     const cvLink = document.getElementById('cv-link');
     if (cvLink && data.about.cvUrl) {
       cvLink.href = data.about.cvUrl;
@@ -130,7 +114,6 @@ function renderPersonalData(data) {
   }
 }
 
-// Function to render project cards
 function renderProjects(projects) {
   const container = document.getElementById('projects-container');
 
@@ -177,7 +160,6 @@ function renderProjects(projects) {
   });
 }
 
-// Function to render education timeline
 function renderEducation(education) {
   const container = document.getElementById('timeline-container');
 
