@@ -1,8 +1,8 @@
 [
   {
     "title": "Portfolio Website",
-    "status": "complete",
-    "statusIcon": "fa-check-circle",
+    "status": "in-development",
+    "statusIcon": "ffa-clock",
     "description": "Personal portfolio website showcasing my projects, skills, and professional experience using modern web technologies. Please take a look at the Dev Mode that can be accessed at the bottom of the website to take a glimps behind the curtain!",
     "tags": [
       "HTML",
@@ -41,8 +41,8 @@
   },
   {
     "title": "Tub-Takes",
-    "status": "in-development",
-    "statusIcon": "fa-clock",
+    "status": "complete",
+    "statusIcon": "fa-check-circle",
     "description": "A tier list website developed for the r/GFUEL discord and Reddit communities to rank and categorize products.",
     "tags": [
       "JavaScript",
