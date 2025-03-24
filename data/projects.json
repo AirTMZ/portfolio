@@ -17,7 +17,7 @@
         "type": "outline"
       }
     ],
-    "image": "images/portfolio-website-thumbnail.jpg"
+    "image": "images/projects/portfolio-website-thumbnail.jpg"
   },
   {
     "title": "Tub-Takes-Bot",
@@ -37,7 +37,7 @@
         "type": "outline"
       }
     ],
-    "image": "images/tub-takes-bot-thumbnail.jpg"
+    "image": "images/projects/tub-takes-bot-thumbnail.jpg"
   },
   {
     "title": "Tub-Takes",
@@ -63,7 +63,7 @@
         "type": "primary"
       }
     ],
-    "image": "images/tub-takes-thumbnail.jpg"
+    "image": "images/projects/tub-takes-thumbnail.jpg"
   },
   {
     "title": "RandoSeed",
@@ -83,7 +83,7 @@
         "type": "outline"
       }
     ],
-    "image": "images/randoseed-thumbnail.jpg"
+    "image": "images/projects/randoseed-thumbnail.jpg"
   },
   {
     "title": "RoomAllocation",
@@ -109,7 +109,7 @@
         "type": "primary"
       }
     ],
-    "image": "images/roomallocation-thumbnail.jpg"
+    "image": "images/projects/roomallocation-thumbnail.jpg"
   },
   {
     "title": "SpotiPlay",
@@ -129,6 +129,6 @@
         "type": "outline"
       }
     ],
-    "image": "images/spotiplay-thumbnail.jpg"
+    "image": "images/projects/spotiplay-thumbnail.jpg"
   }
 ]
