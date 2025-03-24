@@ -141,6 +141,9 @@ function renderProjects(projects) {
     });
 
     projectCard.innerHTML = `
+      <div class="project-image">
+        <img src="${project.image}" alt="${project.title} Thumbnail">
+      </div>
       <div class="project-content">
         <h3 class="project-title">${project.title}</h3>
         <div class="project-status ${project.status}">

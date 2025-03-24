@@ -16,7 +16,8 @@
         "text": "GitHub",
         "type": "outline"
       }
-    ]
+    ],
+    "image": "images/portfolio-website-thumbnail.jpg"
   },
   {
     "title": "Tub-Takes-Bot",
@@ -35,7 +36,8 @@
         "text": "GitHub",
         "type": "outline"
       }
-    ]
+    ],
+    "image": "images/tub-takes-bot-thumbnail.jpg"
   },
   {
     "title": "Tub-Takes",
@@ -60,7 +62,8 @@
         "text": "View Live",
         "type": "primary"
       }
-    ]
+    ],
+    "image": "images/tub-takes-thumbnail.jpg"
   },
   {
     "title": "RandoSeed",
@@ -79,7 +82,8 @@
         "text": "GitHub",
         "type": "outline"
       }
-    ]
+    ],
+    "image": "images/randoseed-thumbnail.jpg"
   },
   {
     "title": "RoomAllocation",
@@ -104,7 +108,8 @@
         "text": "View Live",
         "type": "primary"
       }
-    ]
+    ],
+    "image": "images/roomallocation-thumbnail.jpg"
   },
   {
     "title": "SpotiPlay",
@@ -123,6 +128,7 @@
         "text": "GitHub",
         "type": "outline"
       }
-    ]
+    ],
+    "image": "images/spotiplay-thumbnail.jpg"
   }
 ]
