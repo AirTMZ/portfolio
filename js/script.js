@@ -59,6 +59,32 @@ document.addEventListener('DOMContentLoaded', async function() {
       body.style.overflow = '';
     });
   });
+
+  const favicons = [
+    'alien.ico',
+    'grin.ico',
+    'monkey.ico',
+    'nerd.ico',
+    'oni.ico',
+    'cowboy.ico',
+    'robot.ico',
+    'sleep.ico',
+    'smile.ico',
+    'wink.ico'
+  ];
+
+  function getRandomFavicon() {
+    let previousFavicon = localStorage.getItem('previousFavicon');
+    let newFavicon;
+    do {
+      newFavicon = favicons[Math.floor(Math.random() * favicons.length)];
+    } while (newFavicon === previousFavicon);
+    localStorage.setItem('previousFavicon', newFavicon);
+    return newFavicon;
+  }
+
+  const faviconElement = document.getElementById('dynamic-favicon');
+  faviconElement.href = `images/favicons/${getRandomFavicon()}`;
 });
 
 function renderPersonalData(data) {
