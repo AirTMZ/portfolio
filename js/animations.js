@@ -1,25 +1,27 @@
 document.addEventListener('DOMContentLoaded', function() {
   const sections = document.querySelectorAll('section');
   sections.forEach((section, index) => {
-    const effects = ['fade-up', 'fade-in', 'slide-in', 'zoom-in', 'flip-in'];
-    const effect = effects[index % effects.length];
+    if (section.id !== 'contact') { // Exclude the "Get In Touch" section
+      const effects = ['fade-up', 'fade-in', 'slide-in', 'zoom-in', 'flip-in'];
+      const effect = effects[index % effects.length];
 
-    section.classList.add('reveal');
-    section.dataset.revealEffect = effect;
-    section.dataset.revealDelay = (index * 0.1) + 's';
+      section.classList.add('reveal');
+      section.dataset.revealEffect = effect;
+      section.dataset.revealDelay = (index * 0.1) + 's';
 
-    const headings = section.querySelectorAll('h2, h3');
-    const paragraphs = section.querySelectorAll('p:not(.about-text)');
+      const headings = section.querySelectorAll('h2, h3');
+      const paragraphs = section.querySelectorAll('p:not(.about-text)');
 
-    headings.forEach(heading => {
-      heading.classList.add('reveal-child');
-      heading.dataset.revealEffect = 'fade-up';
-    });
+      headings.forEach(heading => {
+        heading.classList.add('reveal-child');
+        heading.dataset.revealEffect = 'fade-up';
+      });
 
-    paragraphs.forEach(para => {
-      para.classList.add('reveal-child');
-      para.dataset.revealEffect = 'fade-in';
-    });
+      paragraphs.forEach(para => {
+        para.classList.add('reveal-child');
+        para.dataset.revealEffect = 'fade-in';
+      });
+    }
   });
 
   const projectCards = document.querySelectorAll('.project-card');
