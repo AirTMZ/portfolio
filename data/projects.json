@@ -3,7 +3,7 @@
     "title": "Portfolio Website",
     "status": "in-development",
     "statusIcon": "fa-clock",
-    "description": "Personal portfolio website showcasing my projects, skills, and professional experience using modern web technologies. Please take a look at the Dev Mode that can be accessed at the bottom of the website to take a glimps behind the curtain!",
+    "description": "Personal portfolio website showcasing my projects, skills, and professional experience.",
     "tags": [
       "HTML",
       "CSS",
@@ -23,7 +23,7 @@
     "title": "Tub-Takes-Bot",
     "status": "in-development",
     "statusIcon": "fa-clock",
-    "description": "A Discord bot that works in partnership with the Tub-Takes website to provide tier list functionality within Discord servers.",
+    "description": "A Discord bot that works with the Tub-Takes website for the r/GFUEL community to provide tier list functionality for over 27k+ members.",
     "tags": [
       "Python",
       "PM2",

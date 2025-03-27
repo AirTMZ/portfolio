@@ -23,7 +23,7 @@
     }
 
     .container {
-      max-width: 600px;
+      max-width: 500px;
     }
 
     h1 {
@@ -48,17 +48,23 @@
       color: var(--primary-dark);
     }
 
-    .emoji {
-      font-size: 5rem;
+    .gif-container {
       margin-bottom: 1rem;
+    }
+
+    .gif-container img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
     }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <div class="emoji">🤔</div>
-    <h1>404</h1>
+    <div class="gif-container">
+      <img src="images/gif/404.gif" alt="404 GIF">
+    </div>
     <p>Looks like you're lost... or maybe I am?</p>
     <p>Either way, this page doesn't exist. Maybe try going <a href="index.html">home</a>?</p>
     <p>Or just blame Tim. He's usually to blame around here <i class="fa-solid fa-code"></i></p>
