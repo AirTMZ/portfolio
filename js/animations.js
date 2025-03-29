@@ -111,6 +111,7 @@ function moveShapes(e) {
 
 document.addEventListener('DOMContentLoaded', function() {
   createParticleBackground();
+  createBorderSparks(); // Add the border sparks
 });
 
 function createParticleBackground() {
@@ -171,4 +172,89 @@ function createParticleBackground() {
     }
   `;
   document.head.appendChild(style);
+}
+
+// Create border sparks effect
+function createBorderSparks() {
+  const sparksContainer = document.createElement('div');
+  sparksContainer.id = 'border-sparks';
+  sparksContainer.style.position = 'fixed';
+  sparksContainer.style.top = '0';
+  sparksContainer.style.left = '0';
+  sparksContainer.style.width = '100%';
+  sparksContainer.style.height = '100%';
+  sparksContainer.style.pointerEvents = 'none';
+  sparksContainer.style.zIndex = '9990';
+  document.body.appendChild(sparksContainer);
+
+  // Create the sparks CSS
+  const style = document.createElement('style');
+  style.textContent = `
+    .spark {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      z-index: 9991;
+      pointer-events: none;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+    }
+
+    @keyframes sparkFade {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--x), var(--y)) scale(0.1);
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Generate sparks at intervals (reduced from 300ms to 150ms for more frequency)
+  setInterval(createSpark, 150);
+
+  function createSpark() {
+    // Randomly decide if this should be a top or bottom spark
+    const isTop = Math.random() > 0.5;
+
+    // Create spark element
+    const spark = document.createElement('div');
+    spark.className = 'spark';
+
+    // Position at random point along the border
+    const xPos = Math.random() * 100;
+    const yPos = isTop ? 0 : 100;
+
+    spark.style.left = `${xPos}%`;
+    spark.style.top = `${yPos}%`;
+
+    // Randomize direction for movement
+    const xDirection = Math.random() * 40 - 20; // -20px to 20px (increased range)
+    const yDirection = isTop ? Math.random() * 40 + 5 : -(Math.random() * 40 + 5); // Away from border (increased range)
+
+    spark.style.setProperty('--x', `${xDirection}px`);
+    spark.style.setProperty('--y', `${yDirection}px`);
+
+    // Occasionally create a larger, brighter spark
+    if (Math.random() < 0.3) { // 30% chance of a "special" spark
+      spark.style.width = '4px';
+      spark.style.height = '4px';
+      spark.style.boxShadow = '0 0 10px rgba(255, 255, 255, 1)';
+    }
+
+    // Animation (slightly longer duration)
+    spark.style.animation = `sparkFade ${Math.random() * 0.6 + 0.7}s ease-out forwards`;
+
+    // Add to container
+    sparksContainer.appendChild(spark);
+
+    // Remove after animation
+    setTimeout(() => {
+      spark.remove();
+    }, 2000); // Increased from 1500ms to 2000ms
+  }
 }

@@ -23,6 +23,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.error('Error loading education data:', error);
   }
 
+  try {
+    const notificationsResponse = await fetch('data/announcements.json');
+    const notifications = await notificationsResponse.json();
+    initNotificationSystem(notifications);
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+  }
+
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
       e.preventDefault();
@@ -213,4 +221,60 @@ function renderEducation(education) {
 
     container.appendChild(timelineItem);
   });
+}
+
+function initNotificationSystem(notifications) {
+  const container = document.getElementById('notification-container');
+  if (!container) return;
+
+  // Filter active notifications
+  const activeNotifications = notifications.filter(notif => notif.active);
+  if (activeNotifications.length === 0) return;
+
+  // Process each notification
+  activeNotifications.forEach((notification, index) => {
+    // Check if this notification has been dismissed in this session
+    const dismissed = sessionStorage.getItem(`dismissed-notification-${notification.id}`);
+    if (dismissed) return;
+
+    // Create notification element
+    const notificationEl = document.createElement('div');
+    notificationEl.className = 'notification';
+    notificationEl.innerHTML = `
+      <div class="notification-icon">
+        <i class="fa-solid fa-circle-info"></i>
+      </div>
+      <div class="notification-content">
+        <div class="notification-message">${notification.text}</div>
+      </div>
+      <button class="notification-close">×</button>
+    `;
+
+    // Add to container
+    container.appendChild(notificationEl);
+
+    // Set delay for staggered appearance
+    setTimeout(() => {
+      notificationEl.classList.add('active');
+    }, 300 * index);
+
+    // Close button functionality
+    const closeBtn = notificationEl.querySelector('.notification-close');
+    closeBtn.addEventListener('click', () => {
+      dismissNotification(notificationEl, notification.id);
+    });
+  });
+}
+
+function dismissNotification(element, id) {
+  if (!element.classList.contains('active')) return;
+
+  element.classList.remove('active');
+  // Use sessionStorage instead of localStorage
+  sessionStorage.setItem(`dismissed-notification-${id}`, 'true');
+
+  // Remove from DOM after animation completes
+  setTimeout(() => {
+    element.remove();
+  }, 500);
 }

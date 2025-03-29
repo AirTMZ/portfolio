@@ -1,0 +1,12 @@
+[
+  {
+    "id": "2",
+    "active": true,
+    "text": "Welcome to my portfolio! Just made this cool banner system that allows me to add announcements to my site. Thanks for visiting!"
+  },
+  {
+    "id": "1",
+    "active": false,
+    "text": "Site maintenance scheduled for this weekend. Expect some cool new features!"
+  }
+]
