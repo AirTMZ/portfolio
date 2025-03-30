@@ -51,13 +51,13 @@
     ],
     "links": [
       {
-        "url": "https://github.com/AirTMZ/Tub-Takes",
+        "url": "https://tubtakes.tmitchell.uk/",
         "icon": "fa-brands fa-github",
         "text": "GitHub",
         "type": "outline"
       },
       {
-        "url": "https://airtmz.github.io/Tub-Takes/",
+        "url": "https://tubtakes.tmitchell.uk/",
         "icon": "fa-solid fa-external-link",
         "text": "View Live",
         "type": "primary"
@@ -97,13 +97,13 @@
     ],
     "links": [
       {
-        "url": "https://github.com/AirTMZ/RoomAllocation",
+        "url": "http://rooms.tmitchell.uk/",
         "icon": "fa-brands fa-github",
         "text": "GitHub",
         "type": "outline"
       },
       {
-        "url": "https://airtmz.github.io/RoomAllocation/",
+        "url": "http://rooms.tmitchell.uk/",
         "icon": "fa-solid fa-external-link",
         "text": "View Live",
         "type": "primary"
