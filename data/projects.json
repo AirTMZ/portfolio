@@ -21,9 +21,9 @@
   },
   {
     "title": "Tub-Takes-Bot",
-    "status": "in-development",
-    "statusIcon": "fa-clock",
-    "description": "A Discord bot that works with the Tub-Takes website for the r/GFUEL community to provide tier list functionality for over 27k+ members.",
+    "status": "complete",
+    "statusIcon": "fa-check-circle",
+    "description": "A Discord bot that works with the Tub-Takes website for the r/GFUEL community to provide a slew of different statistics with weighted tier lists to 27k+ members.",
     "tags": [
       "Python",
       "PM2",

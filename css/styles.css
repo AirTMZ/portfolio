@@ -416,6 +416,9 @@ section {
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
+  padding-bottom: 8px;
+  margin-bottom: -8px;
 }
 
 .project-card:hover {
@@ -448,6 +451,8 @@ section {
   flex-grow: 1;
   position: relative;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding-bottom: calc(1.5rem + 2px);
+  margin-bottom: -2px;
 }
 
 .project-content:hover {
@@ -612,6 +617,9 @@ section {
   font-size: 0.9rem;
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
+  position: relative;
+  padding-bottom: 3px;
+  margin-bottom: -3px;
 }
 
 .skill:hover {
@@ -669,6 +677,8 @@ section {
   position: relative;
   overflow: hidden;
   z-index: 1;
+  padding-bottom: calc(1rem + 3px);
+  margin-bottom: -3px;
 }
 
 .contact-link::before {
@@ -761,6 +771,8 @@ section {
   position: relative;
   border: 1px solid var(--border-color);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding-bottom: calc(1.5rem + 2px);
+  margin-bottom: -2px;
 }
 
 .timeline-content:hover {
