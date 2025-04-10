@@ -1,0 +1,12 @@
+{
+  "title": "Timothy Mitchell | Cyber Security & Full Stack Developer",
+  "description": "Personal portfolio of Timothy Mitchell, a Cyber Security student and Full Stack Developer specializing in .NET development and financial threat intelligence.",
+  "keywords": "Timothy Mitchell, Cyber Security, Full Stack Developer, .NET Developer, Financial Threat Intelligence, Portfolio",
+  "author": "Timothy Mitchell",
+  "social": {
+    "twitter": "@TimMitchellDev",
+    "linkedinUsername": "tim-mitch"
+  },
+  "siteUrl": "https://tmitchell.uk",
+  "themeColor": "#00ADFF"
+}

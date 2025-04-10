@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', async function() {
   try {
+    const metadataResponse = await fetch('data/metadata.json');
+    const metadata = await metadataResponse.json();
+    applyMetadata(metadata);
+  } catch (error) {
+    console.error('Error loading metadata:', error);
+  }
+
+  try {
     const personalResponse = await fetch('data/personal.json');
     const personalData = await personalResponse.json();
     renderPersonalData(personalData);
@@ -81,6 +89,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     'wink.ico'
   ];
 
+  // Add shield icon shine effect
+  const shieldIcon = document.getElementById('shield-icon');
+  if (shieldIcon) {
+    shieldIcon.addEventListener('click', function() {
+      // Prevent multiple animations from running simultaneously
+      if (!this.classList.contains('shining')) {
+        this.classList.add('shining');
+
+        // Remove the class when animation completes to allow clicking again
+        setTimeout(() => {
+          this.classList.remove('shining');
+        }, 1200); // Match the animation duration
+      }
+    });
+  }
+
   function getRandomFavicon() {
     let previousFavicon = localStorage.getItem('previousFavicon');
     let newFavicon;
@@ -94,6 +118,81 @@ document.addEventListener('DOMContentLoaded', async function() {
   const faviconElement = document.getElementById('dynamic-favicon');
   faviconElement.href = `images/favicons/${getRandomFavicon()}`;
 });
+
+function applyMetadata(metadata) {
+  // Set basic meta tags
+  document.title = metadata.title;
+
+  // Update meta tags dynamically
+  const metaTags = {
+    'description': metadata.description,
+    'keywords': metadata.keywords,
+    'author': metadata.author,
+    'theme-color': metadata.themeColor,
+
+    // Open Graph meta tags
+    'og:title': metadata.title,
+    'og:description': metadata.description,
+    'og:type': 'website',
+    'og:url': metadata.siteUrl,
+    'og:image': `${metadata.siteUrl}/images/personal/profile-social.jpg`,
+
+    // Twitter Card meta tags
+    'twitter:card': 'summary_large_image',
+    'twitter:site': metadata.social.twitter,
+    'twitter:title': metadata.title,
+    'twitter:description': metadata.description,
+    'twitter:image': `${metadata.siteUrl}/images/personal/profile-social.jpg`
+  };
+
+  // Apply meta tags
+  for (const [name, content] of Object.entries(metaTags)) {
+    // Check if meta tag exists
+    let metaTag = document.querySelector(`meta[name="${name}"], meta[property="${name}"]`);
+    if (!metaTag) {
+      metaTag = document.createElement('meta');
+      if (name.startsWith('og:') || name.startsWith('twitter:')) {
+        metaTag.setAttribute('property', name);
+      } else {
+        metaTag.setAttribute('name', name);
+      }
+      document.head.appendChild(metaTag);
+    }
+    metaTag.setAttribute('content', content);
+  }
+
+  // Add canonical link
+  let canonicalLink = document.querySelector('link[rel="canonical"]');
+  if (!canonicalLink) {
+    canonicalLink = document.createElement('link');
+    canonicalLink.setAttribute('rel', 'canonical');
+    document.head.appendChild(canonicalLink);
+  }
+  canonicalLink.setAttribute('href', metadata.siteUrl);
+
+  // Add JSON-LD structured data
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    'name': 'Timothy Mitchell',
+    'url': metadata.siteUrl,
+    'image': `${metadata.siteUrl}/images/personal/pfp.jpg`,
+    'jobTitle': 'Full Stack .NET Developer & Cyber Security Student',
+    'sameAs': [
+      `https://www.linkedin.com/in/${metadata.social.linkedinUsername}/`,
+      `https://github.com/AirTMZ/`,
+      `https://twitter.com/${metadata.social.twitter.replace('@', '')}`
+    ]
+  };
+
+  let scriptTag = document.querySelector('script[type="application/ld+json"]');
+  if (!scriptTag) {
+    scriptTag = document.createElement('script');
+    scriptTag.setAttribute('type', 'application/ld+json');
+    document.head.appendChild(scriptTag);
+  }
+  scriptTag.textContent = JSON.stringify(structuredData);
+}
 
 function renderPersonalData(data) {
   if (data.hero) {

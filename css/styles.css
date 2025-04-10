@@ -1143,3 +1143,39 @@ body.menu-open {
     max-width: none;
   }
 }
+
+/* Shield Shine Effect */
+@keyframes shieldShine {
+  0% {
+    color: #1b202b;
+    text-shadow: none;
+  }
+
+  40% {
+    color: #ffffff;
+    text-shadow: 0 0 15px var(--primary), 0 0 30px var(--primary), 0 0 45px var(--primary);
+  }
+
+  60% {
+    color: #ffffff;
+    text-shadow: 0 0 15px var(--primary), 0 0 30px var(--primary), 0 0 45px var(--primary);
+  }
+
+  100% {
+    color: #1b202b;
+    text-shadow: none;
+  }
+}
+
+.shield-icon {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.shield-icon:hover {
+  transform: scale(1.05);
+}
+
+.shield-icon.shining {
+  animation: shieldShine 1.2s ease-in-out;
+}
