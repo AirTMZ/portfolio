@@ -154,15 +154,6 @@
             <i class="fa-solid fa-envelope contact-icon"></i>
             <span>Email Me</span>
           </a>
-          
-          <script>
-            const user = "tim";
-            const domain = "tmitchell.uk";
-            const link = document.getElementById("email-link");
-            const address = `${user}@${domain}`;
-            link.setAttribute("href", `mailto:${address}`);
-          </script>
-
 
           <a href="https://github.com/AirTMZ/" class="contact-link" target="_blank">
             <i class="fa-brands fa-github contact-icon"></i>
@@ -181,11 +172,18 @@
   <div id="notification-container"></div>
 
   <footer>
-    <p>v3.1.6 &copy; Timothy Mitchell</p>
+    <p>v3.1.7 &copy; Timothy Mitchell</p>
   </footer>
 
   <script src="js/script.js"></script>
-  <script src="js/animations.js"></script>
+  <script src="js/animations.js"></script>   
+  <script>
+    const user = "tim";
+    const domain = "tmitchell.uk";
+    const link = document.getElementById("email-link");
+    const address = `${user}@${domain}`;
+    link.setAttribute("href", `mailto:${address}`);
+  </script>
 </body>
 
 </html>
