@@ -1,11 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta http-equiv="refresh" content="0; url=https://www.gov.uk/find-a-job">
-  <meta name="robots" content="noindex">
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="3; url=https://www.gov.uk/find-a-job" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Redirecting...</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .redirect-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .redirect-container h1 {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .redirect-container p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+    .redirect-container a {
+      color: var(--primary);
+      text-decoration: underline;
+      margin-top: 1rem;
+      display: inline-block;
+    }
+  </style>
 </head>
 <body>
-  <p>If you are not redirected automatically, <a href="https://www.gov.uk/find-a-job">click here</a>.</p>
+  <div class="redirect-container">
+    <h1>Redirecting...</h1>
+    <p>You are being sent to the UK Government's job portal.</p>
+    <a href="https://www.gov.uk/find-a-job">Click here if not redirected</a>
+  </div>
 </body>
 </html>
