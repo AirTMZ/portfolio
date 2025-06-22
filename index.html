@@ -150,6 +150,7 @@
         <h2 class="section-title">Get In Touch</h2>
         <p>Interested in getting in touch? Feel free to reach out.</p>
 
+        <div class="contact-links">
           <a href="#" class="contact-link" id="email-link">
             <i class="fa-solid fa-envelope contact-icon"></i>
             <span>Email Me</span>
@@ -172,17 +173,21 @@
   <div id="notification-container"></div>
 
   <footer>
-    <p>v3.1.7 &copy; Timothy Mitchell</p>
+    <p>v3.1.5 &copy; Timothy Mitchell</p>
   </footer>
 
   <script src="js/script.js"></script>
-  <script src="js/animations.js"></script>   
+  <script src="js/animations.js"></script>
   <script>
-    const user = "tim";
-    const domain = "tmitchell.uk";
-    const link = document.getElementById("email-link");
-    const address = `${user}@${domain}`;
-    link.setAttribute("href", `mailto:${address}`);
+    document.getElementById('email-link').addEventListener('click', function(event) {
+        event.preventDefault();
+
+        const user = 'tim';
+        const domain = 'tmitchell.uk';
+
+        const mailtoLink = `mailto:${user}@${domain}?subject=${subject}&body=${body}`;
+        window.location.href = mailtoLink;
+    });
   </script>
 </body>
 
