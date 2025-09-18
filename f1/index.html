@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Redirecting...</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      background: #3cb3a6;
+    }
+  </style>
+  <script>
+    const urls = [
+      "https://docs.google.com/forms/d/e/1FAIpQLSfHekCmgK1W2mmB26nazk0MsHgt4GkNmnKsfjIO7Aok8j2cSw/viewform",
+      "https://tmitchell.uk/second-form",
+      "https://tmitchell.uk/third-form"
+    ];
+
+    // Only support ?=1 (no parameter name)
+    let qr;
+    const match = window.location.search.match(/^\?=([0-9]+)/);
+    if (match) {
+      qr = parseInt(match[1], 10);
+    }
+    if (!isNaN(qr) && qr >= 1 && qr <= urls.length) {
+      window.location.href = urls[qr - 1];
+    } else {
+      window.location.href = urls[0];
+    }
+  </script>
+</head>
+
+<body>
+</body>
+
+</html>
