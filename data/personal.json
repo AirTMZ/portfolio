@@ -1,32 +1,18 @@
 {
   "hero": {
-    "title": "Full Stack .NET Dev & CyberSec Student",
-    "description": "Cyber Security student and aspiring Financial Threat Intelligence Analyst."
+    "title": "Security Engineer",
+    "description": "Cyber Security student and Security Engineer focused on practical work, regulated environments, and clear communication."
   },
   "about": {
     "intro": [
-      "I'm a Cyber Security student and aspiring Financial Threat Intelligence Analyst currently pursuing a Bachelor's Degree in Computer Security at Cardiff Metropolitan University. As an out-of-the-box problem solver, I'm passionate about CyberSecurity, Computer Science, and Music.",
-      "Beyond my academic pursuits, I was the Principal Clarinettist for many national orchestras, a BBC Young Musician of the Year clarinet finalist, and was a private music tutor from 2016 until the start of University in 2023. I've almost completed the South West Coastal Path challenge with my father and earned my Gold Duke of Edinburgh Award."
-    ],
-    "skills": [
-      "Python",
-      "Software Engineering",
-      "Team Leadership",
-      "Windows, Linux, MacOS",
-      "Report Writing",
-      "Legal Compliance",
-      "SAT Training",
-      "Project Management",
-      "Teaching",
-      "Figma"
+      "I’m a Security Engineer and Computer Security student at Cardiff Metropolitan University. I spend most of my time around practical security work, threat analysis, and writing things up in a way that makes sense.",
+      "I like taking ownership, working in structured environments, and turning technical detail into something people can actually use."
     ],
     "certifications": [
       "PaloAlto Level 2 Security",
       "CyberFirst Defenders",
       "CyberFirst Advanced",
-      "Microsoft Career Essentials in Cybersecurity",
-      "Advanced C#: OOP",
-      "Clarinet ARSM Distinction"
+      "Microsoft Career Essentials in Cybersecurity"
     ],
     "cvUrl": "https://docs.google.com/document/u/0/export?format=pdf&id=1wELI5Wbf41rFZbf_DhGimQZM1H_IAMcYpjTuBrVuch8&token=AC4w5Vg3knIzmRiuJS4zviu1vPYpy0P73Q%3A1742596723316&ouid=107190701232291018606&includes_info_params=true&usp=docs_home&cros_files=false&tab=t.0"
   }

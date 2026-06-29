@@ -1,34 +1,24 @@
 [
   {
-    "title": "Portfolio Website",
+    "title": "RandoSeed",
     "status": "in-development",
     "statusIcon": "fa-clock",
-    "description": "Personal portfolio website showcasing my projects, skills, and professional experience.",
-    "tags": [
-      "HTML",
-      "CSS",
-      "JavaScript"
-    ],
+    "description": "An entropy experiment inspired by cryptographic thinking, exploring how unpredictable inputs can be combined into safer random values.",
     "links": [
       {
-        "url": "https://github.com/AirTMZ/Portfolio-Website",
+        "url": "https://github.com/AirTMZ/RandoSeed",
         "icon": "fa-brands fa-github",
         "text": "GitHub",
         "type": "outline"
       }
     ],
-    "image": "images/projects/portfolio-website-thumbnail.jpg"
+    "image": "images/projects/randoseed-thumbnail.jpg"
   },
   {
     "title": "Tub-Takes-Bot",
     "status": "complete",
     "statusIcon": "fa-check-circle",
-    "description": "A Discord bot that works with the Tub-Takes website for the r/GFUEL community to provide a slew of different statistics with weighted tier lists to 27k+ members.",
-    "tags": [
-      "Python",
-      "PM2",
-      "Server Management"
-    ],
+    "description": "Automation and moderation bot that supports a large community platform with statistics, workflow handling, and reliable server-side execution.",
     "links": [
       {
         "url": "https://github.com/AirTMZ/Tub-Takes-Bot",
@@ -43,12 +33,7 @@
     "title": "Tub-Takes",
     "status": "complete",
     "statusIcon": "fa-check-circle",
-    "description": "A tier list website developed for the r/GFUEL discord and Reddit communities to rank and categorize products.",
-    "tags": [
-      "JavaScript",
-      "HTML/CSS",
-      "Web Development"
-    ],
+    "description": "Community web platform focused on structured ranking, categorisation, and dependable front-end delivery.",
     "links": [
       {
         "url": "https://tubtakes.tmitchell.uk/",
@@ -66,35 +51,10 @@
     "image": "images/projects/tub-takes-thumbnail.jpg"
   },
   {
-    "title": "RandoSeed",
-    "status": "in-development",
-    "statusIcon": "fa-clock",
-    "description": "A truly random generator using physical and unpredictable external indicators to produce cryptographically secure random values.",
-    "tags": [
-      "Python",
-      "Cryptography",
-      "Security"
-    ],
-    "links": [
-      {
-        "url": "https://github.com/AirTMZ/RandoSeed",
-        "icon": "fa-brands fa-github",
-        "text": "GitHub",
-        "type": "outline"
-      }
-    ],
-    "image": "images/projects/randoseed-thumbnail.jpg"
-  },
-  {
     "title": "RoomAllocation",
     "status": "complete",
     "statusIcon": "fa-check-circle",
-    "description": "A simple room allocation website that determines the best, fairest, and most favorable room assignments for shared living situations.",
-    "tags": [
-      "JavaScript",
-      "Algorithm Design",
-      "Web App"
-    ],
+    "description": "Decision-support web app that automates fair room allocation with clear logic and predictable outcomes.",
     "links": [
       {
         "url": "http://rooms.tmitchell.uk/",
@@ -110,25 +70,5 @@
       }
     ],
     "image": "images/projects/roomallocation-thumbnail.jpg"
-  },
-  {
-    "title": "SpotiPlay",
-    "status": "complete",
-    "statusIcon": "fa-check-circle",
-    "description": "A C# .NET app that merges different profiles' favorite songs into a shared playlist (created before Spotify Blend existed).",
-    "tags": [
-      "C#",
-      ".NET",
-      "Spotify API"
-    ],
-    "links": [
-      {
-        "url": "https://github.com/AirTMZ/SpotiPlay",
-        "icon": "fa-brands fa-github",
-        "text": "GitHub",
-        "type": "outline"
-      }
-    ],
-    "image": "images/projects/spotiplay-thumbnail.jpg"
   }
 ]

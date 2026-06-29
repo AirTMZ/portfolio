@@ -24,19 +24,19 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   try {
+    const experienceResponse = await fetch('data/experience.json');
+    const experience = await experienceResponse.json();
+    renderExperience(experience);
+  } catch (error) {
+    console.error('Error loading experience data:', error);
+  }
+
+  try {
     const educationResponse = await fetch('data/education.json');
     const education = await educationResponse.json();
     renderEducation(education);
   } catch (error) {
     console.error('Error loading education data:', error);
-  }
-
-  try {
-    const notificationsResponse = await fetch('data/announcements.json');
-    const notifications = await notificationsResponse.json();
-    initNotificationSystem(notifications);
-  } catch (error) {
-    console.error('Error loading notifications:', error);
   }
 
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -50,7 +50,31 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   const menuToggle = document.querySelector('.menu-toggle');
   const navLinks = document.querySelector('.nav-links');
+  const header = document.querySelector('header');
   const body = document.body;
+  let headerIsCollapsed = false;
+
+  const updateHeaderState = () => {
+    if (!header) {
+      return;
+    }
+
+    const scrollPosition = window.scrollY;
+
+    if (!headerIsCollapsed && scrollPosition > 36) {
+      headerIsCollapsed = true;
+      header.classList.add('scrolled');
+      return;
+    }
+
+    if (headerIsCollapsed && scrollPosition < 20) {
+      headerIsCollapsed = false;
+      header.classList.remove('scrolled');
+    }
+  };
+
+  updateHeaderState();
+  window.addEventListener('scroll', updateHeaderState, { passive: true });
 
   if (menuToggle) {
     menuToggle.addEventListener('click', () => {
@@ -76,47 +100,33 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
   });
 
-  const favicons = [
-    'alien.ico',
-    'grin.ico',
-    'monkey.ico',
-    'nerd.ico',
-    'oni.ico',
-    'cowboy.ico',
-    'robot.ico',
-    'sleep.ico',
-    'smile.ico',
-    'wink.ico'
-  ];
-
-  // Add shield icon shine effect
-  const shieldIcon = document.getElementById('shield-icon');
-  if (shieldIcon) {
-    shieldIcon.addEventListener('click', function() {
-      // Prevent multiple animations from running simultaneously
-      if (!this.classList.contains('shining')) {
-        this.classList.add('shining');
-
-        // Remove the class when animation completes to allow clicking again
-        setTimeout(() => {
-          this.classList.remove('shining');
-        }, 1200); // Match the animation duration
-      }
-    });
-  }
-
-  function getRandomFavicon() {
-    let previousFavicon = localStorage.getItem('previousFavicon');
-    let newFavicon;
-    do {
-      newFavicon = favicons[Math.floor(Math.random() * favicons.length)];
-    } while (newFavicon === previousFavicon);
-    localStorage.setItem('previousFavicon', newFavicon);
-    return newFavicon;
-  }
-
   const faviconElement = document.getElementById('dynamic-favicon');
-  faviconElement.href = `images/favicons/${getRandomFavicon()}`;
+  const faviconPaths = [
+    'images/favicons/cowboy.ico',
+    'images/favicons/oni.ico',
+    'images/favicons/sleep.ico',
+    'images/favicons/smile.ico',
+    'images/favicons/monkey.ico',
+    'images/favicons/grin.ico',
+    'images/favicons/robot.ico',
+    'images/favicons/nerd.ico',
+    'images/favicons/alien.ico',
+    'images/favicons/wink.ico'
+  ];
+  let faviconIndex = Math.floor(Math.random() * faviconPaths.length);
+
+  const applyFavicon = () => {
+    if (!faviconElement) {
+      return;
+    }
+
+    faviconElement.type = 'image/x-icon';
+    faviconElement.href = faviconPaths[faviconIndex];
+    faviconIndex = (faviconIndex + 1) % faviconPaths.length;
+  };
+
+  applyFavicon();
+  setInterval(applyFavicon, 4000);
 });
 
 function applyMetadata(metadata) {
@@ -135,14 +145,14 @@ function applyMetadata(metadata) {
     'og:description': metadata.description,
     'og:type': 'website',
     'og:url': metadata.siteUrl,
-    'og:image': `${metadata.siteUrl}/images/personal/profile-social.jpg`,
+    'og:image': `${metadata.siteUrl}/images/personal/pfp.jpg`,
 
     // Twitter Card meta tags
     'twitter:card': 'summary_large_image',
     'twitter:site': metadata.social.twitter,
     'twitter:title': metadata.title,
     'twitter:description': metadata.description,
-    'twitter:image': `${metadata.siteUrl}/images/personal/profile-social.jpg`
+    'twitter:image': `${metadata.siteUrl}/images/personal/pfp.jpg`
   };
 
   // Apply meta tags
@@ -177,7 +187,7 @@ function applyMetadata(metadata) {
     'name': 'Timothy Mitchell',
     'url': metadata.siteUrl,
     'image': `${metadata.siteUrl}/images/personal/pfp.jpg`,
-    'jobTitle': 'Full Stack .NET Developer & Cyber Security Student',
+    'jobTitle': 'Security Engineer',
     'sameAs': [
       `https://www.linkedin.com/in/${metadata.social.linkedinUsername}/`,
       `https://github.com/AirTMZ/`,
@@ -204,6 +214,11 @@ function renderPersonalData(data) {
   }
 
   if (data.about) {
+    const ageYearsElement = document.getElementById('age-years');
+    if (ageYearsElement) {
+      ageYearsElement.textContent = String(calculateAgeYears('2004-04-11'));
+    }
+
     const whoAmITitle = document.querySelector('.about-content .skill-title');
 
     let existingParagraphs = document.querySelectorAll('.about-content .about-text');
@@ -217,17 +232,6 @@ function renderPersonalData(data) {
       currentElement.insertAdjacentElement('afterend', p);
       currentElement = p;
     });
-
-    const skillsContainer = document.getElementById('skills-container');
-    if (skillsContainer) {
-      skillsContainer.innerHTML = '';
-      data.about.skills.forEach(skill => {
-        const span = document.createElement('span');
-        span.className = 'skill';
-        span.textContent = skill;
-        skillsContainer.appendChild(span);
-      });
-    }
 
     const certContainer = document.getElementById('certifications-container');
     if (certContainer) {
@@ -245,6 +249,20 @@ function renderPersonalData(data) {
       cvLink.href = data.about.cvUrl;
     }
   }
+}
+
+function calculateAgeYears(birthDateString) {
+  const birthDate = new Date(`${birthDateString}T00:00:00`);
+  const today = new Date();
+
+  let ageYears = today.getFullYear() - birthDate.getFullYear();
+  const monthDifference = today.getMonth() - birthDate.getMonth();
+
+  if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+    ageYears -= 1;
+  }
+
+  return ageYears;
 }
 
 function renderProjects(projects) {
@@ -268,11 +286,6 @@ function renderProjects(projects) {
       </a>`;
     });
 
-    let tagsHTML = '';
-    project.tags.forEach(tag => {
-      tagsHTML += `<span class="tag">${tag}</span>`;
-    });
-
     projectCard.innerHTML = `
       <div class="project-image">
         <img src="${project.image}" alt="${project.title} Thumbnail">
@@ -283,9 +296,6 @@ function renderProjects(projects) {
           <i class="fa-solid ${project.statusIcon}"></i> ${project.status === 'complete' ? 'Complete' : 'In Development'}
         </div>
         <p class="project-description">${project.description}</p>
-        <div class="project-tags">
-          ${tagsHTML}
-        </div>
         <div class="project-buttons">
           ${linksHTML}
         </div>
@@ -293,6 +303,40 @@ function renderProjects(projects) {
     `;
 
     container.appendChild(projectCard);
+  });
+}
+
+function renderExperience(experience) {
+  const container = document.getElementById('experience-container');
+
+  if (!container) {
+    console.error('Experience container not found');
+    return;
+  }
+
+  container.innerHTML = '';
+
+  experience.forEach(item => {
+    const experienceCard = document.createElement('div');
+    experienceCard.className = 'experience-card';
+
+    let highlightsHTML = '';
+    item.highlights.forEach(highlight => {
+      highlightsHTML += `<li>${highlight}</li>`;
+    });
+
+    experienceCard.innerHTML = `
+      <div class="experience-topline">
+        <div class="experience-company">${item.company}</div>
+        <div class="experience-date">${item.date}</div>
+      </div>
+      <p class="experience-summary">${item.summary}</p>
+      <ul class="experience-highlights">
+        ${highlightsHTML}
+      </ul>
+    `;
+
+    container.appendChild(experienceCard);
   });
 }
 
@@ -306,9 +350,10 @@ function renderEducation(education) {
 
   container.innerHTML = '';
 
-  education.forEach(item => {
+  education.forEach((item, index) => {
     const timelineItem = document.createElement('div');
-    timelineItem.className = `timeline-item ${item.position}`;
+    const position = item.position || (index % 2 === 0 ? 'left' : 'right');
+    timelineItem.className = `timeline-item ${position}`;
 
     timelineItem.innerHTML = `
       <div class="timeline-content">
@@ -320,60 +365,4 @@ function renderEducation(education) {
 
     container.appendChild(timelineItem);
   });
-}
-
-function initNotificationSystem(notifications) {
-  const container = document.getElementById('notification-container');
-  if (!container) return;
-
-  // Filter active notifications
-  const activeNotifications = notifications.filter(notif => notif.active);
-  if (activeNotifications.length === 0) return;
-
-  // Process each notification
-  activeNotifications.forEach((notification, index) => {
-    // Check if this notification has been dismissed in this session
-    const dismissed = sessionStorage.getItem(`dismissed-notification-${notification.id}`);
-    if (dismissed) return;
-
-    // Create notification element
-    const notificationEl = document.createElement('div');
-    notificationEl.className = 'notification';
-    notificationEl.innerHTML = `
-      <div class="notification-icon">
-        <i class="fa-solid fa-circle-info"></i>
-      </div>
-      <div class="notification-content">
-        <div class="notification-message">${notification.text}</div>
-      </div>
-      <button class="notification-close">×</button>
-    `;
-
-    // Add to container
-    container.appendChild(notificationEl);
-
-    // Set delay for staggered appearance
-    setTimeout(() => {
-      notificationEl.classList.add('active');
-    }, 300 * index);
-
-    // Close button functionality
-    const closeBtn = notificationEl.querySelector('.notification-close');
-    closeBtn.addEventListener('click', () => {
-      dismissNotification(notificationEl, notification.id);
-    });
-  });
-}
-
-function dismissNotification(element, id) {
-  if (!element.classList.contains('active')) return;
-
-  element.classList.remove('active');
-  // Use sessionStorage instead of localStorage
-  sessionStorage.setItem(`dismissed-notification-${id}`, 'true');
-
-  // Remove from DOM after animation completes
-  setTimeout(() => {
-    element.remove();
-  }, 500);
 }

@@ -1,0 +1,23 @@
+[
+  {
+    "company": "Lloyds Banking Group",
+    "date": "Jun 2025 - Aug 2026",
+    "summary": "Security Engineer within the Adaptive Edge Security and Routing (Protect) team in the Digital Edge and Cyber Security platform.",
+    "highlights": [
+      "Own BAU security operations, including Akamai Security Engine upgrades, WAF and bot management policy governance, and certificate lifecycle management",
+      "Manage the team incident queue and help coordinate the investigation and resolution of security incidents",
+      "Write technical justification and risk documentation to support secure change across pre-production and production environments",
+      "Contributed to enterprise-scale incident management and received the annual Excellence Award"
+    ]
+  },
+  {
+    "company": "Serve Legal",
+    "date": "Apr 2024 - Present",
+    "summary": "Legal Compliance Auditor carrying out social engineering audits in a regulated environment.",
+    "highlights": [
+      "Conduct physical social engineering audits to test business resilience against legal and regulatory requirements",
+      "Write clear and accurate reports so businesses can see where training or policy needs improving",
+      "Independently manage a high volume of time-sensitive audits with accuracy and thoroughness"
+    ]
+  }
+]
