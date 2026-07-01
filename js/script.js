@@ -248,6 +248,7 @@ function renderPersonalData(data) {
     if (cvLink && data.about.cvUrl) {
       cvLink.href = data.about.cvUrl;
     }
+
   }
 }
 

@@ -8,7 +8,8 @@
 
   <meta name="description"
     content="Portfolio of Timothy Mitchell, a security engineer focused on threat analysis, secure systems, and practical cyber work.">
-  <meta name="keywords" content="Timothy Mitchell, Security Engineer, Cyber Security, Threat Analysis, Vulnerability Research, Portfolio">
+  <meta name="keywords"
+    content="Timothy Mitchell, Security Engineer, Cyber Security, Threat Analysis, Vulnerability Research, Portfolio">
   <meta name="author" content="Timothy Mitchell">
   <meta name="robots" content="index, follow">
 
@@ -41,32 +42,36 @@
   <div class="container">
     <header>
       <nav>
-        <div class="logo">Timothy Mitchell</div>
+        <div class="nav-brand">
+          <img class="nav-avatar" src="images/personal/pfp.jpg" alt="Timothy Mitchell profile photo">
+          <div class="logo">Timothy Mitchell</div>
+        </div>
         <div class="menu-toggle">
           <span></span>
           <span></span>
           <span></span>
         </div>
         <div class="nav-links">
-            <a href="#projects">Projects</a>
-            <a href="#experience">Experience</a>
-            <a href="#about">About</a>
-            <a href="#education">Route</a>
-            <a href="#contact">Contact</a>
+          <a href="#about">About</a>
+          <a href="#experience">Experience</a>
+          <a href="#projects">Projects</a>
+          <a href="#education">Route</a>
+          <a href="#contact">Contact</a>
         </div>
       </nav>
     </header>
 
     <section class="hero">
       <div class="hero-content">
-          <h1>Hi, I’m Timothy Mitchell.</h1>
-          <p>Cyber Security student and Security Engineer focused on practical work, clear communication, and regulated environments.</p>
+        <h1>Hi, I’m Timothy Mitchell.</h1>
+        <p>Cyber Security student and Security Engineer focused on practical work, clear communication, and regulated
+          environments.</p>
         <div class="hero-links">
           <a href="#projects" class="btn btn-primary">
-              View Projects
+            View Projects
           </a>
           <a href="#contact" class="btn btn-outline">
-              Contact Me
+            Contact Me
           </a>
         </div>
       </div>
@@ -79,8 +84,10 @@
         <div class="about-content">
           <p class="about-name">Timothy Mitchell, <span id="age-years">22</span></p>
           <h3 class="skill-title">Who am I?</h3>
-          <p class="about-text">I’m a Security Engineer and Computer Security student at Cardiff Metropolitan University, with a focus on practical security work, threat analysis, and writing things up clearly.</p>
-          <p class="about-text">I like taking ownership, working in structured environments, and turning technical detail into something useful for people making decisions.</p>
+          <p class="about-text">I’m a Security Engineer and Computer Security student at Cardiff Metropolitan
+            University, with a focus on practical security work, threat analysis, and writing things up clearly.</p>
+          <p class="about-text">I like taking ownership, working in structured environments, and turning technical
+            detail into something useful for people making decisions.</p>
 
           <h3 class="skill-title">Certifications</h3>
           <div id="certifications-container" class="skills">
@@ -159,16 +166,16 @@
     <p>v1.0.0 &copy; Timothy Mitchell</p>
   </footer>
 
-  <script src="js/script.js"></script>
+  <script src="js/script.js?v=20260701c"></script>
   <script>
-    document.getElementById('email-link').addEventListener('click', function(event) {
-    event.preventDefault();
+    document.getElementById('email-link').addEventListener('click', function (event) {
+      event.preventDefault();
 
-    const user = 'tim';
-    const domain = 'tmitchell.uk';
+      const user = 'tim';
+      const domain = 'tmitchell.uk';
 
-    const mailtoLink = `mailto:${user}@${domain}`;
-    window.location.href = mailtoLink;
+      const mailtoLink = `mailto:${user}@${domain}`;
+      window.location.href = mailtoLink;
     });
   </script>
 
