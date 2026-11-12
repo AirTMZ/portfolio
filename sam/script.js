@@ -3984,6 +3984,54 @@ function triggerSamKill(title, reason) {
   updateSamCamUI();
 }
 
+// Pickup: walk over a mess item to grab it — if hands empty, or auto-swap
+// onto an urgent stinky item. Used by both the PLAYING update and the
+// KILL_ANIM (lunge) update. Previously this block only lived in PLAYING,
+// so walking over an item while Sam lunged did nothing. Mirrors the
+// tryDepositHeldItem() fix: same rules, same bird block, same swap.
+function tryPickupMessItems() {
+  // 4. Pick up mess items automatically when walking over them (if hands empty, or auto-swap onto an urgent stinky item!)
+  for (let i = items.length - 1; i >= 0; i--) {
+    const item = items[i];
+    if (item.scatterProgress < 1 || item.pickupCooldown > 0) continue;
+    const canGrab = !player.holding || (item.isStinky && !player.holding.isStinky);
+    if (!canGrab) continue;
+
+    const dist = Math.hypot(player.x - item.x, player.y - item.y);
+    if (dist < player.radius + 20) {
+      if (windowBird.state === 'HARASSING') {
+        if (windowBird.remindCooldown <= 0) {
+          windowBird.remindCooldown = 1.1;
+          spawnFloatingText('BIRD BLOCKING HANDS! PRESS [SPACE] TO SHOO!', player.x, player.y - 38, '#f59e0b');
+        }
+        break;
+      }
+      if (player.holding) {
+        const swapped = player.holding;
+        swapped.x = Math.max(175, Math.min(660, player.x - Math.cos(player.facingAngle) * 44));
+        swapped.y = Math.max(185, Math.min(660, player.y - Math.sin(player.facingAngle) * 44));
+        swapped.targetX = swapped.x;
+        swapped.targetY = swapped.y;
+        swapped.scatterProgress = 1;
+        swapped.pickupCooldown = 0.85;
+        items.push(swapped);
+      }
+      player.holding = item;
+      items.splice(i, 1);
+      playSound('pickup');
+      spawnFloatingText(
+        item.isStinky
+          ? `STINKY ${item.type === 'sock' ? 'SOCK' : 'PIZZA'}! SORT IN ${item.stinkTimer.toFixed(1)}s!`
+          : getNextSituationalPhrase(item.type),
+        player.x,
+        player.y - 28,
+        item.isStinky ? '#a3e635' : item.isHeavy ? '#f59e0b' : '#fde047'
+      );
+      break;
+    }
+  }
+}
+
 // Deposit: if you're holding an item and standing in its matching
 // drop-off container, put it in — even mid-lunge. Used by both the
 // PLAYING update and the KILL_ANIM (lunge) update. Previously this
@@ -4208,6 +4256,21 @@ function update(dt) {
         return;
       }
     }
+
+    // Pickup works mid-lunge too, same as deposit: walk over an item
+    // while fleeing and you grab it (or auto-swap onto a stinky one).
+    // Cooldowns still tick here, otherwise an item dropped just before
+    // the lunge (Q, bird fling, stinky swap) would stay unpickable for
+    // the whole lunge. Stink timers stay frozen mid-lunge — Sam is
+    // already lunging, so expiring shouldn't re-trigger a kill.
+    // Pickup runs before deposit so one frame can do both, exactly
+    // like the PLAYING update (grab, then drop it in if you're at its bin).
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].pickupCooldown > 0) {
+        items[i].pickupCooldown = Math.max(0, items[i].pickupCooldown - dt);
+      }
+    }
+    tryPickupMessItems();
 
     // Deposit works mid-lunge too: if you're holding the pizza and you
     // reach its bin while waiting for the perfect block, it goes in.
@@ -4758,46 +4821,7 @@ function update(dt) {
     return;
   }
 
-  // 4. Pick up mess items automatically when walking over them (if hands empty, or auto-swap onto an urgent stinky item!)
-  for (let i = items.length - 1; i >= 0; i--) {
-    const item = items[i];
-    if (item.scatterProgress < 1 || item.pickupCooldown > 0) continue;
-    const canGrab = !player.holding || (item.isStinky && !player.holding.isStinky);
-    if (!canGrab) continue;
-
-    const dist = Math.hypot(player.x - item.x, player.y - item.y);
-    if (dist < player.radius + 20) {
-      if (windowBird.state === 'HARASSING') {
-        if (windowBird.remindCooldown <= 0) {
-          windowBird.remindCooldown = 1.1;
-          spawnFloatingText('BIRD BLOCKING HANDS! PRESS [SPACE] TO SHOO!', player.x, player.y - 38, '#f59e0b');
-        }
-        break;
-      }
-      if (player.holding) {
-        const swapped = player.holding;
-        swapped.x = Math.max(175, Math.min(660, player.x - Math.cos(player.facingAngle) * 44));
-        swapped.y = Math.max(185, Math.min(660, player.y - Math.sin(player.facingAngle) * 44));
-        swapped.targetX = swapped.x;
-        swapped.targetY = swapped.y;
-        swapped.scatterProgress = 1;
-        swapped.pickupCooldown = 0.85;
-        items.push(swapped);
-      }
-      player.holding = item;
-      items.splice(i, 1);
-      playSound('pickup');
-      spawnFloatingText(
-        item.isStinky
-          ? `STINKY ${item.type === 'sock' ? 'SOCK' : 'PIZZA'}! SORT IN ${item.stinkTimer.toFixed(1)}s!`
-          : getNextSituationalPhrase(item.type),
-        player.x,
-        player.y - 28,
-        item.isStinky ? '#a3e635' : item.isHeavy ? '#f59e0b' : '#fde047'
-      );
-      break;
-    }
-  }
+  tryPickupMessItems();
 
   // 5. Check if player reached the matching drop-off container while holding an item
   tryDepositHeldItem();
