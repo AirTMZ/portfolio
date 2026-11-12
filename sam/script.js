@@ -32,6 +32,7 @@ const startSamCanvas = document.getElementById('start-sam-canvas');
 const gameoverSamCanvas = document.getElementById('gameover-sam-canvas');
 const cutsceneCanvas = document.getElementById('cutscene-canvas');
 const cutsceneShell = document.getElementById('cutscene-shell');
+const cutsceneSkipLabel = document.querySelector('.cutscene-skip-label');
 
 // Map Selector & Unlock Toast UI Elements
 const mapBtnBedroom = document.getElementById('map-btn-bedroom');
@@ -1358,8 +1359,8 @@ function stopVacuumSound() {
 // ============================================================================
 // MULTI-MAP CONFIGURATIONS (1: Bedroom, 2: The Lounge, 3: The Backyard)
 // ============================================================================
-const LOUNGE_UNLOCK_SCORE = 1000; // $1,000 in Bedroom (20 items @ $50) unlocks The Lounge!
-const GARDEN_UNLOCK_SCORE = 1500; // $1,500 in The Lounge (20 items @ $75) unlocks The Backyard!
+const LOUNGE_UNLOCK_SCORE = 2000; // $2,500 in Bedroom (20 items @ $50) unlocks The Lounge!
+const GARDEN_UNLOCK_SCORE = 3000; // $3,000 in The Lounge (20 items @ $75) unlocks The Backyard!
 const UNLOCKED_MAPS_KEY = 'dont_wake_sam_unlocked_maps_v1';
 
 let unlockedMaps = {
@@ -2384,6 +2385,72 @@ function hideCutsceneShell() {
   clearCutsceneCanvas();
 }
 
+// Per-cutscene first watch: localStorage detector, one entry per map.
+// Bedroom, lounge, and garden each get their own first watch — watching
+// bedroom does NOT unlock skipping lounge or garden. Each cutscene is
+// unskippable the first time THAT map's cutscene is seen, skippable every
+// time after that map has finished naturally once. Refreshing does NOT
+// reset it (it's localStorage, not session), but the lunge demo still
+// replays after a refresh if you watch the whole intro cutscene — that
+// demo is gated on introCutsceneWatched (this session), not on this flag.
+// Dev menu can toggle/reset all flags for testing (see runCheatAction).
+const CUTSCENE_SEEN_KEY = 'dont_wake_sam_cutscene_seen_v1';
+const CUTSCENE_MAPS = ['bedroom', 'lounge', 'garden'];
+function getSeenCutscenes() {
+  try {
+    const raw = localStorage.getItem(CUTSCENE_SEEN_KEY);
+    if (!raw) return {};
+    if (raw === '1') {
+      // Old single-flag format: that could only have come from the first
+      // cutscene, which is bedroom — migrate it to bedroom-only.
+      return { bedroom: true };
+    }
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') return parsed;
+    return {};
+  } catch (e) {
+    return {};
+  }
+}
+function hasEverCompletedCutscene(mapId) {
+  const id = mapId || cutsceneMap || currentMap;
+  if (!id) return false;
+  return Boolean(getSeenCutscenes()[id]);
+}
+function markCutsceneSeen(mapId) {
+  const id = mapId || cutsceneMap || currentMap;
+  if (!id) return;
+  try {
+    const seen = getSeenCutscenes();
+    seen[id] = true;
+    localStorage.setItem(CUTSCENE_SEEN_KEY, JSON.stringify(seen));
+  } catch (e) {}
+}
+function canSkipCutscene(mapId) {
+  return hasEverCompletedCutscene(mapId);
+}
+function allCutscenesSeen() {
+  return CUTSCENE_MAPS.every((m) => hasEverCompletedCutscene(m));
+}
+function refreshCutsceneSkipToggle() {
+  document.querySelectorAll('[data-cheat-action="toggle-cutscene-skip"]').forEach((btn) => {
+    btn.textContent = allCutscenesSeen() ? 'CUTSCENE SKIP: ON (ALL SEEN)' : 'CUTSCENE SKIP: OFF — RESET ALL';
+  });
+}
+function updateCutsceneSkipLabel() {
+  // No "cannot skip" title: on a first watch the skip prompt just isn't
+  // there. If you see the prompt, you can skip; if you don't, you can't.
+  if (cutsceneSkipLabel && cutsceneMap) {
+    if (canSkipCutscene(cutsceneMap)) {
+      cutsceneSkipLabel.textContent = 'PRESS SPACE / ENTER / ESC TO SKIP';
+      cutsceneSkipLabel.style.display = '';
+    } else {
+      cutsceneSkipLabel.style.display = 'none';
+    }
+  }
+  refreshCutsceneSkipToggle();
+}
+
 function beginMapCutscene(mapId) {
   if (cutscenesSeenThisSession.has(mapId)) {
     // Play-once-per-session is the correct rule — but "not playing" must
@@ -2406,6 +2473,7 @@ function beginMapCutscene(mapId) {
   cutsceneOutroStep = -1; // a new cutscene cancels any pending ending
   gameState = 'CUTSCENE';
   cutsceneShell?.classList.add('active');
+  updateCutsceneSkipLabel();
   return true;
 }
 
@@ -2415,8 +2483,22 @@ function endMapCutscene(watched = false) {
   // call this with watched=false, so they never unlock the tutorial.
   const finishedMap = cutsceneMap;
   const wasInCutscene = gameState === 'CUTSCENE';
-  if (wasInCutscene && watched && finishedMap === 'bedroom') {
-    introCutsceneWatched = true;
+  // First watch of THIS cutscene cannot be skipped: if this map's
+  // cutscene has never finished naturally, a watched=false end is a skip
+  // attempt — stay in CUTSCENE and keep playing. Natural finishes
+  // (watched=true) and leaked-still dismissals (wasInCutscene=false)
+  // always go through.
+  // Returns false when blocked, true when it actually ended/dismissed.
+  if (wasInCutscene && !watched && !canSkipCutscene(finishedMap)) {
+    updateCutsceneSkipLabel();
+    return false;
+  }
+  if (wasInCutscene && watched) {
+    // First natural finish of THIS map unlocks skipping that map forever after.
+    markCutsceneSeen(finishedMap);
+    if (finishedMap === 'bedroom') {
+      introCutsceneWatched = true;
+    }
   }
   hideCutsceneShell();
   cutsceneMap = null;
@@ -2433,6 +2515,8 @@ function endMapCutscene(watched = false) {
     cutsceneOutroStep = 0;
     cutsceneOutroTick = 0;
   }
+  updateCutsceneSkipLabel();
+  return true;
 }
 
 function drawMapCutscene() {
@@ -3794,6 +3878,128 @@ function triggerSamKill(title, reason) {
   updateSamCamUI();
 }
 
+// Deposit: if you're holding an item and standing in its matching
+// drop-off container, put it in — even mid-lunge. Used by both the
+// PLAYING update and the KILL_ANIM (lunge) update. Previously this
+// block only lived in PLAYING, so walking into your bin while Sam
+// lunged did nothing. Returns true if an item was deposited.
+function tryDepositHeldItem() {
+  // 5. Check if player reached the matching drop-off container while holding an item
+  if (player.holding && dropZones[player.holding.type]) {
+    const zone = dropZones[player.holding.type];
+    const distToZone = Math.hypot(player.x - zone.dropX, player.y - zone.dropY);
+    if (distToZone < 56) {
+      const wasStinky = player.holding.isStinky;
+      if (wasStinky) {
+        stinkySortedThisGame++;
+        if (stinkySortedThisGame >= 2) {
+          unlockAchievement('stink_stopper');
+        }
+      }
+      const pts = MAP_CONFIGS[currentMap].itemCash;
+      levelTimer = Math.min(MAX_TIMER_CAP, levelTimer + ITEM_TIME_BONUS);
+      playSound('deposit');
+      itemsSorted++;
+      if (itemsSorted >= 20 && player.lives === 3) {
+        unlockAchievement('sorted_15');
+      }
+      player.holding = null;
+      addScore(pts);
+
+      // Clearing all five refreshes the batch and restores the timer to 20 seconds
+      // only when the current timer has already fallen below that baseline.
+      const clearedAllFive = items.length === 0 && !player.holding;
+      if (clearedAllFive) {
+        spawnFloatingText(
+          `BATCH CLEARED! +$${pts} · TIMER ${levelTimer < BATCH_TIMER_START ? 'RESET TO 20s' : 'KEPT'}`,
+          zone.dropX,
+          zone.dropY - 26,
+          '#facc15'
+        );
+      } else {
+        spawnFloatingText(
+          wasStinky
+            ? `STINK CLEARED! +$${pts}`
+            : `+$${pts}`,
+          zone.dropX,
+          zone.dropY - 24,
+          wasStinky ? '#a3e635' : '#34d399'
+        );
+      }
+      // Knockout Stick spawns at most once every 15 items sorted (plus random past that)
+      if (itemsSorted >= nextStickItemThreshold) {
+        nextStickItemThreshold = itemsSorted + 15 + Math.floor(Math.random() * 8);
+        if (!player.hasStick && !powerups.some((p) => p.type === 'stick')) {
+          spawnPowerupOfType('stick', true);
+          if (!unlockedStick) {
+            unlockedStick = true;
+            playSound('levelup');
+            spawnFloatingText('KNOCKOUT STICK UNLOCKED!', canvas.width / 2, 90, '#facc15');
+          }
+        }
+      }
+
+      if (clearedAllFive) {
+        batchRefreshCount++;
+        if (
+          currentMap === 'lounge' &&
+          batchRefreshCount >= 3 &&
+          !loungeRoombaReleased
+        ) {
+          loungeRoombaReleased = true;
+          roomba.active = true;
+          roomba.state = 'ROAMING';
+          roomba.x = 655;
+          roomba.y = 645;
+          const releaseAngle = -Math.PI * 0.72;
+          roomba.vx = Math.cos(releaseAngle) * roomba.speed;
+          roomba.vy = Math.sin(releaseAngle) * roomba.speed;
+          startVacuumSound();
+          spawnFloatingText('ROOMBA RELEASED FROM THE LOUNGE STAND!', 655, 615, '#f59e0b');
+        }
+        if (levelTimer < BATCH_TIMER_START) {
+          levelTimer = BATCH_TIMER_START;
+        }
+        if (levelTimer >= 21) {
+          unlockAchievement('first_batch');
+        }
+        if (levelTimer >= 18) {
+          cleanBatches++;
+        } else {
+          cleanBatches = 0;
+        }
+        if (cleanBatches >= 5) {
+          unlockAchievement('grandmaster');
+        }
+        if (currentMap === 'lounge') {
+          loungeBatches++;
+          if (loungeBatches >= 3) {
+            unlockAchievement('unlock_lounge');
+          }
+        }
+        if (currentMap === 'garden') {
+          gardenBatches = gardenBirdShook ? gardenBatches + 1 : 0;
+          gardenBirdShook = false;
+          if (gardenBatches >= 3) {
+            unlockAchievement('unlock_garden');
+          }
+        }
+        spawnMessBatch(true);
+        refreshGooHazards(true);
+        updateScoreboardUI();
+        // Ice is a regular refresh reward: every second cleared batch gets one.
+        if (batchRefreshCount % 2 === 0 && !powerups.some((p) => p.type === 'ice')) {
+          spawnPowerupOfType('ice', true);
+          spawnFloatingText('ICE CUBE DROP! EVERY SECOND REFRESH!', canvas.width / 2, 90, '#38bdf8');
+        }
+      }
+
+      return true; // deposited
+    }
+  }
+  return false;
+}
+
 function update(dt) {
   // Tutorial freeze only lives inside a lunge — any exit clears it.
   if (gameState !== 'KILL_ANIM' && lungeTutorialActive) {
@@ -3828,7 +4034,8 @@ function update(dt) {
   }
 
   if (gameState === 'KILL_ANIM') {
-    // Player can still move while Sam lunges towards you!
+    // Player can still move while Sam lunges towards you — except in
+    // the frozen tutorial demo (see below), where movement locks until you block.
     if (player.slowTimer > 0) {
       player.slowTimer = Math.max(0, player.slowTimer - dt);
     }
@@ -3838,17 +4045,27 @@ function update(dt) {
     if (roomba.deflectCooldown > 0) {
       roomba.deflectCooldown = Math.max(0, roomba.deflectCooldown - dt);
     }
-    handlePlayerMovement(dt, false);
+    // Demo freeze: the first-playthrough tutorial lunge where Sam stops
+    // in GOLD so you can read and press SPACE. While he's stopped, you
+    // can't walk around — it looks weird to wander off while he's frozen.
+    // Normal lunges still let you run (e.g. to the bin to deposit).
+    // SPACE / stick / ice still work — this only locks WASD movement.
+    const tutorialDemoFrozen = lungeTutorialActive && lungeTutorialFrozen;
+    if (tutorialDemoFrozen) {
+      player.isMoving = false;
+    } else {
+      handlePlayerMovement(dt, false);
 
-    // Stepping in purple goo still slows you while fleeing
-    for (let i = slowHazards.length - 1; i >= 0; i--) {
-      const haz = slowHazards[i];
-      if (haz.scatterProgress < 1) continue;
-      if (Math.hypot(player.x - haz.x, player.y - haz.y) < player.radius + haz.radius - 6) {
-        slowHazards.splice(i, 1);
-        player.slowTimer = 2.6;
-        playSound('slow');
-        spawnFloatingText('PURPLE GOO! SLOWED!', player.x, player.y - 30, '#c084fc');
+      // Stepping in purple goo still slows you while fleeing
+      for (let i = slowHazards.length - 1; i >= 0; i--) {
+        const haz = slowHazards[i];
+        if (haz.scatterProgress < 1) continue;
+        if (Math.hypot(player.x - haz.x, player.y - haz.y) < player.radius + haz.radius - 6) {
+          slowHazards.splice(i, 1);
+          player.slowTimer = 2.6;
+          playSound('slow');
+          spawnFloatingText('PURPLE GOO! SLOWED!', player.x, player.y - 30, '#c084fc');
+        }
       }
     }
 
@@ -3885,6 +4102,12 @@ function update(dt) {
         return;
       }
     }
+
+    // Deposit works mid-lunge too: if you're holding the pizza and you
+    // reach its bin while waiting for the perfect block, it goes in.
+    // Movement, SPACE, stick, and ice are all untouched — this just
+    // runs the same deposit check the PLAYING update runs.
+    tryDepositHeldItem();
 
     const dx = player.x - sam.attackX;
     const dy = player.y - sam.attackY;
@@ -4471,118 +4694,7 @@ function update(dt) {
   }
 
   // 5. Check if player reached the matching drop-off container while holding an item
-  if (player.holding && dropZones[player.holding.type]) {
-    const zone = dropZones[player.holding.type];
-    const distToZone = Math.hypot(player.x - zone.dropX, player.y - zone.dropY);
-    if (distToZone < 56) {
-      const wasStinky = player.holding.isStinky;
-      if (wasStinky) {
-        stinkySortedThisGame++;
-        if (stinkySortedThisGame >= 2) {
-          unlockAchievement('stink_stopper');
-        }
-      }
-      const pts = MAP_CONFIGS[currentMap].itemCash;
-      levelTimer = Math.min(MAX_TIMER_CAP, levelTimer + ITEM_TIME_BONUS);
-      playSound('deposit');
-      itemsSorted++;
-      if (itemsSorted >= 20 && player.lives === 3) {
-        unlockAchievement('sorted_15');
-      }
-      player.holding = null;
-      addScore(pts);
-
-      // Clearing all five refreshes the batch and restores the timer to 20 seconds
-      // only when the current timer has already fallen below that baseline.
-      const clearedAllFive = items.length === 0 && !player.holding;
-      if (clearedAllFive) {
-        spawnFloatingText(
-          `BATCH CLEARED! +$${pts} · TIMER ${levelTimer < BATCH_TIMER_START ? 'RESET TO 20s' : 'KEPT'}`,
-          zone.dropX,
-          zone.dropY - 26,
-          '#facc15'
-        );
-      } else {
-        spawnFloatingText(
-          wasStinky
-            ? `STINK CLEARED! +$${pts}`
-            : `+$${pts}`,
-          zone.dropX,
-          zone.dropY - 24,
-          wasStinky ? '#a3e635' : '#34d399'
-        );
-      }
-      // Knockout Stick spawns at most once every 15 items sorted (plus random past that)
-      if (itemsSorted >= nextStickItemThreshold) {
-        nextStickItemThreshold = itemsSorted + 15 + Math.floor(Math.random() * 8);
-        if (!player.hasStick && !powerups.some((p) => p.type === 'stick')) {
-          spawnPowerupOfType('stick', true);
-          if (!unlockedStick) {
-            unlockedStick = true;
-            playSound('levelup');
-            spawnFloatingText('KNOCKOUT STICK UNLOCKED!', canvas.width / 2, 90, '#facc15');
-          }
-        }
-      }
-
-      if (clearedAllFive) {
-        batchRefreshCount++;
-        if (
-          currentMap === 'lounge' &&
-          batchRefreshCount >= 3 &&
-          !loungeRoombaReleased
-        ) {
-          loungeRoombaReleased = true;
-          roomba.active = true;
-          roomba.state = 'ROAMING';
-          roomba.x = 655;
-          roomba.y = 645;
-          const releaseAngle = -Math.PI * 0.72;
-          roomba.vx = Math.cos(releaseAngle) * roomba.speed;
-          roomba.vy = Math.sin(releaseAngle) * roomba.speed;
-          startVacuumSound();
-          spawnFloatingText('ROOMBA RELEASED FROM THE LOUNGE STAND!', 655, 615, '#f59e0b');
-        }
-        if (levelTimer < BATCH_TIMER_START) {
-          levelTimer = BATCH_TIMER_START;
-        }
-        if (levelTimer >= 21) {
-          unlockAchievement('first_batch');
-        }
-        if (levelTimer >= 18) {
-          cleanBatches++;
-        } else {
-          cleanBatches = 0;
-        }
-        if (cleanBatches >= 5) {
-          unlockAchievement('grandmaster');
-        }
-        if (currentMap === 'lounge') {
-          loungeBatches++;
-          if (loungeBatches >= 3) {
-            unlockAchievement('unlock_lounge');
-          }
-        }
-        if (currentMap === 'garden') {
-          gardenBatches = gardenBirdShook ? gardenBatches + 1 : 0;
-          gardenBirdShook = false;
-          if (gardenBatches >= 3) {
-            unlockAchievement('unlock_garden');
-          }
-        }
-        spawnMessBatch(true);
-        refreshGooHazards(true);
-        updateScoreboardUI();
-        // Ice is a regular refresh reward: every second cleared batch gets one.
-        if (batchRefreshCount % 2 === 0 && !powerups.some((p) => p.type === 'ice')) {
-          spawnPowerupOfType('ice', true);
-          spawnFloatingText('ICE CUBE DROP! EVERY SECOND REFRESH!', canvas.width / 2, 90, '#38bdf8');
-        }
-      }
-
-      if (gameState !== 'PLAYING') return;
-    }
-  }
+  tryDepositHeldItem();
 
   // 6. Update Sam's Sleep / Ice / Knockout / Frozen-On-Spot / Returning-To-Bed / Exclamation Warning / Awake Cycle
   if (sam.returningToBed) {
@@ -7550,6 +7662,10 @@ function loop(now) {
 }
 
 function startGame() {
+  // First watch of this cutscene: Restart must not bypass it — resetGame() hides
+  // the shell and beginMapCutscene() would treat it as seen-this-session,
+  // so a restart mid-cutscene would skip it. Stay in the cutscene.
+  if (gameState === 'CUTSCENE' && !canSkipCutscene(currentMap)) return;
   initAudio();
   startOverlay.classList.remove('active');
   gameoverOverlay.classList.remove('active');
@@ -7563,7 +7679,9 @@ function openMainMenu() {
   stopVacuumSound();
   // If the menu is opened mid-cutscene, end it properly — otherwise the
   // shell stayed .active under the menu and froze on the next start.
-  endMapCutscene();
+  // First watch of this cutscene: the menu must not bypass it — endMapCutscene
+  // returns false when skipping is blocked, so stay in the cutscene.
+  if (!endMapCutscene()) return;
   cutsceneOutroStep = -1; // going to the menu cancels the ending — it is
   // for the cutscene -> gameplay handoff, not the menu
   gameState = 'START';
@@ -7579,7 +7697,9 @@ function selectMap(mapKey) {
   randomMode = false;
   // Switching maps mid-cutscene ends it first — otherwise the old
   // cutscene kept playing over the new map, or its frame got stuck.
-  if (gameState === 'CUTSCENE') endMapCutscene();
+  if (gameState === 'CUTSCENE') {
+    if (!endMapCutscene()) return; // first watch of this cutscene cannot be skipped via map switch
+  }
   if (currentMap !== mapKey) {
     if (gameState === 'PLAYING') {
       swapMapMidGame(mapKey, false);
@@ -8064,6 +8184,18 @@ function runCheatAction(action) {
     playSound('roomba_reveal');
     startVacuumSound();
     spawnFloatingText('ROOMBA ENFORCED — WATCH YOUR ANKLES!', player.x, player.y - 42, '#facc15');
+  } else if (action === 'toggle-cutscene-skip') {
+    // Dev toggle for testing: flips ALL maps between first-watch
+    // (none seen, nothing skippable) and can-skip (all seen). To test
+    // one cutscene's first watch, reset all, then watch just that one.
+    try {
+      if (allCutscenesSeen()) {
+        localStorage.removeItem(CUTSCENE_SEEN_KEY);
+      } else {
+        localStorage.setItem(CUTSCENE_SEEN_KEY, JSON.stringify({ bedroom: true, lounge: true, garden: true }));
+      }
+    } catch (e) {}
+    updateCutsceneSkipLabel();
   } else if (action === 'equip-outfit') {
     const outfitId = cheatOutfitSelect?.value;
     if (!outfitId || !ownedOutfits[outfitId]) {
@@ -8116,6 +8248,8 @@ if (cheatAuthForm) {
 document.querySelectorAll('[data-cheat-action]').forEach((button) => {
   button.addEventListener('click', () => runCheatAction(button.dataset.cheatAction));
 });
+// First-load: cutscene skip label + dev toggle reflect stored flag.
+updateCutsceneSkipLabel();
 if (cheatOutfitSelect) {
   OUTFITS.forEach((outfit) => {
     const option = document.createElement('option');

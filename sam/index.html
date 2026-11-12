@@ -10,23 +10,37 @@
        lays out the wide desktop game (1160px canvas, 1380px hub) and picks
        a zoomed-out scale. On phones the only layout is the block itself. -->
   <style>
-    #mobile-block { display: none; }
-    @media (max-width: 820px) and (pointer: coarse) and (hover: none), (max-height: 500px) and (pointer: coarse) and (hover: none) {
+    #mobile-block {
+      display: none;
+    }
+
+    @media (max-width: 820px) and (pointer: coarse) and (hover: none),
+    (max-height: 500px) and (pointer: coarse) and (hover: none) {
       #mobile-block {
-        position: fixed; inset: 0;
-        width: 100vw; width: 100dvw;
-        height: 100vh; height: 100dvh;
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        width: 100dvw;
+        height: 100vh;
+        height: 100dvh;
         z-index: 100000;
-        display: flex; align-items: center; justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         padding: 24px;
         padding-top: max(24px, env(safe-area-inset-top));
         padding-bottom: max(24px, env(safe-area-inset-bottom));
         padding-left: max(24px, env(safe-area-inset-left));
         padding-right: max(24px, env(safe-area-inset-right));
-        background: #161311; color: #f3ede2; text-align: center;
+        background: #161311;
+        color: #f3ede2;
+        text-align: center;
         overflow-y: auto;
       }
-      body > :not(#mobile-block) { display: none !important; }
+
+      body> :not(#mobile-block) {
+        display: none !important;
+      }
     }
   </style>
   <link rel="stylesheet" href="styles.css" />
@@ -127,7 +141,7 @@
               </div>
               <div class="start-map-info">
                 <strong>2. THE LOUNGE ($75 / ITEM)</strong>
-                <span class="start-map-status" id="start-map-sub-lounge">EARN $1,000 IN BEDROOM</span>
+                <span class="start-map-status" id="start-map-sub-lounge">EARN $2,000 IN BEDROOM</span>
               </div>
             </button>
 
@@ -138,7 +152,7 @@
               </div>
               <div class="start-map-info">
                 <strong>3. THE BACKYARD ($100 / ITEM)</strong>
-                <span class="start-map-status" id="start-map-sub-garden">EARN $1,500 IN LOUNGE</span>
+                <span class="start-map-status" id="start-map-sub-garden">EARN $3,000 IN LOUNGE</span>
               </div>
             </button>
 
@@ -212,6 +226,7 @@
           <button class="cheat-action" data-cheat-action="clear-outfits">REMOVE OUTFITS</button>
           <button class="cheat-action" data-cheat-action="enforce-roomba">ENFORCE ROOMBA</button>
           <button class="cheat-action" data-cheat-action="toggle-hard-mode">HARD MODE: OFF</button>
+          <button class="cheat-action" data-cheat-action="toggle-cutscene-skip">CUTSCENE SKIP: ON (ALL SEEN)</button>
         </div>
         <div class="cheat-outfit-row">
           <label for="cheat-outfit-select">EQUIP OUTFIT</label>
