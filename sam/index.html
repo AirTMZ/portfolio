@@ -3,79 +3,71 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>DON'T WAKE SAM</title>
   <link rel="icon" href="sleep.ico">
-  <!-- First-paint phone block: before styles.css loads, so a phone never
-       lays out the wide desktop game (1160px canvas, 1380px hub) and picks
-       a zoomed-out scale. On phones the only layout is the block itself. -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- ROUND 9 INLINE (mobile only) — title fix duplicated here so it applies even if styles.css is cached. Desktop keeps centred title. -->
   <style>
-    #mobile-block {
-      display: none;
-    }
-
-    @media (max-width: 820px) and (pointer: coarse) and (hover: none),
-    (max-height: 500px) and (pointer: coarse) and (hover: none) {
-      #mobile-block {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        width: 100dvw;
-        height: 100vh;
-        height: 100dvh;
-        z-index: 100000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        padding-top: max(24px, env(safe-area-inset-top));
-        padding-bottom: max(24px, env(safe-area-inset-bottom));
-        padding-left: max(24px, env(safe-area-inset-left));
-        padding-right: max(24px, env(safe-area-inset-right));
-        background: #161311;
-        color: #f3ede2;
-        text-align: center;
-        overflow-y: auto;
+    @media (max-height: 620px) and (orientation: landscape),
+    (pointer: coarse) and (orientation: landscape) {
+      .title-screen {
+        display: block !important
       }
 
-      body> :not(#mobile-block) {
-        display: none !important;
+      .title-screen .title-card {
+        display: block !important;
+        position: relative !important;
+        width: 100% !important;
+        max-width: none !important;
+        height: 100% !important;
+        padding: 0 !important;
+        text-align: left !important
+      }
+
+      .title-screen .title-card .title-logo {
+        position: absolute !important;
+        left: 6% !important;
+        top: 50% !important;
+        translate: 0 -50% !important;
+        text-align: left !important
+      }
+
+      .title-screen .title-card .title-logo .title-line {
+        text-align: left !important
+      }
+
+      .title-screen .title-card .title-anim-canvas {
+        position: absolute !important;
+        right: 2% !important;
+        bottom: 6% !important;
+        width: min(52vw, 560px) !important;
+        height: auto !important;
+        max-width: min(52vw, 560px) !important
       }
     }
   </style>
-  <link rel="stylesheet" href="styles.css" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
     rel="stylesheet">
-  <script>
-    (function () {
-      var root = document.documentElement;
-      function check() {
-        var w = window.innerWidth;
-        var h = window.innerHeight;
-        var portrait = h > w;
-        var veryWide = w / h >= 1.9;
-        var touchOnly = window.matchMedia && window.matchMedia('(pointer: coarse) and (hover: none)').matches;
-        // Portrait = phone. Landscape phones are very wide, so there the touch check separates them from ultrawide monitors.
-        root.classList.toggle('is-phone', portrait || (veryWide && touchOnly));
-      }
-      check();
-      window.addEventListener('resize', check);
-      window.addEventListener('orientationchange', check);
-    })();
-  </script>
 </head>
 
 <body>
-  <!-- Phone-only block screen (shown via html.is-phone) -->
-  <div id="mobile-block" role="alert">
-    <div class="mobile-block-card">
-      <div class="mobile-block-icon">📵</div>
-      <h1>CAN'T (yet) BE PLAYED ON A PHONE</h1>
-      <p>DON'T WAKE SAM (currently)needs a keyboard.</p>
-      <p>Please switch to a computer to play.</p>
+  <!-- Aspect guard: game needs a landscape window. Shown by CSS only,
+       based on viewport SHAPE, not pointer type, so it also catches a PC
+       window dragged narrow and DevTools portrait mode. Fixed overlay —
+       never in flow, so it can never push the game down like a banner. -->
+  <div id="aspect-guard" role="alert" aria-live="polite">
+    <div class="rotate-card">
+      <div class="rotate-icon">↻</div>
+      <h1>WINDOW TOO NARROW</h1>
+      <p>DON'T WAKE SAM plays in landscape.</p>
+      <p class="rotate-sub guard-touch-msg">Rotate your device sideways to keep playing.</p>
+      <p class="rotate-sub guard-desktop-msg">Widen this window — drag it wider until this message goes away.</p>
     </div>
   </div>
 
@@ -128,7 +120,9 @@
           <button class="hub-nav-btn" id="open-outfits-btn">
             <span class="btn-icon">👕</span> OUTFITS
           </button>
-          <button class="hub-nav-btn" id="start-mute-btn">SOUND: ON</button>
+          <button class="hub-nav-btn" id="open-settings-btn">
+            <span class="btn-icon">⚙</span> SETTINGS
+          </button>
         </div>
       </header>
 
@@ -201,8 +195,11 @@
         <div class="footer-left">
           <button class="version-badge" id="version-cheat-trigger" type="button">v1.5.0</button>
           <span class="footer-divider">•</span>
-          <span>CONTROLS: <kbd>WASD</kbd> / <kbd>ARROWS</kbd> MOVE &nbsp;|&nbsp; <kbd>SPACE</kbd> SHIELD / SHOO BIRD
+          <span class="footer-controls-desktop">CONTROLS: <kbd>WASD</kbd> / <kbd>ARROWS</kbd> MOVE &nbsp;|&nbsp;
+            <kbd>SPACE</kbd> SHIELD / SHOO BIRD
             &nbsp;|&nbsp; <kbd>E</kbd> STICK &nbsp;|&nbsp; <kbd>Q</kbd> DROP</span>
+          <span class="footer-controls-touch">CONTROLS: RIGHT THUMB joystick to move &nbsp;|&nbsp; USE = shield / stick
+            &nbsp;|&nbsp; DROP = drop item</span>
         </div>
       </footer>
     </div>
@@ -343,13 +340,60 @@
         <button class="cta-btn" id="done-outfits-btn">BACK TO MENU</button>
       </div>
     </div>
+
+    <!-- =================================================================== -->
+    <!-- SETTINGS SUB-MODAL (Behind Settings Button on Start Screen!)        -->
+    <!-- Sound slider + touch-controls toggle. The controls toggle is for    -->
+    <!-- tablets / touch laptops that look like a PC layout but still need   -->
+    <!-- (or don't need) touch controls.                                    -->
+    <!-- =================================================================== -->
+    <div class="hub-submodal" id="settings-modal">
+      <div class="submodal-card settings-card">
+        <div class="submodal-header">
+          <div>
+            <h2>SETTINGS</h2>
+            <span class="submodal-sub">Sound + touch controls</span>
+          </div>
+          <button class="submodal-close-btn" id="close-settings-btn">✕ CLOSE</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>SOUND</h3>
+          <div class="settings-slider-row">
+            <label for="settings-volume-slider">VOLUME</label>
+            <input id="settings-volume-slider" type="range" min="0" max="100" step="1" value="80"
+              aria-label="Sound volume">
+            <strong id="settings-volume-val">80%</strong>
+          </div>
+          <button class="hub-nav-btn settings-mute-btn" id="settings-mute-btn" type="button">SOUND: ON</button>
+          <p class="settings-note">Volume 0% also mutes. This controls all game sound.</p>
+        </div>
+
+        <div class="settings-section">
+          <h3>TOUCH CONTROLS</h3>
+          <div class="controls-mode-group" id="controls-mode-group" role="group" aria-label="Touch controls mode">
+            <button class="controls-mode-btn" data-controls-mode="auto" type="button">AUTO</button>
+            <button class="controls-mode-btn" data-controls-mode="on" type="button">ON</button>
+            <button class="controls-mode-btn" data-controls-mode="off" type="button">OFF</button>
+          </div>
+          <p class="settings-note" id="controls-mode-desc">AUTO: touch controls show on touch devices, hidden on
+            keyboard + mouse.</p>
+          <p class="settings-note">ON forces the joystick + DROP / USE buttons even on a PC layout. OFF hides them even
+            on a tablet.</p>
+        </div>
+
+        <button class="cta-btn" id="done-settings-btn">BACK TO MENU</button>
+      </div>
+    </div>
   </div>
 
   <!-- ===================================================================== -->
   <!-- IN-GAME SHELL                                                         -->
   <!-- ===================================================================== -->
   <div class="game-shell">
-    <header class="hud-bar">
+    <header class="hud-bar" id="hud-bar">
+      <button id="hud-menu-toggle" class="hud-menu-toggle" type="button" aria-label="Open game menu"
+        aria-expanded="false" aria-controls="hud-menu-panel">☰</button>
       <div class="brand">
         <h1>DON'T WAKE SAM</h1>
         <span class="brand-sub">INFINITE STEALTH TIDYING</span>
@@ -400,7 +444,7 @@
         </button>
       </div>
 
-      <div class="controls-hud">
+      <div class="controls-hud" id="hud-menu-panel">
         <button id="menu-btn" class="hud-btn menu-hud-btn" title="Return to Main Menu">MAIN MENU</button>
         <button id="mute-btn" class="hud-btn" title="Toggle Audio">SOUND: ON</button>
         <button id="restart-btn" class="hud-btn">RESTART</button>
@@ -455,6 +499,28 @@
             </div>
           </div>
         </div>
+
+        <!-- Touch controls: only visible when body.touch-controls-on.
+             Joystick (left thumb) + DROP / USE (right thumb). They sit
+             inside the canvas wrapper so they overlay the game, not the
+             page, and never shift the canvas layout. -->
+        <div id="touch-controls" aria-hidden="true">
+          <div id="joystick-zone">
+            <div id="joystick-base">
+              <div id="joystick-knob"></div>
+            </div>
+            <span class="touch-hint">MOVE</span>
+          </div>
+          <div id="touch-buttons">
+            <button id="touch-drop-btn" type="button" aria-label="Drop held item">
+              <span class="touch-btn-label">DROP</span>
+            </button>
+            <button id="touch-use-btn" type="button" aria-label="Use shield or stick">
+              <span class="touch-btn-label" id="touch-use-label">USE</span>
+              <span class="touch-btn-sub" id="touch-use-sub">SHIELD / STICK</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Live Sam Monitor & Cash Scoreboard Sidebar -->
@@ -465,13 +531,13 @@
               <span class="score-label">SHIFT CASH</span>
               <span class="score-val cash-val" id="score-val">$0</span>
             </div>
-            <div class="score-box highlight">
+            <div class="score-box highlight mobile-hide">
               <span class="score-label">BEST SHIFT</span>
               <span class="score-val" id="highscore-val">$0</span>
             </div>
           </div>
           <div class="score-row">
-            <div class="score-box">
+            <div class="score-box mobile-hide">
               <span class="score-label">SORTED</span>
               <span class="score-val" id="level-val">0</span>
             </div>
@@ -480,13 +546,13 @@
               <span class="score-val" id="timer-val">20.0s</span>
             </div>
           </div>
-          <div class="bank-strip">
+          <div class="bank-strip mobile-hide">
             <span>TOTAL BANK:</span>
             <strong id="sidebar-wallet-val">$0</strong>
           </div>
         </div>
 
-        <div class="sam-cam-card" id="sam-cam-card">
+        <div class="sam-cam-card mobile-hide" id="sam-cam-card">
           <div class="cam-header">
             <span class="rec-dot"></span>
             <span>BABY MONITOR // CH-01</span>
@@ -502,7 +568,7 @@
           </div>
         </div>
 
-        <div class="legend-card">
+        <div class="legend-card mobile-hide">
           <div class="key-tip">
             <div><kbd>WASD</kbd> / <kbd>Arrows</kbd> Move</div>
             <div><kbd>SPACE</kbd> Shield / Shoo bird</div>
@@ -516,6 +582,43 @@
   </div>
 
   <script src="script.js"></script>
+  <!-- Fallback: if an old copy of script.js ever comes back (no mobile
+     wiring, no SETTINGS handler), this tiny inline script still applies
+     the mobile classes and wires SETTINGS. It runs after script.js and
+     does NOTHING if the new script.js already set __DWS_MOBILE_WIRED,
+     so there is no double-wiring. -->
+  <script>
+    (function () {
+      function applyFallback() {
+        if (window.__DWS_MOBILE_WIRED) return;
+        var isTouch = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0);
+        var mode = 'auto';
+        try { mode = localStorage.getItem('dont_wake_sam_touch_controls_v1') || 'auto'; } catch (e) { }
+        var showTouch = mode === 'on' || (mode !== 'off' && isTouch);
+        document.body.classList.toggle('touch-controls-on', showTouch);
+        function updateCompact() {
+          var w = window.innerWidth, hh = window.innerHeight;
+          document.body.classList.toggle('compact-game', w > hh && hh <= 620);
+        }
+        updateCompact();
+        window.addEventListener('resize', updateCompact);
+        window.addEventListener('orientationchange', updateCompact);
+        var openBtn = document.getElementById('open-settings-btn');
+        var modal = document.getElementById('settings-modal');
+        if (openBtn && modal) {
+          openBtn.addEventListener('click', function () { modal.classList.add('active'); });
+        }
+        var closeBtn = document.getElementById('close-settings-btn');
+        var doneBtn = document.getElementById('done-settings-btn');
+        if (closeBtn && modal) closeBtn.addEventListener('click', function () { modal.classList.remove('active'); });
+        if (doneBtn && modal) doneBtn.addEventListener('click', function () { modal.classList.remove('active'); });
+        window.__DWS_MOBILE_WIRED = true;
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyFallback);
+      else applyFallback();
+      window.addEventListener('load', applyFallback);
+    })();
+  </script>
 </body>
 
 </html>

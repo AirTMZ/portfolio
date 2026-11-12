@@ -182,9 +182,27 @@ const doneOutfitsBtn = document.getElementById('done-outfits-btn');
 const outfitsModal = document.getElementById('outfits-modal');
 const outfitsWalletInlineEl = document.getElementById('outfits-wallet-inline');
 
-const startMuteBtn = document.getElementById('start-mute-btn');
+const openSettingsBtn = document.getElementById('open-settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const closeSettingsBtn = document.getElementById('close-settings-btn');
+const doneSettingsBtn = document.getElementById('done-settings-btn');
+const settingsVolumeSlider = document.getElementById('settings-volume-slider');
+const settingsVolumeVal = document.getElementById('settings-volume-val');
+const settingsMuteBtn = document.getElementById('settings-mute-btn');
+const controlsModeDesc = document.getElementById('controls-mode-desc');
+const touchControlsEl = document.getElementById('touch-controls');
+const joystickZone = document.getElementById('joystick-zone');
+const joystickBase = document.getElementById('joystick-base');
+const joystickKnob = document.getElementById('joystick-knob');
+const touchDropBtn = document.getElementById('touch-drop-btn');
+const touchUseBtn = document.getElementById('touch-use-btn');
+const touchUseLabel = document.getElementById('touch-use-label');
+const touchUseSub = document.getElementById('touch-use-sub');
 const menuBtn = document.getElementById('menu-btn');
 const gameoverMenuBtn = document.getElementById('gameover-menu-btn');
+const hudBar = document.getElementById('hud-bar');
+const hudMenuToggle = document.getElementById('hud-menu-toggle');
+const hudMenuPanel = document.getElementById('hud-menu-panel');
 
 const startMapBedroom = document.getElementById('start-map-bedroom');
 const startMapLounge = document.getElementById('start-map-lounge');
@@ -914,7 +932,16 @@ renderWardrobeUI();
 
 // Web Audio Synthesizer for SFX + Sneaky Background Music
 let audioCtx = null;
+let masterGain = null;
+const VOLUME_KEY = 'dont_wake_sam_volume_v1';
+const MUTED_KEY = 'dont_wake_sam_muted_v1';
+const CONTROLS_MODE_KEY = 'dont_wake_sam_touch_controls_v1';
+let masterVolume = 0.8;
+try { const s = parseFloat(localStorage.getItem(VOLUME_KEY)); if (!Number.isNaN(s)) masterVolume = Math.max(0, Math.min(1, s)); } catch (e) {}
 let isMuted = false;
+try { isMuted = localStorage.getItem(MUTED_KEY) === '1'; } catch (e) {}
+let touchControlsMode = 'auto';
+try { const m = localStorage.getItem(CONTROLS_MODE_KEY); if (m === 'on' || m === 'off' || m === 'auto') touchControlsMode = m; } catch (e) {}
 let bgmInterval = null;
 let bgmStep = 0;
 let cutsceneBgmStep = 0;
@@ -928,10 +955,51 @@ function initAudio() {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (AudioContext) audioCtx = new AudioContext();
   }
-  if (audioCtx && audioCtx.state === 'suspended') {
-    audioCtx.resume();
+  if (audioCtx && !masterGain) {
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = isMuted ? 0 : masterVolume;
+    masterGain.connect(audioCtx.destination);
   }
+  if (audioCtx && audioCtx.state === 'suspended') { audioCtx.resume(); }
+  applyVolume();
   startBackgroundMusic();
+}
+function applyVolume() {
+  if (masterGain && audioCtx) masterGain.gain.setTargetAtTime(isMuted ? 0 : masterVolume, audioCtx.currentTime, 0.02);
+}
+function setVolume(v) {
+  masterVolume = Math.max(0, Math.min(1, v));
+  try { localStorage.setItem(VOLUME_KEY, String(masterVolume)); } catch (e) {}
+  if (masterVolume > 0 && isMuted) { isMuted = false; try { localStorage.setItem(MUTED_KEY, '0'); } catch (e) {} }
+  applyVolume(); syncSettingsUI();
+}
+function isTouchDevice() {
+  return (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window || (navigator && navigator.maxTouchPoints > 0);
+}
+function shouldShowTouchControls() {
+  if (touchControlsMode === 'on') return true;
+  if (touchControlsMode === 'off') return false;
+  return isTouchDevice();
+}
+function applyTouchControlsMode() {
+  document.body.classList.toggle('touch-controls-on', shouldShowTouchControls());
+  updateCompactLayout(); syncSettingsUI(); updateCutsceneSkipLabel(); updateTouchButtons();
+}
+function updateCompactLayout() {
+  const w = window.innerWidth, h = window.innerHeight;
+  const isLandscapeShort = w > h && h <= 620;
+  document.body.classList.toggle('compact-game', isLandscapeShort);
+}
+function syncSettingsUI() {
+  if (settingsVolumeSlider) settingsVolumeSlider.value = String(Math.round(masterVolume * 100));
+  if (settingsVolumeVal) settingsVolumeVal.textContent = isMuted ? 'MUTED' : `${Math.round(masterVolume * 100)}%`;
+  const lbl = isMuted ? 'SOUND: OFF' : 'SOUND: ON';
+  if (settingsMuteBtn) settingsMuteBtn.textContent = lbl;
+  if (muteBtn) muteBtn.textContent = lbl;
+  document.querySelectorAll('.controls-mode-btn').forEach((b) => { b.classList.toggle('active', b.dataset.controlsMode === touchControlsMode); });
+  if (controlsModeDesc) {
+    controlsModeDesc.textContent = touchControlsMode === 'on' ? 'ON: joystick + DROP / USE always show, even on a PC layout.' : touchControlsMode === 'off' ? 'OFF: touch controls never show, even on a tablet.' : 'AUTO: touch controls show on touch devices, hidden on keyboard + mouse.';
+  }
 }
 
 // Sneaky tiptoe pizzicato background music loop
@@ -972,7 +1040,7 @@ function startBackgroundMusic() {
         bassGain.gain.setValueAtTime(0.045, now);
         bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
         bassOsc.connect(bassGain);
-        bassGain.connect(audioCtx.destination);
+        bassGain.connect(masterGain);
         bassOsc.start(now);
         bassOsc.stop(now + 0.36);
       }
@@ -986,7 +1054,7 @@ function startBackgroundMusic() {
           leadGain.gain.setValueAtTime(mult === 1 ? 0.03 : 0.008, now);
           leadGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
           leadOsc.connect(leadGain);
-          leadGain.connect(audioCtx.destination);
+          leadGain.connect(masterGain);
           leadOsc.start(now);
           leadOsc.stop(now + 0.41);
         });
@@ -1012,7 +1080,7 @@ function startBackgroundMusic() {
           leadGain.gain.setValueAtTime(mult === 1 ? 0.03 : 0.008, now);
           leadGain.gain.exponentialRampToValueAtTime(0.001, now + decay);
           leadOsc.connect(leadGain);
-          leadGain.connect(audioCtx.destination);
+          leadGain.connect(masterGain);
           leadOsc.start(now);
           leadOsc.stop(now + decay + 0.01);
         });
@@ -1025,7 +1093,7 @@ function startBackgroundMusic() {
           bassGain.gain.setValueAtTime(0.04, now);
           bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
           bassOsc.connect(bassGain);
-          bassGain.connect(audioCtx.destination);
+          bassGain.connect(masterGain);
           bassOsc.start(now);
           bassOsc.stop(now + 0.81);
         }
@@ -1045,7 +1113,7 @@ function startBackgroundMusic() {
     bassGain.gain.setValueAtTime(0.055, now);
     bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
     bassOsc.connect(bassGain);
-    bassGain.connect(audioCtx.destination);
+    bassGain.connect(masterGain);
     bassOsc.start(now);
     bassOsc.stop(now + 0.19);
 
@@ -1061,7 +1129,7 @@ function startBackgroundMusic() {
       leadGain.gain.setValueAtTime(0.035, now);
       leadGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
       leadOsc.connect(leadGain);
-      leadGain.connect(audioCtx.destination);
+      leadGain.connect(masterGain);
       leadOsc.start(now);
       leadOsc.stop(now + 0.13);
     }
@@ -1084,7 +1152,7 @@ function playSound(type) {
     gain.gain.exponentialRampToValueAtTime(0.22, now + 0.18);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 1.15);
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(masterGain);
     osc.start(now);
     osc.stop(now + 1.2);
   } else if (type === 'alert') {
@@ -1099,7 +1167,7 @@ function playSound(type) {
       gain.gain.linearRampToValueAtTime(index === 0 ? 0.2 : 0.11, start + 0.008);
       gain.gain.exponentialRampToValueAtTime(0.001, start + 0.16);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
       osc.start(start);
       osc.stop(start + 0.18);
     });
@@ -1112,7 +1180,7 @@ function playSound(type) {
     gain.gain.setValueAtTime(0.14, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(masterGain);
     osc.start(now);
     osc.stop(now + 0.13);
   } else if (type === 'deposit') {
@@ -1125,7 +1193,7 @@ function playSound(type) {
     gain.gain.setValueAtTime(0.18, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(masterGain);
     osc.start(now);
     osc.stop(now + 0.27);
   } else if (type === 'slow') {
@@ -1137,7 +1205,7 @@ function playSound(type) {
     gain.gain.setValueAtTime(0.12, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
+    gain.connect(masterGain);
     osc.start(now);
     osc.stop(now + 0.26);
   } else if (type === 'ice') {
@@ -1149,7 +1217,7 @@ function playSound(type) {
       gain.gain.setValueAtTime(0.14, now + i * 0.05);
       gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.3);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
       osc.start(now + i * 0.05);
       osc.stop(now + i * 0.05 + 0.31);
     });
@@ -1169,7 +1237,7 @@ function playSound(type) {
       gain.gain.exponentialRampToValueAtTime(0.001, start + 0.24);
       osc.connect(filter);
       filter.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
       osc.start(start);
       osc.stop(start + 0.27);
     });
@@ -1183,7 +1251,7 @@ function playSound(type) {
       gain.gain.setValueAtTime(0.15, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.68);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
       osc.start(now);
       osc.stop(now + 0.7);
     });
@@ -1196,7 +1264,7 @@ function playSound(type) {
       gain.gain.setValueAtTime(0.16, now + idx * 0.08);
       gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.32);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
       osc.start(now + idx * 0.08);
       osc.stop(now + idx * 0.08 + 0.33);
     });
@@ -1235,7 +1303,7 @@ function playSound(type) {
       osc1.connect(filter);
       osc2.connect(filter);
       filter.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
 
       osc1.start(now + n.t);
       osc2.start(now + n.t);
@@ -1253,7 +1321,7 @@ function playSound(type) {
     thwackGain.gain.setValueAtTime(0.32, now);
     thwackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
     thwackOsc.connect(thwackGain);
-    thwackGain.connect(audioCtx.destination);
+    thwackGain.connect(masterGain);
     thwackOsc.start(now);
     thwackOsc.stop(now + 0.17);
 
@@ -1266,7 +1334,7 @@ function playSound(type) {
       gain.gain.setValueAtTime(0.12, now + 0.12 + idx * 0.065);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12 + idx * 0.065 + 0.22);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
       osc.start(now + 0.12 + idx * 0.065);
       osc.stop(now + 0.12 + idx * 0.065 + 0.23);
     });
@@ -1280,7 +1348,7 @@ function playSound(type) {
     blastGain.gain.setValueAtTime(0.28, now);
     blastGain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
     blastOsc.connect(blastGain);
-    blastGain.connect(audioCtx.destination);
+    blastGain.connect(masterGain);
     blastOsc.start(now);
     blastOsc.stop(now + 0.39);
 
@@ -1292,7 +1360,7 @@ function playSound(type) {
       gain.gain.setValueAtTime(0.15, now + idx * 0.04);
       gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.22);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
       osc.start(now + idx * 0.04);
       osc.stop(now + idx * 0.04 + 0.23);
     });
@@ -1306,7 +1374,7 @@ function playSound(type) {
       gain.gain.setValueAtTime(0.14, now + idx * 0.07);
       gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.2);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
       osc.start(now + idx * 0.07);
       osc.stop(now + idx * 0.07 + 0.21);
     });
@@ -1321,7 +1389,7 @@ function playSound(type) {
       gain.gain.setValueAtTime(0.11, now + offset);
       gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.06);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
       osc.start(now + offset);
       osc.stop(now + offset + 0.065);
     });
@@ -1351,7 +1419,7 @@ function playSound(type) {
       osc1.connect(filter);
       osc2.connect(filter);
       filter.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(masterGain);
       osc1.start(now + offset);
       osc2.start(now + offset);
       osc1.stop(now + offset + 0.15);
@@ -1391,7 +1459,7 @@ function startVacuumSound() {
 
   noiseNode.connect(noiseFilter);
   noiseFilter.connect(noiseGain);
-  noiseGain.connect(audioCtx.destination);
+  noiseGain.connect(masterGain);
 
   // 2. Dual vacuum turbine motor hum oscillators (whirring up in pitch)
   const motorOsc1 = audioCtx.createOscillator();
@@ -1415,7 +1483,7 @@ function startVacuumSound() {
   motorOsc1.connect(motorFilter);
   motorOsc2.connect(motorFilter);
   motorFilter.connect(motorGain);
-  motorGain.connect(audioCtx.destination);
+  motorGain.connect(masterGain);
 
   noiseNode.start(now);
   motorOsc1.start(now);
@@ -2542,7 +2610,7 @@ function updateCutsceneSkipLabel() {
   // there. If you see the prompt, you can skip; if you don't, you can't.
   if (cutsceneSkipLabel && cutsceneMap) {
     if (canSkipCutscene(cutsceneMap)) {
-      cutsceneSkipLabel.textContent = 'PRESS SPACE / ENTER / ESC TO SKIP';
+      cutsceneSkipLabel.textContent = document.body.classList.contains('touch-controls-on') ? 'TAP TO SKIP' : 'PRESS SPACE / ENTER / ESC TO SKIP';
       cutsceneSkipLabel.style.display = '';
     } else {
       cutsceneSkipLabel.style.display = 'none';
@@ -4964,6 +5032,7 @@ function isPlayerInRedZone(px = player.x, py = player.y) {
   return angle >= RED_CONE_START_ANGLE && angle <= RED_CONE_END_ANGLE;
 }
 
+const touchJoystick = { active: false, pointerId: null, dx: 0, dy: 0 };
 function handlePlayerMovement(dt, canTriggerSam) {
   let vx = 0;
   let vy = 0;
@@ -4971,6 +5040,7 @@ function handlePlayerMovement(dt, canTriggerSam) {
   if (keys['s'] || keys['arrowdown']) vy += 1;
   if (keys['a'] || keys['arrowleft']) vx -= 1;
   if (keys['d'] || keys['arrowright']) vx += 1;
+  if (touchJoystick.active && (touchJoystick.dx !== 0 || touchJoystick.dy !== 0)) { vx += touchJoystick.dx; vy += touchJoystick.dy; }
 
   player.isMoving = vx !== 0 || vy !== 0;
 
@@ -7253,12 +7323,16 @@ function drawSam() {
   }
 
   // --- 3 SHIELD LIVES HUD BADGE (Top-Right of Canvas) ---
+  // On mobile the hamburger sits top-right, so drop the badge below it.
+  const isHamburgerMode = document.body.classList.contains('compact-game') || document.body.classList.contains('touch-controls-on');
+  const shieldsBadgeY = isHamburgerMode ? 56 : 14;
+  const shieldsTextY = shieldsBadgeY + 17;
   ctx.save();
   ctx.fillStyle = '#211d1a';
   ctx.strokeStyle = '#0c0a09';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(canvas.width - 194, 14, 174, 34, 4);
+  ctx.roundRect(canvas.width - 194, shieldsBadgeY, 174, 34, 4);
   ctx.fill();
   ctx.stroke();
 
@@ -7266,11 +7340,11 @@ function drawSam() {
   ctx.fillStyle = '#f3ede2';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  ctx.fillText('SHIELDS:', canvas.width - 182, 31);
+  ctx.fillText('SHIELDS:', canvas.width - 182, shieldsTextY);
 
   for (let i = 0; i < 3; i++) {
     const sx = canvas.width - 96 + i * 26;
-    const sy = 31;
+    const sy = shieldsTextY;
     const active = i < player.lives;
     ctx.beginPath();
     ctx.arc(sx, sy, 8, 0, Math.PI * 2);
@@ -7774,6 +7848,7 @@ function loop(now) {
   lastTime = now;
 
   update(dt);
+  updateTouchButtons();
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBedroom();
@@ -7791,12 +7866,65 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
+function simulateKey(key, code) {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true, cancelable: true }));
+  window.setTimeout(() => { window.dispatchEvent(new KeyboardEvent('keyup', { key, code, bubbles: true })); }, 90);
+}
+function pressTouchUse() {
+  initAudio();
+  if (gameState === 'CUTSCENE' || cutsceneShell?.classList.contains('active')) { endMapCutscene(); return; }
+  if (player.hasStick) simulateKey('e', 'KeyE'); else simulateKey(' ', 'Space');
+  updateTouchButtons();
+}
+function pressTouchDrop() {
+  initAudio();
+  if (!player.holding) return;
+  simulateKey('q', 'KeyQ'); updateTouchButtons();
+}
+function updateTouchButtons() {
+  if (!touchUseBtn || !touchDropBtn) return;
+  let label = 'USE'; let sub = 'SHIELD / STICK';
+  if (player?.hasStick) { label = 'STICK'; sub = 'BONK SAM!'; }
+  else if (gameState === 'KILL_ANIM') { label = 'SHIELD'; sub = 'BLOCK!'; }
+  else if (windowBird?.state === 'HARASSING') { label = 'SHOO'; sub = 'SHOO BIRD'; }
+  if (touchUseLabel && touchUseLabel.textContent !== label) touchUseLabel.textContent = label;
+  if (touchUseSub && touchUseSub.textContent !== sub) touchUseSub.textContent = sub;
+  touchDropBtn.classList.toggle('touch-disabled', !player?.holding);
+}
+function enterFullscreen() {
+  // True fullscreen hides the browser search bar / tabs on mobile/tablet,
+  // so the playable window is not tiny. Must be called from a user gesture
+  // (Start Shift / Play Again / Restart). Android Chrome / Edge support it.
+  // iOS Safari has no document fullscreen — it will fall through to the
+  // scroll-to-hide fallback below, and 100dvh still gives the most space.
+  // PC: NEVER fullscreen. isTouchDevice() is false on a keyboard+mouse PC
+  // (pointer fine, no touch), so we return and the game stays windowed.
+  try {
+    if (typeof isTouchDevice === 'function' ? !isTouchDevice() : !(window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) return;
+    if (document.fullscreenElement) return;
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (req) {
+      const p = req.call(el, { navigationUI: 'hide' });
+      if (p && p.catch) p.catch(() => {});
+    } else {
+      window.scrollTo(0, 1);
+    }
+    if (screen.orientation && screen.orientation.lock) {
+      // Lock after fullscreen engages; if it fails (not fullscreen yet on
+      // this browser), the catch keeps the game starting anyway.
+      setTimeout(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }, 300);
+    }
+  } catch (e) {}
+}
 function startGame() {
   // First watch of this cutscene: Restart must not bypass it — resetGame() hides
   // the shell and beginMapCutscene() would treat it as seen-this-session,
   // so a restart mid-cutscene would skip it. Stay in the cutscene.
   if (gameState === 'CUTSCENE' && !canSkipCutscene(currentMap)) return;
   initAudio();
+  enterFullscreen();
+  try { if (screen.orientation && screen.orientation.lock && document.fullscreenElement) { screen.orientation.lock('landscape').catch(() => {}); } } catch (e) {}
   startOverlay.classList.remove('active');
   gameoverOverlay.classList.remove('active');
   resetGame();
@@ -8223,20 +8351,89 @@ if (doneOutfitsBtn && outfitsModal) {
 if (menuBtn) menuBtn.addEventListener('click', openMainMenu);
 if (gameoverMenuBtn) gameoverMenuBtn.addEventListener('click', openMainMenu);
 
+// Mobile hamburger: whole HUD bar collapses to one button top-right.
+// Panel holds the same MAIN MENU / SOUND / RESTART buttons, stacked.
+function closeHudMenu() {
+  if (hudBar) hudBar.classList.remove('hud-menu-open');
+  if (hudMenuToggle) hudMenuToggle.setAttribute('aria-expanded', 'false');
+}
+if (hudMenuToggle && hudBar) {
+  hudMenuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = hudBar.classList.toggle('hud-menu-open');
+    hudMenuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+}
+document.addEventListener('click', (e) => {
+  if (!hudBar || !hudBar.classList.contains('hud-menu-open')) return;
+  if (hudBar.contains(e.target)) return;
+  closeHudMenu();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeHudMenu();
+});
+[menuBtn, muteBtn, restartBtn].forEach((btn) => {
+  if (btn) btn.addEventListener('click', closeHudMenu);
+});
+
 startBtn.addEventListener('click', startGame);
 retryBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
 
 function toggleSound() {
+  initAudio();
   isMuted = !isMuted;
+  try { localStorage.setItem(MUTED_KEY, isMuted ? '1' : '0'); } catch (e) {}
   if (isMuted) stopVacuumSound();
-  const label = isMuted ? 'SOUND: OFF' : 'SOUND: ON';
-  if (muteBtn) muteBtn.textContent = label;
-  if (startMuteBtn) startMuteBtn.textContent = label;
+  applyVolume(); syncSettingsUI();
 }
-
 if (muteBtn) muteBtn.addEventListener('click', toggleSound);
-if (startMuteBtn) startMuteBtn.addEventListener('click', toggleSound);
+if (settingsMuteBtn) settingsMuteBtn.addEventListener('click', toggleSound);
+if (openSettingsBtn && settingsModal) {
+  openSettingsBtn.addEventListener('click', () => { initAudio(); syncSettingsUI(); settingsModal.classList.add('active'); });
+}
+if (closeSettingsBtn && settingsModal) closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('active'));
+if (doneSettingsBtn && settingsModal) doneSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('active'));
+if (settingsVolumeSlider) settingsVolumeSlider.addEventListener('input', () => { initAudio(); setVolume(parseInt(settingsVolumeSlider.value, 10) / 100); });
+document.querySelectorAll('.controls-mode-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.controlsMode;
+    if (mode !== 'auto' && mode !== 'on' && mode !== 'off') return;
+    touchControlsMode = mode;
+    try { localStorage.setItem(CONTROLS_MODE_KEY, mode); } catch (e) {}
+    applyTouchControlsMode();
+  });
+});
+function updateJoystickFromEvent(e) {
+  if (!joystickBase || !joystickKnob) return;
+  const rect = joystickBase.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+  let dx = (e.clientX - cx) / (rect.width / 2), dy = (e.clientY - cy) / (rect.height / 2);
+  const len = Math.hypot(dx, dy);
+  if (len > 1) { dx /= len; dy /= len; }
+  touchJoystick.dx = dx; touchJoystick.dy = dy;
+  joystickKnob.style.transform = `translate(calc(-50% + ${dx * 32}px), calc(-50% + ${dy * 32}px))`;
+}
+function resetJoystick() {
+  touchJoystick.active = false; touchJoystick.pointerId = null; touchJoystick.dx = 0; touchJoystick.dy = 0;
+  if (joystickKnob) joystickKnob.style.transform = 'translate(-50%, -50%)';
+}
+if (joystickZone) {
+  joystickZone.addEventListener('pointerdown', (e) => { e.preventDefault(); try { joystickZone.setPointerCapture(e.pointerId); } catch (err) {} touchJoystick.active = true; touchJoystick.pointerId = e.pointerId; updateJoystickFromEvent(e); });
+  joystickZone.addEventListener('pointermove', (e) => { if (!touchJoystick.active || e.pointerId !== touchJoystick.pointerId) return; e.preventDefault(); updateJoystickFromEvent(e); });
+  const endJoystick = (e) => { if (e.pointerId !== touchJoystick.pointerId) return; resetJoystick(); };
+  joystickZone.addEventListener('pointerup', endJoystick);
+  joystickZone.addEventListener('pointercancel', endJoystick);
+}
+function bindTouchButton(btn, handler) {
+  if (!btn) return;
+  btn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); btn.classList.add('touch-pressed'); handler(); });
+  const release = () => btn.classList.remove('touch-pressed');
+  btn.addEventListener('pointerup', release); btn.addEventListener('pointercancel', release); btn.addEventListener('pointerleave', release);
+}
+bindTouchButton(touchUseBtn, pressTouchUse);
+bindTouchButton(touchDropBtn, pressTouchDrop);
+if (touchControlsEl) touchControlsEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
 let cheatTriggerClicks = 0;
 let cheatTriggerResetTimer = null;
@@ -8391,4 +8588,9 @@ if (cheatOutfitSelect) {
 
 renderMapThumbnails();
 resetGame();
+syncSettingsUI();
+applyTouchControlsMode();
+window.__DWS_MOBILE_WIRED = true;
+window.addEventListener('resize', updateCompactLayout);
+window.addEventListener('orientationchange', updateCompactLayout);
 requestAnimationFrame(loop);

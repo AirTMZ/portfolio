@@ -42,8 +42,8 @@ body {
   background: radial-gradient(circle at 50% 15%, #26201b 0%, #14110f 75%);
   z-index: 200;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   padding: 1.1rem 1.5rem;
   opacity: 0;
   pointer-events: none;
@@ -60,9 +60,10 @@ body {
   z-index: 500;
   background: radial-gradient(circle at 50% 18%, #2b231b 0%, #14110f 72%);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   padding: 1.5rem;
+  overflow-y: auto;
   cursor: default;
   opacity: 1;
   transform: scale(1);
@@ -84,6 +85,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin: auto;
 }
 .title-anim-canvas {
   width: min(920px, 92vw);
@@ -141,6 +143,7 @@ body {
   flex-direction: column;
   justify-content: space-between;
   gap: 0.9rem;
+  margin: auto;
 }
 
 /* Start Screen Top Header */
@@ -346,6 +349,7 @@ body {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
 }
 
 .launch-cta-wrap {
@@ -454,6 +458,7 @@ body {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
   transition: filter 0.25s ease, transform 0.25s ease;
 }
 
@@ -548,6 +553,7 @@ body {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: contain;
 }
 
 .equipped-tag {
@@ -820,9 +826,10 @@ button.version-badge {
   background: rgba(10, 8, 7, 0.86);
   z-index: 250;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   padding: 1.5rem;
+  overflow-y: auto;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.18s ease;
@@ -844,6 +851,7 @@ button.version-badge {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  margin: auto;
 }
 
 .submodal-header {
@@ -904,6 +912,7 @@ button.version-badge {
   width: 100%;
   height: auto;
   max-height: 360px;
+  object-fit: contain;
   background: #171411;
   border: 2px solid var(--panel-border);
   border-radius: 5px;
@@ -1086,6 +1095,7 @@ button.version-badge {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
   transition: filter 0.25s ease, transform 0.25s ease;
 }
 
@@ -1300,7 +1310,9 @@ button.version-badge {
 
 #game-canvas {
   width: 100%;
+  max-width: calc((100vh - 82px) * 1.6111);
   height: auto;
+  aspect-ratio: 1160 / 720;
   max-height: calc(100vh - 82px);
   object-fit: contain;
   display: block;
@@ -1381,9 +1393,10 @@ button.version-badge {
   inset: 0;
   background: rgba(16, 14, 12, 0.88);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   padding: 1.5rem;
+  overflow-y: auto;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.18s ease;
@@ -1404,6 +1417,7 @@ button.version-badge {
   width: 100%;
   text-align: left;
   box-shadow: 6px 6px 0 var(--border-hard);
+  margin: auto;
 }
 
 .preview-tag {
@@ -1539,6 +1553,7 @@ button.version-badge {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
 }
 
 /* Achievement Unlocked Notification Toast */
@@ -1815,6 +1830,7 @@ button.version-badge {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
 }
 
 .cam-viewport::after {
@@ -2018,93 +2034,30 @@ kbd {
 }
 
 
-/* Phone-only block screen.
-   Why this is written this way: the page underneath is a desktop layout
-   (game canvas 1160px, hub up to 1380px, shell up to 1580px). If that
-   wide content stays in layout on a phone, the browser's layout viewport
-   stays wide, the fixed block gets sized to that wide layout, and the
-   phone shows a zoomed-in crop — you have to pinch out to find the block.
-   So on phones the game is removed from layout entirely (display: none),
-   and the block is sized to the phone's actual viewport (dvw/dvh), not
-   the page. Text uses clamp() so it scales to a small screen. */
-#mobile-block {
+/* ========================================================================= */
+/* ROTATE PROMPT + TOUCH / MOBILE LAYOUT                                      */
+/* The old "can't play on mobile" block is gone. The game now plays on      */
+/* touch devices in landscape.                                               */
+/* - #aspect-guard: bad-aspect only, pure CSS. It overlays the game  */
+/*   and asks the player to rotate. It never shows on desktop or in         */
+/*   landscape.                                                              */
+/* - body:is(.touch-controls-on, .compact-game): set by script.js from Settings > Touch        */
+/*   Controls (AUTO / ON / OFF). All touch-layout rules hang off this one   */
+/*   class, so a tablet forced ON (or a touch laptop forced OFF) gets the   */
+/*   right layout regardless of screen size. Desktop without touch          */
+/*   controls keeps the exact original layout.                             */
+/* ========================================================================= */
+#aspect-guard {
   display: none;
 }
 
-html.is-phone #mobile-block {
-  position: fixed;
-  inset: 0;
-  /* Fallbacks first, dynamic viewport units second (URL bar aware). */
-  width: 100vw;
-  width: 100dvw;
-  height: 100vh;
-  height: 100dvh;
-  z-index: 100000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Safe-area padding so notches / home bars don't clip the card. */
-  padding-top: max(24px, env(safe-area-inset-top));
-  padding-right: max(24px, env(safe-area-inset-right));
-  padding-bottom: max(24px, env(safe-area-inset-bottom));
-  padding-left: max(24px, env(safe-area-inset-left));
-  background: var(--bg-dark);
-  color: var(--text-light);
-  text-align: center;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* The wide desktop layout must not stretch the layout viewport on phones. */
-html.is-phone,
-html.is-phone body {
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-html.is-phone body > :not(#mobile-block) {
-  display: none !important;
-}
-
-.mobile-block-card {
-  width: min(420px, 100%);
-  max-width: 420px;
-  /* margin: auto (not just flex centring) so a short landscape phone can
-     still scroll to the top instead of clipping it. */
-  margin: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: center;
-}
-
-.mobile-block-icon {
-  font-size: clamp(48px, 14vw, 64px);
-  line-height: 1;
-}
-
-.mobile-block-card h1 {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: clamp(20px, 6vw, 24px);
-  line-height: 1.25;
-  color: var(--accent);
-  text-wrap: balance;
-}
-
-.mobile-block-card p {
-  font-size: clamp(16px, 4.5vw, 18px);
-  line-height: 1.5;
-  color: var(--text-dim);
-  text-wrap: balance;
-}
-
-/* CSS-only fallback if the head JS that sets html.is-phone fails or is
-   blocked: same block, same game-hidden rule, via media queries alone.
-   Portrait phones (narrow + coarse) and landscape phones (short + coarse)
-   both match. Desktop narrow windows (fine pointer) do not. */
-@media (max-width: 820px) and (pointer: coarse) and (hover: none), (max-height: 500px) and (pointer: coarse) and (hover: none) {
-  #mobile-block {
+/* Guard is based on viewport SHAPE, not pointer type. That is the whole
+   point: a PC window dragged narrow (portrait / near-square / very
+   short) and a phone in portrait in DevTools responsive mode (which
+   still reports a mouse pointer) both get told the aspect is wrong.
+   Landscape phones, tablets, and normal PC windows never see it. */
+@media (orientation: portrait), (max-aspect-ratio: 11/10), (max-height: 280px) {
+  #aspect-guard {
     position: fixed;
     inset: 0;
     width: 100vw;
@@ -2123,12 +2076,695 @@ html.is-phone body > :not(#mobile-block) {
     color: var(--text-light);
     text-align: center;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
   }
+}
 
-  body > :not(#mobile-block) {
-    display: none !important;
+.rotate-card {
+  width: min(420px, 100%);
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+}
+
+.rotate-icon {
+  font-size: clamp(48px, 14vw, 64px);
+  line-height: 1;
+  animation: rotate-wiggle 1.6s ease-in-out infinite;
+}
+
+@keyframes rotate-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-18deg); }
+  75% { transform: rotate(72deg); }
+}
+
+.rotate-card h1 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(20px, 6vw, 24px);
+  line-height: 1.25;
+  color: var(--accent);
+  text-wrap: balance;
+}
+
+.rotate-card p {
+  font-size: clamp(16px, 4.5vw, 18px);
+  line-height: 1.5;
+  color: var(--text-dim);
+  text-wrap: balance;
+}
+
+.rotate-card .rotate-sub {
+  font-size: clamp(14px, 4vw, 16px);
+}
+
+.guard-touch-msg {
+  display: none;
+}
+
+.guard-desktop-msg {
+  display: block;
+}
+
+@media (pointer: coarse) {
+  .guard-touch-msg {
+    display: block;
   }
+  .guard-desktop-msg {
+    display: none;
+  }
+}
+
+/* --- Touch controls (hidden until body:is(.touch-controls-on, .compact-game)) --- */
+#touch-controls {
+  display: none;
+}
+
+body.touch-controls-on #touch-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding:
+    calc(10px + env(safe-area-inset-bottom))
+    calc(14px + env(safe-area-inset-right))
+    calc(10px + env(safe-area-inset-bottom))
+    calc(14px + env(safe-area-inset-left));
+  pointer-events: none;
+}
+
+#joystick-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#joystick-base {
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  background: rgba(12, 10, 9, 0.55);
+  border: 2px solid rgba(243, 237, 226, 0.45);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5);
+  position: relative;
+  touch-action: none;
+}
+
+#joystick-knob {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(243, 237, 226, 0.92);
+  border: 2px solid #0c0a09;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  touch-action: none;
+}
+
+.touch-hint {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(243, 237, 226, 0.75);
+  text-shadow: 0 1px 0 #0c0a09;
+}
+
+#touch-buttons {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+#touch-drop-btn,
+#touch-use-btn {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 2px solid #0c0a09;
+  box-shadow: 0 4px 0 #0c0a09;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  cursor: pointer;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  color: #0c0a09;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#touch-drop-btn {
+  background: #e2e8f0;
+  width: 72px;
+  height: 72px;
+}
+
+#touch-use-btn {
+  background: #facc15;
+  width: 92px;
+  height: 92px;
+}
+
+#touch-drop-btn:active,
+#touch-use-btn:active,
+#touch-drop-btn.touch-pressed,
+#touch-use-btn.touch-pressed {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #0c0a09;
+}
+
+#touch-drop-btn.touch-disabled {
+  opacity: 0.45;
+}
+
+.touch-btn-label {
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+}
+
+.touch-btn-sub {
+  font-size: 0.52rem;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+
+/* --- In-game HUD when touch controls are on: only cash + timer --- */
+/* Top map switcher, baby monitor, controls info, best / sorted / bank   */
+/* all go away. The scoreboard becomes a compact pill row over the game. */
+body:is(.touch-controls-on, .compact-game) .game-shell {
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  gap: 0.4rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .hud-bar {
+  padding: 0.4rem 0.6rem;
+  padding-left: max(0.6rem, env(safe-area-inset-left));
+  padding-right: max(0.6rem, env(safe-area-inset-right));
+}
+
+body:is(.touch-controls-on, .compact-game) .hud-bar .map-selector-bar,
+body:is(.touch-controls-on, .compact-game) .hud-bar .brand-sub {
+  display: none;
+}
+
+body:is(.touch-controls-on, .compact-game) .brand h1 {
+  font-size: 1rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .controls-hud {
+  gap: 0.35rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .hud-btn {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.68rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .stage {
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: 1fr;
+  position: relative;
+}
+
+body:is(.touch-controls-on, .compact-game) {
+  overscroll-behavior: none;
+  padding: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+body:is(.touch-controls-on, .compact-game) .canvas-wrapper {
+  flex: 1;
+  min-height: 0;
+  touch-action: none;
+  border-width: 2px;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+body:is(.touch-controls-on, .compact-game) .hud-bar {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+}
+
+body:is(.touch-controls-on, .compact-game) #game-canvas {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain;
+}
+
+/* Compact cash + timer pill, floating over the top of the game. */
+/* Cash + timer pill: TOP-LEFT. The SHIELDS badge is drawn in-canvas at
+   the TOP-RIGHT (canvas x = width-194..width-20, y = 14..48), so a
+   top-right pill lands exactly on top of it. Top-left of the canvas is
+   empty (top wall), so the pill lives there instead. */
+body:is(.touch-controls-on, .compact-game) .sam-sidebar {
+  position: absolute;
+  top: 8px;
+  left: max(8px, env(safe-area-inset-left));
+  right: auto;
+  transform: none;
+  z-index: 25;
+  flex-direction: row;
+  gap: 0;
+  pointer-events: none;
+}
+
+body:is(.touch-controls-on, .compact-game) .sam-sidebar .mobile-hide {
+  display: none;
+}
+
+body:is(.touch-controls-on, .compact-game) .scoreboard-card {
+  flex-direction: row;
+  gap: 0.3rem;
+  padding: 0.25rem 0.35rem;
+  background: rgba(33, 29, 26, 0.82);
+}
+
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-row {
+  display: contents;
+}
+
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-box {
+  padding: 0.2rem 0.4rem;
+  min-width: 68px;
+  text-align: center;
+}
+
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-label {
+  font-size: 0.5rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-val {
+  font-size: 0.85rem;
+}
+
+/* Hide the cutscene skip keyboard hint on touch — tapping skips instead. */
+body:is(.touch-controls-on, .compact-game) .cutscene-skip-label {
+  font-size: 0.7rem;
+}
+
+/* --- Main menu on phones: fit ONE page, top buttons always visible --- */
+/* The old hub was built for a tall desktop screen: header wrapped to
+   2-3 rows (brand + 2 wallet pills + 4 text buttons), map thumbs grew,
+   and the hub was min-height:100dvh + space-between, so it overflowed
+   and the flex-centred start-screen clipped the top. On a phone that
+   meant scroll + missing top buttons. Fix: one header row, icon-only
+   nav buttons, labels hidden, map cards compact, footer gone. */
+body:is(.touch-controls-on, .compact-game) .start-screen {
+  padding: 0.35rem;
+  padding-left: max(0.35rem, env(safe-area-inset-left));
+  padding-right: max(0.35rem, env(safe-area-inset-right));
+  padding-top: max(0.35rem, env(safe-area-inset-top));
+  padding-bottom: max(0.35rem, env(safe-area-inset-bottom));
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+body:is(.touch-controls-on, .compact-game) .start-hub-container {
+  gap: 0.35rem;
+  min-height: 0;
+  max-width: none;
+  justify-content: flex-start;
+  margin: auto;
+}
+
+/* Header: ONE row, never wraps, never pushes content off-screen. */
+body:is(.touch-controls-on, .compact-game) .start-header {
+  padding: 0.35rem 0.5rem;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+body:is(.touch-controls-on, .compact-game) .start-brand {
+  flex-shrink: 0;
+}
+
+body:is(.touch-controls-on, .compact-game) .start-brand h1 {
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+body:is(.touch-controls-on, .compact-game) .start-wallet-bar {
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+body:is(.touch-controls-on, .compact-game) .wallet-pill {
+  padding: 0.25rem 0.45rem;
+  gap: 0.25rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .wallet-label {
+  display: none;
+}
+
+body:is(.touch-controls-on, .compact-game) .wallet-amount {
+  font-size: 0.78rem;
+}
+
+/* Nav buttons: icon-only on phones. Text is still in the DOM for
+   screen readers / tooltips, just not painted, so 4 buttons fit in
+   ~150px instead of ~500px. */
+body:is(.touch-controls-on, .compact-game) .start-nav-actions {
+  gap: 0.3rem;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+body:is(.touch-controls-on, .compact-game) .hub-nav-btn {
+  font-size: 0;
+  padding: 0.35rem 0.45rem;
+  min-width: 36px;
+  min-height: 36px;
+  justify-content: center;
+}
+
+body:is(.touch-controls-on, .compact-game) .hub-nav-btn .btn-icon {
+  font-size: 0.85rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .hub-nav-btn .ach-pill-count {
+  display: none;
+}
+
+/* Centre stage: compact, no stretching. */
+body:is(.touch-controls-on, .compact-game) .start-center-stage {
+  gap: 0.35rem;
+  max-width: none;
+  flex: 0 1 auto;
+  justify-content: flex-start;
+}
+
+body:is(.touch-controls-on, .compact-game) .maps-center-panel {
+  padding: 0.4rem 0.5rem;
+  gap: 0.3rem;
+  flex: 0 1 auto;
+}
+
+body:is(.touch-controls-on, .compact-game) .hub-section-header {
+  font-size: 0.65rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .hub-section-header .section-hint {
+  display: none;
+}
+
+body:is(.touch-controls-on, .compact-game) .start-map-grid {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+  flex: 0 1 auto;
+}
+
+/* Map cards back to horizontal (thumb left, info right) — vertical
+   cards with growing thumbs were what made them tall. Fixed thumb
+   56x40 keeps every card ~52px tall. */
+body:is(.touch-controls-on, .compact-game) .start-map-card {
+  flex-direction: row;
+  align-items: center;
+  padding: 0.35rem;
+  gap: 0.4rem;
+  min-height: 0;
+}
+
+body:is(.touch-controls-on, .compact-game) .start-map-thumb {
+  width: 56px;
+  height: 40px;
+  flex: none;
+  flex-shrink: 0;
+}
+
+body:is(.touch-controls-on, .compact-game) .start-map-info strong {
+  font-size: 0.68rem;
+  line-height: 1.1;
+}
+
+body:is(.touch-controls-on, .compact-game) .start-map-status {
+  font-size: 0.55rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .map-desc-line {
+  display: none;
+}
+
+body:is(.touch-controls-on, .compact-game) .start-random-icon {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  font-size: 1.1rem;
+}
+
+/* Launch: one short row. */
+body:is(.touch-controls-on, .compact-game) .start-launch-bottom {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.7rem;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+body:is(.touch-controls-on, .compact-game) .launch-sam-avatar {
+  width: 64px;
+  height: 48px;
+  flex-shrink: 0;
+}
+
+body:is(.touch-controls-on, .compact-game) .launch-cta-wrap {
+  gap: 0.3rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .launch-cta-wrap h2 {
+  font-size: 0.9rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .start-shift-btn {
+  min-height: 40px;
+  font-size: 0.9rem;
+  padding: 0.55rem 1rem;
+  max-width: none;
+}
+
+/* Footer: gone on short landscape phones (its controls line is in the
+   tutorial anyway). Tablets (touch, not compact) keep it. */
+body.compact-game .start-footer {
+  display: none;
+}
+
+body:is(.touch-controls-on, .compact-game) .footer-controls-desktop {
+  display: none;
+}
+
+.footer-controls-touch {
+  display: none;
+}
+
+body.touch-controls-on .footer-controls-touch {
+  display: inline;
+}
+
+/* --- Title screen on phones: fit the height, don't clip --- */
+/* Title was: SAM at 13vw + WAKE at 9vw + canvas 920x340 scaled to 92vw
+   = ~530px tall on an 844x390 phone, overflowing a 390px screen with
+   the top clipped. Now sized by viewport HEIGHT, not width. */
+body:is(.touch-controls-on, .compact-game) .title-screen {
+  padding: 0.5rem;
+  padding-left: max(0.5rem, env(safe-area-inset-left));
+  padding-right: max(0.5rem, env(safe-area-inset-right));
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+body:is(.touch-controls-on, .compact-game) .title-card {
+  gap: 0.25rem;
+  max-width: none;
+}
+
+body:is(.touch-controls-on, .compact-game) .title-line-dont {
+  font-size: clamp(1.2rem, 5vh, 4rem);
+}
+
+body:is(.touch-controls-on, .compact-game) .title-line-wake {
+  font-size: clamp(1.6rem, 7vh, 6rem);
+}
+
+body:is(.touch-controls-on, .compact-game) .title-line-sam {
+  font-size: clamp(2rem, 10vh, 8.5rem);
+}
+
+body:is(.touch-controls-on, .compact-game) .title-anim-canvas {
+  width: min(920px, 92vw, calc(42dvh * 2.705));
+  height: auto;
+  max-height: 42dvh;
+}
+
+/* --- Submodals (tutorial / achievements / outfits / settings) on phones --- */
+body:is(.touch-controls-on, .compact-game) .hub-submodal {
+  padding: 0.5rem;
+  padding-left: max(0.5rem, env(safe-area-inset-left));
+  padding-right: max(0.5rem, env(safe-area-inset-right));
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+body:is(.touch-controls-on, .compact-game) .submodal-card {
+  padding: 0.8rem 0.9rem;
+  gap: 0.6rem;
+}
+
+body:is(.touch-controls-on, .compact-game) .overlay {
+  padding: 0.5rem;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+body:is(.touch-controls-on, .compact-game) .modal-card {
+  padding: 0.9rem 1rem;
+}
+
+
+/* --- Compact-only: HUD overlays the game so the canvas gets the FULL
+   viewport height. This is what makes a short landscape phone playable:
+   without it the HUD bar steals ~40px of ~390px height, shrinking the
+   whole game ~10% and making the player / items tiny. The bar only
+   covers the top wall (y < ~75 world units) — no items spawn there and
+   Sam's head is at y ~295 — so nothing playable is hidden.
+   Tablet-large (touch ON, not compact) keeps the HUD in flow. --- */
+body.compact-game .game-shell {
+  position: relative;
+}
+
+body.compact-game .hud-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: rgba(33, 29, 26, 0.92);
+}
+
+body.compact-game .stage {
+  position: absolute;
+  inset: 0;
+  grid-template-rows: 1fr;
+}
+
+/* Score pill sits just below the overlaid HUD bar, not under it. */
+body.compact-game .sam-sidebar {
+  top: 44px;
+}
+
+/* --- Settings modal --- */
+.settings-card {
+  max-width: 560px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  background: var(--panel-inset);
+  border: 1px solid var(--panel-border);
+  border-radius: 5px;
+}
+
+.settings-section h3 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--text-light);
+}
+
+.settings-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.settings-slider-row label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+#settings-volume-slider {
+  flex: 1;
+  accent-color: #d97706;
+  cursor: pointer;
+}
+
+#settings-volume-val {
+  font-family: 'IBM Plex Mono', monospace;
+  min-width: 44px;
+  text-align: right;
+}
+
+.settings-mute-btn {
+  align-self: flex-start;
+}
+
+.settings-note {
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.controls-mode-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.controls-mode-btn {
+  background: #2c2622;
+  color: var(--text-light);
+  border: 2px solid #6b5748;
+  border-radius: 7px;
+  padding: 0.6rem 0.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.controls-mode-btn.active {
+  background: #d97706;
+  border-color: #0c0a09;
+  color: #0c0a09;
 }
 
 
@@ -2138,4 +2774,1031 @@ html.is-phone body > :not(#mobile-block) {
   width: 100%;
   height: 100%;
   background: #000;
+  object-fit: contain;
+}
+
+/* ===== CSS-ONLY FALLBACK: mobile layout by viewport, no JS class needed =====
+   If an old script.js ever comes back (no touch-controls-on /
+   compact-game classes), these media queries still give phones the
+   mobile layout. They mirror the class-based rules above, but trigger
+   on pointer + shape alone. When the JS classes ARE present they agree,
+   so there is no conflict. */
+@media (pointer: coarse), (max-width: 900px) and (orientation: landscape) {
+  body {
+    padding: 0;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+  /* Touch controls visible + joystick on the RIGHT, buttons on the LEFT */
+  #touch-controls {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    display: flex !important;
+    flex-direction: row-reverse;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: calc(10px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
+    pointer-events: none;
+  }
+  #touch-controls #joystick-zone,
+  #touch-controls #touch-buttons {
+    pointer-events: auto;
+  }
+  /* Cash + timer: top-left, NO outer box */
+  .sam-sidebar {
+    position: absolute;
+    top: 8px;
+    left: max(8px, env(safe-area-inset-left));
+    right: auto;
+    transform: none;
+    z-index: 25;
+    flex-direction: row;
+    gap: 0;
+    pointer-events: none;
+    width: auto;
+    max-width: none;
+  }
+  .sam-sidebar .mobile-hide {
+    display: none;
+  }
+  .sam-sidebar .scoreboard-card {
+    flex-direction: row;
+    gap: 0.3rem;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    width: auto;
+  }
+  .sam-sidebar .scoreboard-card .score-row {
+    display: contents;
+  }
+  .sam-sidebar .scoreboard-card .score-box {
+    padding: 0.2rem 0.4rem;
+    min-width: 68px;
+    text-align: center;
+  }
+  .sam-sidebar .scoreboard-card .score-label {
+    font-size: 0.5rem;
+  }
+  .sam-sidebar .scoreboard-card .score-val {
+    font-size: 0.85rem;
+  }
+  /* HUD: only cash + timer stays, rest hides on touch */
+  .hud-bar .map-selector-bar,
+  .hud-bar .brand-sub {
+    display: none;
+  }
+  .game-shell {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    gap: 0.4rem;
+  }
+  .stage {
+    grid-template-columns: 1fr;
+    position: relative;
+  }
+  .canvas-wrapper {
+    border-width: 2px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* Short landscape phones: compact menu + HUD overlays game, no scroll */
+@media (max-height: 620px) and (orientation: landscape) {
+  body {
+    padding: 0;
+    overflow: hidden;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+  .start-screen {
+    padding: 0.35rem;
+    padding-left: max(0.35rem, env(safe-area-inset-left));
+    padding-right: max(0.35rem, env(safe-area-inset-right));
+    padding-top: max(0.35rem, env(safe-area-inset-top));
+    padding-bottom: max(0.35rem, env(safe-area-inset-bottom));
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  .start-hub-container {
+    gap: 0.35rem;
+    min-height: calc(100dvh - 0.7rem);
+    max-width: none;
+    justify-content: space-between;
+    margin: 0;
+  }
+  .start-header {
+    padding: 0.35rem 0.5rem;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+  }
+  .start-brand h1 {
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+  .start-wallet-bar {
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+  .wallet-pill {
+    padding: 0.25rem 0.45rem;
+    gap: 0.25rem;
+  }
+  .wallet-label {
+    display: none;
+  }
+  .wallet-amount {
+    font-size: 0.78rem;
+  }
+  .start-nav-actions {
+    gap: 0.3rem;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+  }
+  .hub-nav-btn {
+    font-size: 0;
+    padding: 0.35rem 0.45rem;
+    min-width: 36px;
+    min-height: 36px;
+    justify-content: center;
+  }
+  .hub-nav-btn .btn-icon {
+    font-size: 0.85rem;
+  }
+  .hub-nav-btn .ach-pill-count {
+    display: none;
+  }
+  .start-center-stage {
+    gap: 0.35rem;
+    max-width: none;
+    margin: 0;
+    flex: 1;
+    min-height: 0;
+    justify-content: center;
+  }
+  .maps-center-panel {
+    padding: 0.4rem 0.5rem;
+    gap: 0.3rem;
+    flex: 1;
+    min-height: 0;
+  }
+  .hub-section-header {
+    font-size: 0.65rem;
+  }
+  .hub-section-header .section-hint {
+    display: none;
+  }
+  .start-map-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+    flex: 0 1 auto;
+  }
+  .start-map-card {
+    padding: 0.35rem;
+    gap: 0.4rem;
+    min-height: 0;
+    align-items: center;
+  }
+  .start-map-thumb {
+    width: 56px;
+    height: 40px;
+    flex: none;
+    flex-shrink: 0;
+  }
+  .start-map-info strong {
+    font-size: 0.68rem;
+    line-height: 1.1;
+  }
+  .start-map-status {
+    font-size: 0.55rem;
+  }
+  .map-desc-line {
+    display: none;
+  }
+  .start-random-icon {
+    width: 40px;
+    height: 40px;
+    flex: none;
+    font-size: 1.1rem;
+  }
+  .start-launch-bottom {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.7rem;
+    gap: 0.6rem;
+    flex-shrink: 0;
+  }
+  .launch-sam-avatar {
+    width: 64px;
+    height: 48px;
+    flex-shrink: 0;
+  }
+  .launch-cta-wrap {
+    gap: 0.3rem;
+  }
+  .launch-cta-wrap h2 {
+    font-size: 0.9rem;
+  }
+  .start-shift-btn {
+    min-height: 40px;
+    font-size: 0.9rem;
+    padding: 0.55rem 1rem;
+    max-width: none;
+  }
+  .start-footer {
+    display: none;
+  }
+  .footer-controls-desktop {
+    display: none;
+  }
+  /* Game: HUD overlays, canvas gets full height */
+  .game-shell {
+    position: relative;
+  }
+  .hud-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background: rgba(33, 29, 26, 0.92);
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+  }
+  .stage {
+    position: absolute;
+    inset: 0;
+    grid-template-rows: 1fr;
+  }
+  .sam-sidebar {
+    top: 44px;
+  }
+  .title-screen {
+    padding: 0.5rem;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  .title-card {
+    gap: 0.25rem;
+    max-width: none;
+  }
+  .title-line-dont {
+    font-size: clamp(1.2rem, 5vh, 4rem);
+  }
+  .title-line-wake {
+    font-size: clamp(1.6rem, 7vh, 6rem);
+  }
+  .title-line-sam {
+    font-size: clamp(2rem, 10vh, 8.5rem);
+  }
+  .title-anim-canvas {
+    width: min(920px, 92vw, calc(42dvh * 2.705));
+    height: auto;
+    max-height: 42dvh;
+  }
+}
+
+/* ========================================================================= */
+/* MOBILE FIX — no-scroll, no floating, no HUD block                         */
+/* Appended override, so it wins over the earlier mobile rules.              */
+/*                                                                           */
+/* 1. Main menu was floating: .start-hub-container had margin: auto inside  */
+/*    a flex .start-screen, so the whole hub centred in the middle with     */
+/*    dead space above and below. Fix: hub fills the viewport height,       */
+/*    header sticks to the top, launch sticks to the bottom, maps sit       */
+/*    centred between them.                                                  */
+/* 2. Game cash/timer: .scoreboard-card had its own opaque background plus   */
+/*    flex: 1 / min-width: 240px (from the max-width: 1120px rule), so it   */
+/*    stretched into a wide solid block that covered the top-left of the    */
+/*    play area. Fix: container goes transparent with no padding/border,    */
+/*    width shrinks to its content, each pill keeps its own background.     */
+/* 3. Settings was a tall single column (header + sound + touch + button)   */
+/*    taller than a landscape phone, so it scrolled and clipped the button. */
+/*    Fix: two-column grid on short landscape, notes trimmed, everything    */
+/*    fits in 100dvh with overflow hidden, never scroll.                    */
+/* ========================================================================= */
+
+/* --- A. JS-driven layout: body.touch-controls-on / body.compact-game --- */
+body:is(.touch-controls-on, .compact-game) .start-screen {
+  overflow: hidden;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+body:is(.touch-controls-on, .compact-game) .start-hub-container {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  justify-content: space-between;
+  gap: 0.35rem;
+  overflow: hidden;
+}
+body:is(.touch-controls-on, .compact-game) .start-center-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  justify-content: center;
+  gap: 0.35rem;
+}
+body:is(.touch-controls-on, .compact-game) .maps-center-panel {
+  flex: 0 1 auto;
+  min-height: 0;
+}
+body:is(.touch-controls-on, .compact-game) .start-launch-bottom {
+  flex-shrink: 0;
+  margin-top: 0;
+}
+body:is(.touch-controls-on, .compact-game) .start-header {
+  flex-shrink: 0;
+}
+
+/* --- A. Game HUD: cash + timer are two pills, no outer block --- */
+body:is(.touch-controls-on, .compact-game) .sam-sidebar {
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  align-items: flex-start;
+}
+body.compact-game .sam-sidebar {
+  top: 44px;
+}
+body.touch-controls-on:not(.compact-game) .sam-sidebar {
+  top: 8px;
+}
+body:is(.touch-controls-on, .compact-game) .scoreboard-card {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  gap: 0.35rem;
+  flex: none;
+  min-width: 0;
+  width: max-content;
+  max-width: 100%;
+}
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-box {
+  flex: none;
+  min-width: 0;
+  background: rgba(20, 18, 16, 0.88);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-box.cash-box {
+  background: rgba(20, 34, 24, 0.92);
+  border-color: #15803d;
+}
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-box.timer-box {
+  background: rgba(20, 18, 16, 0.88);
+}
+
+/* --- A. Settings: two columns, fits without scrolling --- */
+body:is(.touch-controls-on, .compact-game) #settings-modal {
+  overflow: hidden;
+  padding: 0.5rem;
+  padding-left: max(0.5rem, env(safe-area-inset-left));
+  padding-right: max(0.5rem, env(safe-area-inset-right));
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  align-items: center;
+  justify-content: center;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .settings-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "header header"
+    "sound touch"
+    "back back";
+  gap: 0.45rem;
+  align-content: start;
+  width: 100%;
+  max-width: min(920px, calc(100vw - 1rem));
+  max-height: calc(100dvh - 1rem);
+  height: auto;
+  overflow: hidden;
+  padding: 0.55rem 0.75rem;
+  margin: 0;
+  flex: none;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .submodal-header {
+  grid-area: header;
+  padding-bottom: 0.35rem;
+  flex-shrink: 0;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .submodal-header h2 {
+  font-size: 1rem;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .submodal-sub {
+  display: none;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .submodal-close-btn {
+  padding: 0.3rem 0.55rem;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .settings-section {
+  min-width: 0;
+  padding: 0.5rem 0.6rem;
+  gap: 0.35rem;
+  justify-content: flex-start;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .settings-section:nth-child(2) {
+  grid-area: sound;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .settings-section:nth-child(3) {
+  grid-area: touch;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .settings-section h3 {
+  font-size: 0.7rem;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .settings-slider-row {
+  gap: 0.4rem;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .settings-note {
+  font-size: 0.62rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .settings-section:nth-child(3) .settings-note:last-of-type {
+  display: none;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .settings-mute-btn {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.65rem;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .controls-mode-btn {
+  padding: 0.45rem 0.3rem;
+  font-size: 0.72rem;
+}
+body:is(.touch-controls-on, .compact-game) #settings-modal .cta-btn {
+  grid-area: back;
+  padding: 0.5rem 1rem;
+  font-size: 0.82rem;
+  min-height: 38px;
+  box-shadow: 0 2px 0 #0c0a09;
+}
+
+/* --- B. CSS-only fallback: same fixes when the JS classes are absent --- */
+/* Covers DevTools narrow windows and phones before JS runs. Same rules,  */
+/* plain selectors, later in the file so they win over the earlier        */
+/* fallback blocks.                                                       */
+@media (max-height: 620px) and (orientation: landscape), (pointer: coarse) and (orientation: landscape) {
+  .start-screen {
+    overflow: hidden;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+  .start-hub-container {
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    flex: 1 1 auto;
+    min-height: 0;
+    justify-content: space-between;
+    gap: 0.35rem;
+    overflow: hidden;
+  }
+  .start-center-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+  .maps-center-panel {
+    flex: 0 1 auto;
+    min-height: 0;
+  }
+  .start-launch-bottom {
+    flex-shrink: 0;
+    margin-top: 0;
+  }
+  .start-header {
+    flex-shrink: 0;
+  }
+  .sam-sidebar {
+    width: max-content;
+    max-width: calc(100vw - 16px);
+    align-items: flex-start;
+  }
+  .scoreboard-card {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    gap: 0.35rem;
+    flex: none;
+    min-width: 0;
+    width: max-content;
+    max-width: 100%;
+  }
+  .scoreboard-card .score-box {
+    flex: none;
+    min-width: 0;
+    background: rgba(20, 18, 16, 0.88);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+  }
+  .scoreboard-card .score-box.cash-box {
+    background: rgba(20, 34, 24, 0.92);
+    border-color: #15803d;
+  }
+  #settings-modal {
+    overflow: hidden;
+    padding: 0.5rem;
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    align-items: center;
+    justify-content: center;
+  }
+  #settings-modal .settings-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "header header"
+      "sound touch"
+      "back back";
+    gap: 0.45rem;
+    align-content: start;
+    width: 100%;
+    max-width: min(920px, calc(100vw - 1rem));
+    max-height: calc(100dvh - 1rem);
+    height: auto;
+    overflow: hidden;
+    padding: 0.55rem 0.75rem;
+    margin: 0;
+    flex: none;
+  }
+  #settings-modal .submodal-header {
+    grid-area: header;
+    padding-bottom: 0.35rem;
+  }
+  #settings-modal .submodal-header h2 {
+    font-size: 1rem;
+  }
+  #settings-modal .submodal-sub {
+    display: none;
+  }
+  #settings-modal .submodal-close-btn {
+    padding: 0.3rem 0.55rem;
+    font-size: 0.65rem;
+  }
+  #settings-modal .settings-section {
+    min-width: 0;
+    padding: 0.5rem 0.6rem;
+    gap: 0.35rem;
+    justify-content: flex-start;
+  }
+  #settings-modal .settings-section:nth-child(2) {
+    grid-area: sound;
+  }
+  #settings-modal .settings-section:nth-child(3) {
+    grid-area: touch;
+  }
+  #settings-modal .settings-section h3 {
+    font-size: 0.7rem;
+  }
+  #settings-modal .settings-slider-row {
+    gap: 0.4rem;
+  }
+  #settings-modal .settings-note {
+    font-size: 0.62rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  #settings-modal .settings-section:nth-child(3) .settings-note:last-of-type {
+    display: none;
+  }
+  #settings-modal .settings-mute-btn {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.65rem;
+  }
+  #settings-modal .controls-mode-btn {
+    padding: 0.45rem 0.3rem;
+    font-size: 0.72rem;
+  }
+  #settings-modal .cta-btn {
+    grid-area: back;
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+    min-height: 38px;
+    box-shadow: 0 2px 0 #0c0a09;
+  }
+}
+
+/* ========================================================================= */
+/* ROUND 9 — COMPLETE. File came back as the original again, so this       */
+/* re-applies EVERYTHING in one block. Use this copy.                      */
+/*                                                                           */
+/* TITLE: split by device. Desktop (tall) = centred column, the original   */
+/* look, fixed with safe-center so it never clips. Mobile (short landscape) */
+/* = absolute: text left 6% / middle, Sam canvas right 2% / bottom 6%.    */
+/* Round 8 applied the mobile absolute layout to desktop too, so on       */
+/* desktop the card (no in-flow content) collapsed and Sam floated to the  */
+/* top-centre. Now desktop and mobile are separate, and mobile wins only   */
+/* when body has touch/compact classes OR the short-landscape media query  */
+/* matches — desktop matches neither, so it stays centred.                  */
+/* JOYSTICK: 88px -> 100px (a little bigger), knob 38 -> 44px, padding    */
+/* 8px. Total 108px, still fits the ~107px side bar.                        */
+/* GAME / PILLS / MENU: same as Rounds 5-6.                                 */
+/* ========================================================================= */
+
+/* --- TITLE: DESKTOP (default) — centred column, safe centre --- */
+.title-screen { display: flex !important; flex-direction: column !important; align-items: safe center !important; justify-content: safe center !important; overflow: hidden !important; padding: 0 !important; }
+.title-screen .title-card { display: flex !important; flex-direction: column !important; align-items: safe center !important; justify-content: safe center !important; text-align: center !important; width: 100% !important; max-width: 920px !important; height: 100% !important; max-height: 100dvh !important; min-height: 0 !important; margin: 0 !important; gap: clamp(0.15rem, 1dvh, 0.4rem) !important; padding: clamp(0.4rem, 1.5dvh, 0.8rem) clamp(0.4rem, 2vw, 0.8rem) !important; box-sizing: border-box !important; }
+.title-screen .title-card .title-logo { position: static !important; left: auto !important; top: auto !important; translate: none !important; flex: 0 0 auto !important; max-width: 920px !important; width: 100% !important; margin: 0 auto !important; text-align: center !important; line-height: 0.92 !important; }
+.title-screen .title-card .title-logo .title-line { width: 100% !important; text-align: center !important; margin: 0 auto !important; }
+.title-screen .title-card .title-logo .title-line-dont { font-size: clamp(1.6rem, min(9dvh, 6vw), 4rem) !important; }
+.title-screen .title-card .title-logo .title-line-wake { font-size: clamp(2.2rem, min(13dvh, 9vw), 6rem) !important; }
+.title-screen .title-card .title-logo .title-line-sam { font-size: clamp(3rem, min(18dvh, 13vw), 8.5rem) !important; }
+.title-screen .title-card .title-anim-canvas { position: static !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; flex: 0 1 auto !important; min-height: 0 !important; min-width: 0 !important; width: auto !important; height: min(34dvh, calc(92vw / 2.705)) !important; max-width: 92vw !important; max-height: 34dvh !important; aspect-ratio: 920 / 340 !important; margin: 0 auto !important; }
+
+/* --- TITLE: MOBILE — absolute, text left/middle, Sam bottom-right --- */
+/* Higher specificity (body class) so it beats the desktop rules above, but only on mobile. */
+body:is(.touch-controls-on, .compact-game) .title-screen { display: block !important; }
+body:is(.touch-controls-on, .compact-game) .title-screen .title-card { display: block !important; position: relative !important; width: 100% !important; max-width: none !important; height: 100% !important; padding: 0 !important; text-align: left !important; }
+body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-logo { position: absolute !important; left: 6% !important; top: 50% !important; translate: 0 -50% !important; flex: none !important; max-width: none !important; width: auto !important; margin: 0 !important; text-align: left !important; }
+body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-logo .title-line { text-align: left !important; width: auto !important; margin: 0 !important; }
+body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-logo .title-line-dont { font-size: clamp(1.4rem, min(8dvh, 5vw), 3rem) !important; }
+body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-logo .title-line-wake { font-size: clamp(2rem, min(12dvh, 8vw), 4.5rem) !important; }
+body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-logo .title-line-sam { font-size: clamp(2.8rem, min(17dvh, 11vw), 6.5rem) !important; }
+body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-anim-canvas { position: absolute !important; right: 2% !important; bottom: 6% !important; left: auto !important; top: auto !important; flex: none !important; width: min(52vw, 560px) !important; height: auto !important; max-width: min(52vw, 560px) !important; max-height: none !important; margin: 0 !important; }
+
+/* --- MAIN MENU 2x2 + HAMBURGER --- */
+.hud-menu-toggle { display: none; }
+body:is(.touch-controls-on, .compact-game) .start-center-stage { flex: 1 1 auto; min-height: 0; justify-content: stretch; gap: 0.45rem; }
+body:is(.touch-controls-on, .compact-game) .maps-center-panel { flex: 1 1 auto; min-height: 0; padding: 0.65rem 0.85rem; gap: 0.5rem; justify-content: center; }
+body:is(.touch-controls-on, .compact-game) .start-map-grid { grid-template-columns: repeat(2, 1fr); gap: 0.55rem; flex: 1 1 auto; min-height: 0; align-content: stretch; grid-auto-rows: 1fr; }
+body:is(.touch-controls-on, .compact-game) .start-map-card { flex-direction: row; align-items: center; padding: 0.6rem 0.7rem; gap: 0.6rem; min-height: clamp(62px, 15vh, 86px); }
+body:is(.touch-controls-on, .compact-game) .start-map-thumb { width: 84px; height: 62px; flex: none; flex-shrink: 0; }
+body:is(.touch-controls-on, .compact-game) .start-random-icon { width: 62px; height: 62px; flex: none; font-size: 1.25rem; }
+body:is(.touch-controls-on, .compact-game) .start-map-info strong { font-size: 0.8rem; line-height: 1.2; }
+body:is(.touch-controls-on, .compact-game) .start-map-status { font-size: 0.62rem; }
+body:is(.touch-controls-on, .compact-game) .map-desc-line { display: block; font-size: 0.62rem; line-height: 1.25; }
+body:is(.touch-controls-on, .compact-game) .start-launch-bottom { padding: 0.7rem 1rem; gap: 0.6rem; }
+body:is(.touch-controls-on, .compact-game) .start-shift-btn { min-height: 48px; font-size: 1rem; padding: 0.7rem 1.2rem; }
+body:is(.touch-controls-on, .compact-game) .game-shell { position: relative; }
+body:is(.touch-controls-on, .compact-game) .hud-bar { position: absolute; top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); left: auto; width: auto; background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0; gap: 0; justify-content: flex-end; align-items: flex-start; }
+body:is(.touch-controls-on, .compact-game) .hud-bar .brand, body:is(.touch-controls-on, .compact-game) .hud-bar .map-selector-bar { display: none; }
+body:is(.touch-controls-on, .compact-game) .hud-menu-toggle { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; flex: none; background: rgba(20, 18, 16, 0.92); color: #f3ede2; border: 2px solid var(--panel-border); border-radius: 6px; font-size: 1.1rem; line-height: 1; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,0.5); }
+body:is(.touch-controls-on, .compact-game) .hud-bar .controls-hud { display: none; position: absolute; top: calc(100% + 6px); right: 0; flex-direction: column; align-items: stretch; gap: 0.4rem; background: rgba(20, 18, 16, 0.94); border: 2px solid var(--panel-border); border-radius: 6px; padding: 0.5rem; min-width: 190px; box-shadow: 0 6px 0 rgba(0,0,0,0.5); z-index: 50; }
+body:is(.touch-controls-on, .compact-game) .hud-bar.hud-menu-open .controls-hud { display: flex; }
+body:is(.touch-controls-on, .compact-game) .hud-bar .controls-hud .hud-btn { width: 100%; text-align: left; justify-content: flex-start; padding: 0.6rem 0.7rem; font-size: 0.82rem; }
+
+/* --- CASH / TIMER: smaller, fits side bar --- */
+body:is(.touch-controls-on, .compact-game) .sam-sidebar { flex-direction: column; gap: 0; top: 6px !important; left: max(6px, env(safe-area-inset-left)) !important; }
+body:is(.touch-controls-on, .compact-game) .scoreboard-card { flex-direction: column; gap: 0.25rem; padding: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; width: max-content; flex: none; min-width: 0; }
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-row { display: flex; flex-direction: column; gap: 0.25rem; }
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-box { width: 72px !important; min-width: 72px !important; padding: 0.25rem 0.35rem !important; text-align: center; }
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-label { font-size: 0.45rem !important; }
+body:is(.touch-controls-on, .compact-game) .scoreboard-card .score-val { font-size: 0.75rem !important; line-height: 1.1 !important; }
+body:is(.touch-controls-on, .compact-game) .stage:has(.cutscene-shell.active) .sam-sidebar .scoreboard-card .score-box { width: 64px !important; min-width: 64px !important; padding: 0.2rem 0.3rem !important; }
+body:is(.touch-controls-on, .compact-game) .stage:has(.cutscene-shell.active) .sam-sidebar .scoreboard-card .score-val { font-size: 0.68rem !important; }
+
+/* --- DROP / USE: smaller --- */
+body:is(.touch-controls-on, .compact-game) #touch-buttons { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px !important; }
+body:is(.touch-controls-on, .compact-game) #touch-drop-btn { width: 56px !important; height: 56px !important; }
+body:is(.touch-controls-on, .compact-game) #touch-use-btn { width: 64px !important; height: 64px !important; }
+
+/* --- JOYSTICK: 100px (was 88px), knob 44px — a little bigger, still fits side bar --- */
+body.touch-controls-on #touch-controls { padding: calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left)) !important; }
+body.touch-controls-on #joystick-zone { gap: 2px !important; }
+body.touch-controls-on #joystick-base { width: 100px !important; height: 100px !important; }
+body.touch-controls-on #joystick-knob { width: 44px !important; height: 44px !important; }
+body.touch-controls-on .touch-hint { font-size: 0.55rem !important; }
+
+/* --- GAME WINDOW BIGGER --- */
+body:is(.touch-controls-on, .compact-game) { padding: 0; }
+body:is(.touch-controls-on, .compact-game) .game-shell { width: 100%; max-width: none; height: 100dvh; height: 100vh; gap: 0; padding: 0; }
+body:is(.touch-controls-on, .compact-game) .stage { flex: 1; min-height: 0; min-width: 0; grid-template-columns: 1fr; gap: 0; padding: 0; position: relative; }
+body:is(.touch-controls-on, .compact-game) .canvas-wrapper { flex: 1; min-height: 0; min-width: 0; width: 100%; height: 100%; border-width: 0; border-radius: 0; box-shadow: none; padding: 0; }
+body:is(.touch-controls-on, .compact-game) #game-canvas { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; object-fit: contain !important; }
+body:is(.touch-controls-on, .compact-game) .cutscene-shell { gap: 0.3rem; padding: 0; }
+body:is(.touch-controls-on, .compact-game) .cutscene-frame { width: min(100%, calc(100dvh * 1.777)); height: auto; max-height: 100%; border-width: 0; border-radius: 0; box-shadow: none; }
+
+/* --- FALLBACK: same without JS classes. Desktop does NOT match this (tall + fine pointer), so desktop keeps the centred title above. --- */
+@media (max-height: 620px) and (orientation: landscape), (pointer: coarse) and (orientation: landscape) {
+  .title-screen { display: block !important; }
+  .title-card { display: block !important; position: relative !important; width: 100% !important; max-width: none !important; height: 100% !important; padding: 0 !important; text-align: left !important; }
+  .title-logo { position: absolute !important; left: 6% !important; top: 50% !important; translate: 0 -50% !important; text-align: left !important; }
+  .title-line { text-align: left !important; }
+  .title-line-dont { font-size: clamp(1.4rem, min(8dvh, 5vw), 3rem) !important; }
+  .title-line-wake { font-size: clamp(2rem, min(12dvh, 8vw), 4.5rem) !important; }
+  .title-line-sam { font-size: clamp(2.8rem, min(17dvh, 11vw), 6.5rem) !important; }
+  .title-anim-canvas { position: absolute !important; right: 2% !important; bottom: 6% !important; width: min(52vw, 560px) !important; height: auto !important; max-width: min(52vw, 560px) !important; }
+  .start-map-grid { grid-template-columns: repeat(2, 1fr); gap: 0.55rem; flex: 1 1 auto; align-content: stretch; grid-auto-rows: 1fr; }
+  .start-map-card { min-height: clamp(62px, 15vh, 86px); }
+  .start-map-thumb { width: 84px; height: 62px; }
+  .game-shell { position: relative; gap: 0; padding: 0; }
+  .hud-bar { position: absolute; top: max(8px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); left: auto; width: auto; background: transparent; border: 0; box-shadow: none; padding: 0; justify-content: flex-end; }
+  .hud-bar .brand, .hud-bar .map-selector-bar { display: none; }
+  .hud-menu-toggle { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: rgba(20, 18, 16, 0.92); color: #f3ede2; border: 2px solid var(--panel-border); border-radius: 6px; font-size: 1.1rem; cursor: pointer; }
+  .hud-bar .controls-hud { display: none; position: absolute; top: calc(100% + 6px); right: 0; flex-direction: column; gap: 0.4rem; background: rgba(20, 18, 16, 0.94); border: 2px solid var(--panel-border); border-radius: 6px; padding: 0.5rem; min-width: 190px; z-index: 50; }
+  .hud-bar.hud-menu-open .controls-hud { display: flex; }
+  .sam-sidebar { flex-direction: column; gap: 0; top: 6px; }
+  .sam-sidebar .scoreboard-card { flex-direction: column; gap: 0.25rem; padding: 0; background: transparent; border: 0; box-shadow: none; width: max-content; }
+  .sam-sidebar .scoreboard-card .score-row { display: flex; flex-direction: column; gap: 0.25rem; }
+  .sam-sidebar .scoreboard-card .score-box { width: 72px !important; min-width: 72px !important; padding: 0.25rem 0.35rem !important; }
+  #touch-buttons { flex-direction: column; align-items: center; gap: 6px !important; }
+  #touch-drop-btn { width: 56px !important; height: 56px !important; }
+  #touch-use-btn { width: 64px !important; height: 64px !important; }
+  #touch-controls { padding: 8px !important; }
+  #joystick-base { width: 100px !important; height: 100px !important; }
+  #joystick-knob { width: 44px !important; height: 44px !important; }
+  #game-canvas { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; }
+  .cutscene-frame { width: min(100%, calc(100dvh * 1.777)); border-width: 0; border-radius: 0; box-shadow: none; }
+}
+
+/* ========================================================================= */
+/* ROUND 10 — Tutorial / Achievements / Outfits scale like Settings        */
+/*                                                                           */
+/* Why Settings fits: it is short (header + 2 small sections + button).    */
+/* Why the others scroll:                                                  */
+/*  Tutorial: canvas max-height 360px + caption + controls + button > 390px */
+/*  Achievements: list max-height 380px + header + button > 390px         */
+/*  Outfits: showcase 112px + 3-col grid (2-3 rows) + button > 390px      */
+/* Fix, scoped to ONLY these three (Settings untouched):                   */
+/*  - Submodal: padding 0.5rem, safe-center, overflow hidden (no outer scroll) */
+/*  - Card: max-height calc(100dvh - 1rem), height 100%, overflow hidden  */
+/*  - Inner bodies flex: 1 1 auto, min-height 0, so they shrink to fit.   */
+/*    Lists/grids keep their own inner scroll, but the card itself never   */
+/*    needs the page to scroll.                                            */
+/* ========================================================================= */
+
+/* --- Shared: the three modals only --- */
+body:is(.touch-controls-on, .compact-game) #tutorial-modal,
+body:is(.touch-controls-on, .compact-game) #achievements-modal,
+body:is(.touch-controls-on, .compact-game) #outfits-modal { padding: 0.5rem !important; padding-left: max(0.5rem, env(safe-area-inset-left)) !important; padding-right: max(0.5rem, env(safe-area-inset-right)) !important; align-items: safe center !important; justify-content: safe center !important; overflow: hidden !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .submodal-card,
+body:is(.touch-controls-on, .compact-game) #achievements-modal .submodal-card,
+body:is(.touch-controls-on, .compact-game) #outfits-modal .submodal-card { max-width: 720px !important; width: 100% !important; height: 100% !important; max-height: calc(100dvh - 1rem) !important; min-height: 0 !important; margin: 0 !important; padding: 0.6rem 0.8rem !important; gap: 0.5rem !important; overflow: hidden !important; box-sizing: border-box !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .submodal-header,
+body:is(.touch-controls-on, .compact-game) #achievements-modal .submodal-header,
+body:is(.touch-controls-on, .compact-game) #outfits-modal .submodal-header { flex: 0 0 auto !important; padding-bottom: 0.4rem !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .submodal-header h2,
+body:is(.touch-controls-on, .compact-game) #achievements-modal .submodal-header h2,
+body:is(.touch-controls-on, .compact-game) #outfits-modal .submodal-header h2 { font-size: 1rem !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .submodal-sub,
+body:is(.touch-controls-on, .compact-game) #achievements-modal .submodal-sub,
+body:is(.touch-controls-on, .compact-game) #outfits-modal .submodal-sub { font-size: 0.62rem !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .submodal-close-btn,
+body:is(.touch-controls-on, .compact-game) #achievements-modal .submodal-close-btn,
+body:is(.touch-controls-on, .compact-game) #outfits-modal .submodal-close-btn { padding: 0.3rem 0.55rem !important; font-size: 0.65rem !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .cta-btn,
+body:is(.touch-controls-on, .compact-game) #achievements-modal .cta-btn,
+body:is(.touch-controls-on, .compact-game) #outfits-modal .cta-btn { flex: 0 0 auto !important; min-height: 38px !important; padding: 0.5rem 0.8rem !important; font-size: 0.85rem !important; margin: 0 !important; }
+
+/* --- Tutorial: canvas shrinks, nothing else scrolls --- */
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .tutorial-body { flex: 1 1 auto !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .tutorial-carousel { flex: 1 1 auto !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; gap: 0.4rem !important; overflow: hidden !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .tutorial-slide-caption { flex: 0 0 auto !important; min-height: 0 !important; padding: 0 0.1rem !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .tutorial-slide-caption strong { font-size: 0.9rem !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .tutorial-slide-caption span { font-size: 0.65rem !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal #tutorial-slide-canvas { flex: 1 1 auto !important; min-height: 0 !important; min-width: 0 !important; width: 100% !important; height: 100% !important; max-height: none !important; object-fit: contain !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .tutorial-carousel-controls { flex: 0 0 auto !important; gap: 0.5rem !important; }
+body:is(.touch-controls-on, .compact-game) #tutorial-modal .tutorial-nav-btn { padding: 0.35rem 0.6rem !important; font-size: 0.7rem !important; }
+
+/* --- Achievements: 3 cols, compact rows, list scrolls inside, card does not --- */
+body:is(.touch-controls-on, .compact-game) #achievements-modal .ach-modal-list { flex: 1 1 auto !important; min-height: 0 !important; max-height: none !important; overflow-y: auto !important; grid-template-columns: repeat(3, 1fr) !important; gap: 0.4rem !important; padding-right: 2px !important; }
+body:is(.touch-controls-on, .compact-game) #achievements-modal .ach-item { padding: 0.4rem 0.5rem !important; gap: 0.4rem !important; }
+body:is(.touch-controls-on, .compact-game) #achievements-modal .ach-check { width: 20px !important; height: 20px !important; font-size: 0.65rem !important; }
+body:is(.touch-controls-on, .compact-game) #achievements-modal .ach-info { line-height: 1.2 !important; }
+body:is(.touch-controls-on, .compact-game) #achievements-modal .ach-info strong { font-size: 0.72rem !important; }
+body:is(.touch-controls-on, .compact-game) #achievements-modal .ach-info span { font-size: 0.62rem !important; }
+body:is(.touch-controls-on, .compact-game) #achievements-modal .ach-modal-right { gap: 0.5rem !important; }
+body:is(.touch-controls-on, .compact-game) #achievements-modal .ach-counter { font-size: 0.75rem !important; }
+
+/* --- Outfits: small preview, 4-col grid, grid scrolls inside, card does not --- */
+body:is(.touch-controls-on, .compact-game) #outfits-modal .wardrobe-showcase { flex: 0 0 auto !important; padding: 0.5rem 0.6rem !important; gap: 0.6rem !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-preview-box { width: 64px !important; height: 64px !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .equipped-tag { font-size: 0.5rem !important; padding: 1px 2px !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-showcase-meta { gap: 0.2rem !important; min-width: 0 !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-showcase-meta h3 { font-size: 0.9rem !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-showcase-meta p { font-size: 0.7rem !important; line-height: 1.3 !important; display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-status-note { font-size: 0.65rem !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-grid { flex: 1 1 auto !important; min-height: 0 !important; overflow-y: auto !important; grid-template-columns: repeat(4, 1fr) !important; gap: 0.4rem !important; padding-right: 2px !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-card { padding: 0.4rem 0.45rem !important; gap: 0.3rem !important; box-shadow: 0 2px 0 var(--border-hard) !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-card-top { gap: 0.3rem !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-swatch { width: 20px !important; height: 20px !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-price-tag { font-size: 0.58rem !important; padding: 1px 4px !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-card-title { font-size: 0.7rem !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-card-sub { font-size: 0.6rem !important; line-height: 1.2 !important; }
+body:is(.touch-controls-on, .compact-game) #outfits-modal .outfit-action-btn { font-size: 0.6rem !important; padding: 0.25rem 0.3rem !important; }
+
+/* --- FALLBACK: same without JS classes (short landscape) --- */
+@media (max-height: 620px) and (orientation: landscape), (pointer: coarse) and (orientation: landscape) {
+  #tutorial-modal, #achievements-modal, #outfits-modal { padding: 0.5rem !important; align-items: safe center !important; justify-content: safe center !important; overflow: hidden !important; }
+  #tutorial-modal .submodal-card, #achievements-modal .submodal-card, #outfits-modal .submodal-card { height: 100% !important; max-height: calc(100dvh - 1rem) !important; min-height: 0 !important; margin: 0 !important; padding: 0.6rem 0.8rem !important; gap: 0.5rem !important; overflow: hidden !important; }
+  #tutorial-modal .submodal-header, #achievements-modal .submodal-header, #outfits-modal .submodal-header { flex: 0 0 auto !important; padding-bottom: 0.4rem !important; }
+  #tutorial-modal .submodal-header h2, #achievements-modal .submodal-header h2, #outfits-modal .submodal-header h2 { font-size: 1rem !important; }
+  #tutorial-modal .cta-btn, #achievements-modal .cta-btn, #outfits-modal .cta-btn { flex: 0 0 auto !important; min-height: 38px !important; padding: 0.5rem 0.8rem !important; font-size: 0.85rem !important; }
+  #tutorial-modal .tutorial-body { flex: 1 1 auto !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; }
+  #tutorial-modal .tutorial-carousel { flex: 1 1 auto !important; min-height: 0 !important; gap: 0.4rem !important; overflow: hidden !important; }
+  #tutorial-modal #tutorial-slide-canvas { flex: 1 1 auto !important; min-height: 0 !important; width: 100% !important; height: 100% !important; max-height: none !important; }
+  #tutorial-modal .tutorial-carousel-controls { flex: 0 0 auto !important; }
+  #achievements-modal .ach-modal-list { flex: 1 1 auto !important; min-height: 0 !important; max-height: none !important; grid-template-columns: repeat(3, 1fr) !important; gap: 0.4rem !important; }
+  #achievements-modal .ach-item { padding: 0.4rem 0.5rem !important; }
+  #outfits-modal .wardrobe-showcase { flex: 0 0 auto !important; padding: 0.5rem 0.6rem !important; }
+  #outfits-modal .outfit-preview-box { width: 64px !important; height: 64px !important; }
+  #outfits-modal .outfit-showcase-meta p { display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; }
+  #outfits-modal .outfit-grid { flex: 1 1 auto !important; min-height: 0 !important; grid-template-columns: repeat(4, 1fr) !important; gap: 0.4rem !important; }
+  #outfits-modal .outfit-card { padding: 0.4rem 0.45rem !important; }
+}
+
+/* ========================================================================= */
+/* ROUND 11 — TABLET (768-1366 wide, 600+ tall, landscape, touch)          */
+/*                                                                           */
+/* Phone layout (sides) fails on tablet: canvas is 4:3-ish, so it          */
+/* letterboxes with a dead black bar at the bottom, while joystick /       */
+/* DROP / USE / cash / timer overlay the game. Desktop layout (top bar)  */
+/* fails too: it wastes that bottom bar.                                   */
+/* Tablet fix: bottom control bar. Game takes top, controls take a 120px  */
+/* bar at the bottom — cash/timer left, DROP/USE middle, joystick +       */
+/* hamburger right. Nothing overlays the game.                             */
+/* Title on tablet: phone absolute layout (designed for 390px tall)       */
+/* looked lost on 768px tall. Tablet gets centred column like desktop,    */
+/* but scaled for tablet.                                                  */
+/* Tablet = min-width 768, max-width 1366, min-height 600, landscape.     */
+/* Phone (height <600) and desktop (width >1366 or fine pointer, tall)    */
+/* do NOT match, so they keep their layouts.                               */
+/* ========================================================================= */
+@media (min-width: 768px) and (max-width: 1366px) and (min-height: 600px) and (orientation: landscape) {
+  /* --- TITLE: centred column, tablet scale (overrides phone absolute) --- */
+  .title-screen { display: flex !important; flex-direction: column !important; align-items: safe center !important; justify-content: safe center !important; overflow: hidden !important; padding: 0 !important; }
+  .title-screen .title-card { display: flex !important; flex-direction: column !important; align-items: safe center !important; justify-content: safe center !important; position: static !important; width: 100% !important; max-width: 800px !important; height: 100% !important; max-height: 100dvh !important; margin: 0 !important; padding: 1rem !important; gap: 0.75rem !important; text-align: center !important; }
+  .title-screen .title-card .title-logo { position: static !important; left: auto !important; top: auto !important; translate: none !important; flex: 0 0 auto !important; max-width: 800px !important; width: 100% !important; margin: 0 auto !important; text-align: center !important; }
+  .title-screen .title-card .title-logo .title-line { text-align: center !important; width: 100% !important; margin: 0 auto !important; }
+  .title-screen .title-card .title-logo .title-line-dont { font-size: clamp(2.2rem, 6vw, 3.5rem) !important; }
+  .title-screen .title-card .title-logo .title-line-wake { font-size: clamp(3.2rem, 9vw, 5.5rem) !important; }
+  .title-screen .title-card .title-logo .title-line-sam { font-size: clamp(4.2rem, 12vw, 7.5rem) !important; }
+  .title-screen .title-card .title-anim-canvas { position: static !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; flex: 0 1 auto !important; width: min(720px, 80vw) !important; height: auto !important; max-width: 80vw !important; max-height: 40dvh !important; margin: 0 auto !important; }
+
+  /* --- TITLE: same, but with body class (higher specificity, wins over phone body-class rules) --- */
+  body:is(.touch-controls-on, .compact-game) .title-screen { display: flex !important; flex-direction: column !important; align-items: safe center !important; justify-content: safe center !important; }
+  body:is(.touch-controls-on, .compact-game) .title-screen .title-card { display: flex !important; flex-direction: column !important; align-items: safe center !important; justify-content: safe center !important; position: static !important; max-width: 800px !important; height: 100% !important; padding: 1rem !important; gap: 0.75rem !important; text-align: center !important; }
+  body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-logo { position: static !important; left: auto !important; top: auto !important; translate: none !important; max-width: 800px !important; width: 100% !important; margin: 0 auto !important; text-align: center !important; }
+  body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-logo .title-line { text-align: center !important; width: 100% !important; margin: 0 auto !important; }
+  body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-logo .title-line-dont { font-size: clamp(2.2rem, 6vw, 3.5rem) !important; }
+  body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-logo .title-line-wake { font-size: clamp(3.2rem, 9vw, 5.5rem) !important; }
+  body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-logo .title-line-sam { font-size: clamp(4.2rem, 12vw, 7.5rem) !important; }
+  body:is(.touch-controls-on, .compact-game) .title-screen .title-card .title-anim-canvas { position: static !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; width: min(720px, 80vw) !important; height: auto !important; max-width: 80vw !important; max-height: 40dvh !important; margin: 0 auto !important; }
+
+  /* --- GAME: bottom control bar --- */
+  body:is(.touch-controls-on, .compact-game) .game-shell { height: 100dvh !important; height: 100vh !important; gap: 0 !important; padding: 0 !important; }
+  body:is(.touch-controls-on, .compact-game) .stage { display: block !important; position: relative !important; flex: 1 1 auto !important; min-height: 0 !important; min-width: 0 !important; padding-bottom: 120px !important; box-sizing: border-box !important; grid-template-columns: none !important; gap: 0 !important; }
+  body:is(.touch-controls-on, .compact-game) .canvas-wrapper { width: 100% !important; height: 100% !important; min-height: 0 !important; border-width: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+  body:is(.touch-controls-on, .compact-game) #game-canvas { width: 100% !important; height: 100% !important; max-width: none !important; max-height: none !important; object-fit: contain !important; }
+
+  /* Bottom bar itself: #touch-controls is the bar background */
+  body:is(.touch-controls-on, .compact-game) #touch-controls { position: absolute !important; inset: auto 0 0 0 !important; top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important; height: 120px !important; min-height: 120px !important; display: flex !important; flex-direction: row-reverse !important; align-items: center !important; justify-content: space-between !important; gap: 0 !important; padding: 0.5rem 1rem 0.5rem 290px !important; padding-left: 290px !important; padding-right: 80px !important; background: rgba(20, 18, 16, 0.96) !important; border-top: 2px solid var(--panel-border) !important; box-sizing: border-box !important; pointer-events: none !important; z-index: 30 !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #joystick-zone { flex: 0 0 auto !important; gap: 2px !important; pointer-events: auto !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #joystick-base { width: 110px !important; height: 110px !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #joystick-knob { width: 48px !important; height: 48px !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls .touch-hint { font-size: 0.6rem !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #touch-buttons { flex: 0 0 auto !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; gap: 10px !important; pointer-events: auto !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #touch-drop-btn { width: 72px !important; height: 72px !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #touch-use-btn { width: 84px !important; height: 84px !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls .touch-btn-label { font-size: 0.9rem !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls .touch-btn-sub { font-size: 0.5rem !important; }
+
+  /* Cash / Timer: left of the bottom bar, side by side */
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar { position: absolute !important; left: 0 !important; right: auto !important; top: auto !important; bottom: 0 !important; width: 280px !important; height: 120px !important; min-height: 120px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; gap: 0 !important; padding: 0.5rem 0.5rem 0.5rem max(0.5rem, env(safe-area-inset-left)) !important; box-sizing: border-box !important; z-index: 31 !important; pointer-events: none !important; transform: none !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card { flex-direction: row !important; gap: 0.5rem !important; padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; width: auto !important; max-width: none !important; pointer-events: none !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card .score-row { display: flex !important; flex-direction: row !important; gap: 0.5rem !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card .score-box { width: 110px !important; min-width: 110px !important; height: 60px !important; padding: 0.4rem 0.5rem !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; justify-content: center !important; gap: 2px !important; background: rgba(20, 18, 16, 0.92) !important; border: 1px solid var(--panel-border) !important; border-radius: 6px !important; text-align: left !important; pointer-events: none !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card .score-box.cash-box { background: rgba(20, 34, 24, 0.96) !important; border-color: #15803d !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card .score-label { font-size: 0.55rem !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card .score-val { font-size: 1rem !important; line-height: 1.1 !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .mobile-hide { display: none !important; }
+
+  /* Hamburger: far right of the bottom bar, menu opens UP */
+  body:is(.touch-controls-on, .compact-game) .hud-bar { position: absolute !important; top: auto !important; bottom: 0 !important; right: 0 !important; left: auto !important; width: 70px !important; height: 120px !important; min-height: 120px !important; display: flex !important; align-items: center !important; justify-content: center !important; background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; padding: 0 0.5rem 0 0 !important; gap: 0 !important; z-index: 32 !important; }
+  body:is(.touch-controls-on, .compact-game) .hud-bar .brand, body:is(.touch-controls-on, .compact-game) .hud-bar .map-selector-bar { display: none !important; }
+  body:is(.touch-controls-on, .compact-game) .hud-bar .hud-menu-toggle { display: flex !important; width: 44px !important; height: 44px !important; font-size: 1.2rem !important; }
+  body:is(.touch-controls-on, .compact-game) .hud-bar .controls-hud { display: none !important; position: absolute !important; top: auto !important; bottom: calc(100% + 6px) !important; right: 0 !important; left: auto !important; flex-direction: column !important; }
+  body:is(.touch-controls-on, .compact-game) .hud-bar.hud-menu-open .controls-hud { display: flex !important; }
+}
+
+/* ========================================================================= */
+/* ROUND 12 — TABLET: ONE bottom bar, not two, and it does NOT overlay    */
+/*                                                                           */
+/* Round 11 made TWO bars: #touch-controls (translucent, DROP/USE +      */
+/* joystick) + .sam-sidebar/.hud-bar (solid, 4 boxes + hamburger) stacked */
+/* below it = 240px, and the top bar was translucent so game showed       */
+/* through behind it.                                                      */
+/* Round 12: ONE bar, 110px. #touch-controls IS the bar.                  */
+/*  - Left: DROP + USE (row)                                               */
+/*  - Middle: SAME TWO as mobile — SHIFT CASH + TIMER only (BEST SHIFT /  */
+/*    SORTED stay hidden via .mobile-hide, like mobile).                  */
+/*  - Right: joystick                                                      */
+/*  - Middle, at bottom: hamburger, centred below the two boxes.          */
+/* .sam-sidebar and .hud-bar are transparent overlays INSIDE that one    */
+/* bar, not separate bars. .stage is flex column with padding-bottom     */
+/* 110px and .canvas-wrapper flex:1, so the game sits ABOVE the bar,     */
+/* not behind it.                                                          */
+/* ========================================================================= */
+@media (min-width: 768px) and (max-width: 1366px) and (min-height: 600px) and (orientation: landscape) {
+  body:is(.touch-controls-on, .compact-game) .stage { display: flex !important; flex-direction: column !important; padding: 0 0 110px 0 !important; padding-bottom: 110px !important; box-sizing: border-box !important; }
+  body:is(.touch-controls-on, .compact-game) .canvas-wrapper { flex: 1 1 auto !important; min-height: 0 !important; height: auto !important; width: 100% !important; }
+  body:is(.touch-controls-on, .compact-game) #game-canvas { width: 100% !important; height: 100% !important; }
+
+  /* The ONE bar */
+  body:is(.touch-controls-on, .compact-game) #touch-controls { position: absolute !important; inset: auto 0 0 0 !important; top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important; height: 110px !important; min-height: 110px !important; display: flex !important; flex-direction: row-reverse !important; align-items: center !important; justify-content: space-between !important; padding: 0.4rem 0.8rem !important; padding-left: 0.8rem !important; padding-right: 0.8rem !important; background: rgba(20, 18, 16, 0.96) !important; border-top: 2px solid var(--panel-border) !important; box-sizing: border-box !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #touch-buttons { flex-direction: row !important; gap: 10px !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #touch-drop-btn { width: 72px !important; height: 72px !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #touch-use-btn { width: 84px !important; height: 84px !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #joystick-base { width: 110px !important; height: 110px !important; }
+  body:is(.touch-controls-on, .compact-game) #touch-controls #joystick-knob { width: 48px !important; height: 48px !important; }
+
+  /* Middle: two boxes only, centred, above the hamburger */
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar { position: absolute !important; left: 50% !important; right: auto !important; top: auto !important; bottom: 32px !important; transform: translateX(-50%) !important; width: auto !important; height: 56px !important; min-height: 56px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; gap: 0 !important; padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; z-index: 31 !important; pointer-events: none !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card { flex-direction: row !important; gap: 0.5rem !important; padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; width: auto !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card .score-row { display: flex !important; flex-direction: row !important; gap: 0.5rem !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card .score-box { width: 110px !important; min-width: 110px !important; height: 56px !important; padding: 0.4rem 0.5rem !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card .score-label { font-size: 0.55rem !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .scoreboard-card .score-val { font-size: 1rem !important; line-height: 1.1 !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .mobile-hide { display: none !important; }
+  body:is(.touch-controls-on, .compact-game) .sam-sidebar .bank-strip { display: none !important; }
+
+  /* Middle, at bottom: hamburger, centred below the two boxes */
+  body:is(.touch-controls-on, .compact-game) .hud-bar { position: absolute !important; top: auto !important; bottom: 0 !important; left: 50% !important; right: auto !important; transform: translateX(-50%) !important; width: 60px !important; height: 30px !important; min-height: 30px !important; display: flex !important; align-items: center !important; justify-content: center !important; background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; z-index: 32 !important; }
+  body:is(.touch-controls-on, .compact-game) .hud-bar .brand, body:is(.touch-controls-on, .compact-game) .hud-bar .map-selector-bar { display: none !important; }
+  body:is(.touch-controls-on, .compact-game) .hud-bar .hud-menu-toggle { display: flex !important; width: 32px !important; height: 26px !important; font-size: 1rem !important; }
+  body:is(.touch-controls-on, .compact-game) .hud-bar .controls-hud { display: none !important; position: absolute !important; top: auto !important; bottom: calc(100% + 6px) !important; left: 50% !important; right: auto !important; transform: translateX(-50%) !important; }
+  body:is(.touch-controls-on, .compact-game) .hud-bar.hud-menu-open .controls-hud { display: flex !important; }
+}
+
+/* ========================================================================= */
+/* ROUND 13 — TABLET: ONE fixed bottom bar. All controls IN it.             */
+/*                                                                           */
+/* Rounds 11-12 failed because #touch-controls is inside .canvas-wrapper,  */
+/* .sam-sidebar is inside .stage, .hud-bar is inside .game-shell — three  */
+/* different containing blocks, so "bottom: 0" meant three different      */
+/* bottoms = two stacked bars + controls still overlaid on the game.     */
+/* Round 13 uses position: fixed for all three, so they all anchor to    */
+/* the VIEWPORT bottom, not their parents. One bar, 110px.               */
+/*  - .game-shell padding-bottom 110px: game sits ABOVE the bar, not     */
+/*    behind it. The black bar IS the bar, not empty space.               */
+/*  - #touch-controls: the bar background, fixed bottom 0, full width.  */
+/*  - Left: DROP + USE, horizontal row.                                  */
+/*  - Middle: SHIFT CASH + TIMER only (mobile-hide stays hidden), side   */
+/*    by side, centred.                                                   */
+/*  - Right: joystick.                                                    */
+/*  - Middle, at bottom: hamburger, centred below the two boxes.         */
+/* Tablet = (pointer: coarse) + min-width 700 + min-height 600 +         */
+/* landscape. Phone (height <600) and PC (pointer fine) do NOT match.     */
+/* ========================================================================= */
+@media (pointer: coarse) and (min-width: 700px) and (min-height: 600px) and (orientation: landscape) {
+  body.touch-controls-on .game-shell { padding-bottom: 110px !important; box-sizing: border-box !important; }
+  body.touch-controls-on .stage { display: flex !important; flex-direction: column !important; padding: 0 !important; box-sizing: border-box !important; }
+  body.touch-controls-on .canvas-wrapper { flex: 1 1 auto !important; min-height: 0 !important; height: auto !important; width: 100% !important; }
+
+  /* The ONE bar — fixed to viewport bottom */
+  body.touch-controls-on #touch-controls { position: fixed !important; inset: auto 0 0 0 !important; top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important; height: 110px !important; min-height: 110px !important; display: flex !important; flex-direction: row-reverse !important; align-items: center !important; justify-content: space-between !important; padding: 0.4rem 0.8rem !important; background: #141110 !important; background: rgba(20, 17, 16, 0.98) !important; border-top: 2px solid var(--panel-border) !important; box-sizing: border-box !important; z-index: 40 !important; pointer-events: none !important; }
+  body.touch-controls-on #touch-controls #joystick-zone { flex: 0 0 auto !important; gap: 2px !important; pointer-events: auto !important; }
+  body.touch-controls-on #touch-controls #joystick-base { width: 100px !important; height: 100px !important; }
+  body.touch-controls-on #touch-controls #joystick-knob { width: 44px !important; height: 44px !important; }
+  body.touch-controls-on #touch-controls .touch-hint { font-size: 0.6rem !important; }
+  body.touch-controls-on #touch-controls #touch-buttons { flex: 0 0 auto !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; gap: 10px !important; pointer-events: auto !important; }
+  body.touch-controls-on #touch-controls #touch-drop-btn { width: 72px !important; height: 72px !important; }
+  body.touch-controls-on #touch-controls #touch-use-btn { width: 84px !important; height: 84px !important; }
+  body.touch-controls-on #touch-controls .touch-btn-label { font-size: 0.9rem !important; }
+
+  /* Middle: two boxes only, centred in the bar, above hamburger */
+  body.touch-controls-on .sam-sidebar { position: fixed !important; left: 50% !important; right: auto !important; top: auto !important; bottom: 34px !important; transform: translateX(-50%) !important; width: auto !important; height: 56px !important; min-height: 56px !important; display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; gap: 0 !important; padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; z-index: 41 !important; pointer-events: none !important; }
+  body.touch-controls-on .sam-sidebar .scoreboard-card { flex-direction: row !important; gap: 0.5rem !important; padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; width: auto !important; }
+  body.touch-controls-on .sam-sidebar .scoreboard-card .score-row { display: flex !important; flex-direction: row !important; gap: 0.5rem !important; }
+  body.touch-controls-on .sam-sidebar .scoreboard-card .score-box { width: 110px !important; min-width: 110px !important; height: 56px !important; padding: 0.4rem 0.5rem !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; justify-content: center !important; gap: 2px !important; }
+  body.touch-controls-on .sam-sidebar .scoreboard-card .score-label { font-size: 0.55rem !important; }
+  body.touch-controls-on .sam-sidebar .scoreboard-card .score-val { font-size: 1rem !important; line-height: 1.1 !important; }
+  body.touch-controls-on .sam-sidebar .mobile-hide { display: none !important; }
+  body.touch-controls-on .sam-sidebar .bank-strip { display: none !important; }
+  body.touch-controls-on .sam-sidebar .sam-cam-card { display: none !important; }
+  body.touch-controls-on .sam-sidebar .legend-card { display: none !important; }
+
+  /* Middle, at bottom: hamburger, centred below the two boxes */
+  body.touch-controls-on .hud-bar { position: fixed !important; top: auto !important; bottom: 0 !important; left: 50% !important; right: auto !important; transform: translateX(-50%) !important; width: 60px !important; height: 32px !important; min-height: 32px !important; display: flex !important; align-items: center !important; justify-content: center !important; background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; gap: 0 !important; z-index: 42 !important; }
+  body.touch-controls-on .hud-bar .brand, body.touch-controls-on .hud-bar .map-selector-bar { display: none !important; }
+  body.touch-controls-on .hud-bar .hud-menu-toggle { display: flex !important; width: 32px !important; height: 26px !important; font-size: 1rem !important; }
+  body.touch-controls-on .hud-bar .controls-hud { display: none !important; position: absolute !important; top: auto !important; bottom: calc(100% + 6px) !important; left: 50% !important; right: auto !important; transform: translateX(-50%) !important; }
+  body.touch-controls-on .hud-bar.hud-menu-open .controls-hud { display: flex !important; }
 }
