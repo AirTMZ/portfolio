@@ -51,6 +51,83 @@ body {
   overflow-y: auto;
 }
 
+/* ========================================================================= */
+/* QUICK TITLE SCREEN — on every refresh, not on return to Main Menu       */
+/* ========================================================================= */
+.title-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: radial-gradient(circle at 50% 18%, #2b231b 0%, #14110f 72%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  cursor: default;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.32s ease, transform 0.32s ease;
+}
+.title-screen:not(.active) {
+  opacity: 0;
+  pointer-events: none;
+}
+.title-screen.leaving {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+.title-card {
+  text-align: center;
+  max-width: 920px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.title-anim-canvas {
+  width: min(920px, 92vw);
+  height: auto;
+  display: block;
+  margin-top: 0.4rem;
+}
+.title-logo {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+  animation: title-breathe 3s ease-in-out 1.2s infinite;
+}
+.title-line {
+  display: block;
+  opacity: 0;
+  animation: title-pop 0.55s cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
+}
+.title-line-dont {
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  color: var(--text-light);
+  animation-delay: 0.05s;
+}
+.title-line-wake {
+  font-size: clamp(3rem, 9vw, 6rem);
+  color: var(--text-light);
+  animation-delay: 0.22s;
+}
+.title-line-sam {
+  font-size: clamp(4rem, 13vw, 8.5rem);
+  color: var(--warning);
+  text-shadow: 0 6px 0 #0c0a09, 0 0 32px rgba(234, 179, 8, 0.35);
+  animation-delay: 0.4s;
+}
+@keyframes title-pop {
+  0% { opacity: 0; transform: translateY(28px) scale(0.7) rotate(-3deg); }
+  60% { opacity: 1; transform: translateY(-6px) scale(1.06) rotate(1deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+@keyframes title-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+}
+
 .start-screen.active {
   opacity: 1;
   pointer-events: auto;

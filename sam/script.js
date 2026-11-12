@@ -32,6 +32,106 @@ const startSamCanvas = document.getElementById('start-sam-canvas');
 const gameoverSamCanvas = document.getElementById('gameover-sam-canvas');
 const cutsceneCanvas = document.getElementById('cutscene-canvas');
 const cutsceneShell = document.getElementById('cutscene-shell');
+const titleScreen = document.getElementById('title-screen');
+const titleAnimCanvas = document.getElementById('title-anim-canvas');
+// Title screen: shows on every page load (it's .active in HTML).
+// Unskippable — no click / key skips it. It just plays Sam in bed on
+// the right (sleeping, then peeking), then auto-dismisses to the hub.
+// Once dismissed it stays dismissed — openMainMenu never re-shows it,
+// so returning to Main Menu goes straight to the hub, not the title.
+let titleScreenDismissed = false;
+let titleAnimRaf = null;
+const titleAnimStart = performance.now();
+const TITLE_ANIM_DURATION = 3600;
+function dismissTitleScreen() {
+  if (titleScreenDismissed || !titleScreen) return;
+  titleScreenDismissed = true;
+  if (titleAnimRaf) cancelAnimationFrame(titleAnimRaf);
+  titleScreen.classList.add('leaving');
+  window.setTimeout(() => {
+    titleScreen.classList.remove('active', 'leaving');
+    titleScreen.style.display = 'none';
+  }, 340);
+}
+function drawTitleAnimation(now) {
+  if (titleScreenDismissed || !titleAnimCanvas) return;
+  const t = (now - titleAnimStart) / 1000;
+  const c = titleAnimCanvas.getContext('2d');
+  const W = titleAnimCanvas.width;
+  const H = titleAnimCanvas.height;
+  c.clearRect(0, 0, W, H);
+
+  // Floor + soft rug.
+  c.fillStyle = '#211d1a';
+  c.fillRect(0, 250, W, H - 250);
+  c.fillStyle = 'rgba(217, 119, 6, 0.12)';
+  c.beginPath();
+  c.ellipse(460, 300, 360, 26, 0, 0, Math.PI * 2);
+  c.fill();
+  c.strokeStyle = 'rgba(0, 0, 0, 0.25)';
+  c.lineWidth = 1.5;
+  c.beginPath();
+  c.moveTo(0, 250);
+  c.lineTo(W, 250);
+  c.stroke();
+
+  // Bed on the right: frame, pillow, duvet.
+  c.fillStyle = '#3d362f';
+  c.strokeStyle = '#0c0a09';
+  c.lineWidth = 2;
+  c.beginPath();
+  c.roundRect(600, 128, 24, 132, 8);
+  c.fill();
+  c.stroke();
+  c.fillStyle = '#2c2318';
+  c.beginPath();
+  c.roundRect(600, 168, 280, 92, 10);
+  c.fill();
+  c.stroke();
+  c.fillStyle = '#f3ede2';
+  c.strokeStyle = '#a89f91';
+  c.beginPath();
+  c.roundRect(648, 148, 112, 42, 12);
+  c.fill();
+  c.stroke();
+  c.fillStyle = '#1e293b';
+  c.strokeStyle = '#0f172a';
+  c.beginPath();
+  c.roundRect(600, 200, 280, 60, 10);
+  c.fill();
+  c.stroke();
+
+  // Sam in bed on the right — same face sprite as in-game.
+  // Sleeping, then peeking (one eye open), then back to sleep.
+  const samMode = t >= 1.8 && t < 2.8 ? 'WARNING' : 'SLEEPING';
+  const samX = 712;
+  const samY = 162 + Math.sin(t * 2.4) * 2.5;
+  drawGenericSamFace(c, samX, samY, 52, samMode);
+
+  // Snore Zzz rising off Sam while he's asleep (part of the animation).
+  if (samMode === 'SLEEPING') {
+    c.textAlign = 'center';
+    for (let i = 0; i < 3; i++) {
+      const cycle = (t * 0.55 + i * 0.33) % 1;
+      const zx = samX + 58 + i * 7 + Math.sin(t * 3 + i) * 4;
+      const zy = samY - 58 - cycle * 52;
+      const size = 14 + i * 5 + cycle * 6;
+      c.font = `700 ${size}px 'IBM Plex Mono', monospace`;
+      c.fillStyle = `rgba(243, 237, 226, ${1 - cycle})`;
+      c.fillText(i === 0 ? 'Z' : 'z', zx, zy);
+    }
+  }
+
+  if (t * 1000 < TITLE_ANIM_DURATION) {
+    titleAnimRaf = requestAnimationFrame(drawTitleAnimation);
+  } else {
+    dismissTitleScreen();
+  }
+}
+if (titleScreen && titleAnimCanvas) {
+  // No click / key skip — it just plays, then auto-dismisses.
+  titleAnimRaf = requestAnimationFrame(drawTitleAnimation);
+}
 const cutsceneSkipLabel = document.querySelector('.cutscene-skip-label');
 
 // Map Selector & Unlock Toast UI Elements
@@ -3590,6 +3690,12 @@ function isTextInputTarget(target) {
 
 window.addEventListener('keydown', (e) => {
   if (isTextInputTarget(e.target)) return;
+
+  // Title screen is up: unskippable, so eat keys here — don't dismiss,
+  // and don't let them leak into the game underneath.
+  if (!titleScreenDismissed && titleScreen?.classList.contains('active')) {
+    return;
+  }
 
   const k = e.key.toLowerCase();
   const isSpace = e.code === 'Space' || k === ' ';

@@ -80,6 +80,23 @@
   </div>
 
   <!-- ===================================================================== -->
+  <!-- TITLE SCREEN — shows on every page load / refresh, NOT on return -->
+  <!-- to Main Menu. Auto-plays then auto-dismisses to the hub. The -->
+  <!-- only text is "DON'T WAKE SAM". The canvas below it is the -->
+  <!-- animation: the player tiptoeing past sleeping Sam. -->
+  <!-- ===================================================================== -->
+  <div class="title-screen active" id="title-screen" aria-label="Don't Wake Sam">
+    <div class="title-card">
+      <h1 class="title-logo">
+        <span class="title-line title-line-dont">DON'T</span>
+        <span class="title-line title-line-wake">WAKE</span>
+        <span class="title-line title-line-sam">SAM</span>
+      </h1>
+      <canvas id="title-anim-canvas" width="920" height="340"></canvas>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
   <!-- FULL-SCREEN START MENU HUB                                            -->
   <!-- ===================================================================== -->
   <div class="start-screen active" id="start-overlay">
