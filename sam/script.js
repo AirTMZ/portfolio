@@ -189,7 +189,6 @@ const doneSettingsBtn = document.getElementById('done-settings-btn');
 const settingsVolumeSlider = document.getElementById('settings-volume-slider');
 const settingsVolumeVal = document.getElementById('settings-volume-val');
 const settingsMuteBtn = document.getElementById('settings-mute-btn');
-const settingsVibrationBtn = document.getElementById('settings-vibration-btn');
 const controlsModeDesc = document.getElementById('controls-mode-desc');
 const touchControlsEl = document.getElementById('touch-controls');
 const joystickZone = document.getElementById('joystick-zone');
@@ -538,6 +537,18 @@ const OUTFITS = [
     desc: 'Silent shinobi gi with a crimson headband and stealth mask.'
   },
   {
+    id: 'batman',
+    name: 'Batman',
+    price: 1500,
+    swatch: '#83878d',
+    torso: '#83878d',
+    dark: '#3b3f47',
+    stroke: '#1f2937',
+    hat: '#111827',
+    stripe: '#facc15',
+    desc: 'Grey suit, black bat, blue cape and gold utility belt. The Gotham look, for tiptoeing past Sam.'
+  },
+  {
     id: 'hazmat',
     name: 'Bio-Hazard Suit',
     price: 2000,
@@ -620,6 +631,27 @@ function drawPlayerOutfitBody(targetCtx, outfit, opts = {}) {
   targetCtx.ellipse(0, 15, 20, 10, 0, 0, Math.PI * 2);
   targetCtx.fill();
 
+  // Batman cape: blue-grey, peeking out behind the torso with scalloped points
+  if (outfit.id === 'batman') {
+    targetCtx.fillStyle = '#46578a';
+    targetCtx.strokeStyle = '#1e293b';
+    targetCtx.lineWidth = 1.8;
+    targetCtx.beginPath();
+    targetCtx.moveTo(-20, -4);
+    targetCtx.lineTo(-24, 14);
+    targetCtx.lineTo(-16, 10);
+    targetCtx.lineTo(-10, 19);
+    targetCtx.lineTo(-2, 12);
+    targetCtx.lineTo(4, 19);
+    targetCtx.lineTo(10, 11);
+    targetCtx.lineTo(18, 18);
+    targetCtx.lineTo(24, 12);
+    targetCtx.lineTo(20, -4);
+    targetCtx.closePath();
+    targetCtx.fill();
+    targetCtx.stroke();
+  }
+
   // Sneakers / boots striding below torso
   targetCtx.fillStyle = outfit.id === 'golden' ? '#b45309' : '#0f172a';
   targetCtx.strokeStyle = outfit.id === 'golden' ? '#fef08a' : '#cbd5e1';
@@ -657,6 +689,52 @@ function drawPlayerOutfitBody(targetCtx, outfit, opts = {}) {
     targetCtx.lineTo(-5, 4);
     targetCtx.closePath();
     targetCtx.fill();
+  } else if (outfit.id === 'batman') {
+    // Pec / ab shading so the grey suit reads muscular, like the reference
+    targetCtx.strokeStyle = '#5d6167';
+    targetCtx.lineWidth = 1.2;
+    targetCtx.beginPath();
+    targetCtx.moveTo(-11, 1);
+    targetCtx.quadraticCurveTo(0, 6, 11, 1);
+    targetCtx.moveTo(-9, 8);
+    targetCtx.quadraticCurveTo(0, 11, 9, 8);
+    targetCtx.stroke();
+    // Black bat, straight on the grey chest — no yellow oval
+    targetCtx.fillStyle = '#111827';
+    targetCtx.beginPath();
+    targetCtx.moveTo(0, 0);
+    targetCtx.lineTo(-3, -1);
+    targetCtx.lineTo(-8, -4);
+    targetCtx.lineTo(-13, -5);
+    targetCtx.lineTo(-10, -1);
+    targetCtx.lineTo(-12, 1);
+    targetCtx.lineTo(-7, 3);
+    targetCtx.lineTo(-4, 6);
+    targetCtx.lineTo(0, 7);
+    targetCtx.lineTo(4, 6);
+    targetCtx.lineTo(7, 3);
+    targetCtx.lineTo(12, 1);
+    targetCtx.lineTo(10, -1);
+    targetCtx.lineTo(13, -5);
+    targetCtx.lineTo(8, -4);
+    targetCtx.lineTo(3, -1);
+    targetCtx.closePath();
+    targetCtx.fill();
+    // Chunky gold utility belt with pouches
+    targetCtx.fillStyle = '#eab308';
+    targetCtx.strokeStyle = '#92400e';
+    targetCtx.lineWidth = 1;
+    targetCtx.beginPath();
+    targetCtx.roundRect(-16, 11, 32, 5.5, 1.5);
+    targetCtx.fill();
+    targetCtx.stroke();
+    targetCtx.fillStyle = '#facc15';
+    [-13, -6, 1, 8].forEach((bx) => {
+      targetCtx.beginPath();
+      targetCtx.roundRect(bx, 11.8, 5, 4, 1);
+      targetCtx.fill();
+      targetCtx.stroke();
+    });
   } else if (outfit.id === 'golden') {
     // Sparkling gold chain with cyan diamond medallion
     targetCtx.strokeStyle = '#fef08a';
@@ -692,7 +770,7 @@ function drawPlayerOutfitBody(targetCtx, outfit, opts = {}) {
   targetCtx.ellipse(-19, leftHandY, 5, 7, 0.2, 0, Math.PI * 2);
   targetCtx.ellipse(19, rightHandY, 5, 7, -0.2, 0, Math.PI * 2);
   targetCtx.fill();
-  targetCtx.fillStyle = outfit.id === 'hazmat' ? '#38bdf8' : '#fed7aa';
+  targetCtx.fillStyle = outfit.id === 'batman' ? '#111827' : outfit.id === 'hazmat' ? '#38bdf8' : '#fed7aa';
   targetCtx.strokeStyle = '#7c2d12';
   targetCtx.lineWidth = 1.3;
   targetCtx.beginPath();
@@ -719,7 +797,35 @@ function drawPlayerOutfitBody(targetCtx, outfit, opts = {}) {
   }
 
   // Headgear / Beanie / Crown / Hood
-  if (outfit.id === 'golden') {
+  if (outfit.id === 'batman') {
+    // Full black cowl: tall pointed ears, whole head covered except the jaw
+    targetCtx.fillStyle = '#111827';
+    targetCtx.beginPath();
+    targetCtx.moveTo(-10, -16);
+    targetCtx.lineTo(-9, -29);
+    targetCtx.lineTo(-4, -18);
+    targetCtx.closePath();
+    targetCtx.moveTo(10, -16);
+    targetCtx.lineTo(9, -29);
+    targetCtx.lineTo(4, -18);
+    targetCtx.closePath();
+    targetCtx.fill();
+    targetCtx.beginPath();
+    targetCtx.arc(0, -8, 12.5, 0, Math.PI * 2);
+    targetCtx.fill();
+    // Exposed jaw only
+    targetCtx.fillStyle = '#fed7aa';
+    targetCtx.beginPath();
+    targetCtx.roundRect(-8.5, -4, 17, 7.5, 3);
+    targetCtx.fill();
+    // Gritted mouth line
+    targetCtx.strokeStyle = '#431407';
+    targetCtx.lineWidth = 1.2;
+    targetCtx.beginPath();
+    targetCtx.moveTo(-4, 0);
+    targetCtx.lineTo(4, 0);
+    targetCtx.stroke();
+  } else if (outfit.id === 'golden') {
     // 3-point Royal Gold Crown
     targetCtx.fillStyle = '#facc15';
     targetCtx.strokeStyle = '#713f12';
@@ -763,6 +869,21 @@ function drawPlayerOutfitBody(targetCtx, outfit, opts = {}) {
     targetCtx.roundRect(-9 + lookX * 0.5, -11 + lookY * 0.5, 18, 7.5, 3);
     targetCtx.fill();
     targetCtx.stroke();
+  } else if (outfit.id === 'batman') {
+    // Angry angled white eyes, slanted down toward the centre
+    targetCtx.fillStyle = '#ffffff';
+    targetCtx.beginPath();
+    targetCtx.moveTo(-9 + lookX * 0.5, -12 + lookY * 0.5);
+    targetCtx.lineTo(-2 + lookX * 0.5, -9.5 + lookY * 0.5);
+    targetCtx.lineTo(-2 + lookX * 0.5, -6.5 + lookY * 0.5);
+    targetCtx.lineTo(-9 + lookX * 0.5, -9 + lookY * 0.5);
+    targetCtx.closePath();
+    targetCtx.moveTo(9 + lookX * 0.5, -12 + lookY * 0.5);
+    targetCtx.lineTo(2 + lookX * 0.5, -9.5 + lookY * 0.5);
+    targetCtx.lineTo(2 + lookX * 0.5, -6.5 + lookY * 0.5);
+    targetCtx.lineTo(9 + lookX * 0.5, -9 + lookY * 0.5);
+    targetCtx.closePath();
+    targetCtx.fill();
   } else if (outfit.id === 'disco') {
     // Retro Gold-Rimmed Sunglasses
     targetCtx.fillStyle = '#09090b';
@@ -944,53 +1065,6 @@ try { isMuted = localStorage.getItem(MUTED_KEY) === '1'; } catch (e) {}
 let touchControlsMode = 'auto';
 try { const m = localStorage.getItem(CONTROLS_MODE_KEY); if (m === 'on' || m === 'off' || m === 'auto') touchControlsMode = m; } catch (e) {}
 
-// --- VIBRATION (haptics) ---
-// navigator.vibrate is Android-only (iOS Safari ignores it), so on PC /
-// iPhone this is a silent no-op. Default ON so phone players feel it
-// out of the box; toggle lives in Settings next to SOUND. Saved like
-// volume. Throttled to 50ms so pickup spam can't become a buzz storm;
-// death / awake bypass the throttle because they must always land.
-const VIBRATION_KEY = 'dont_wake_sam_vibration_v1';
-let isVibrationEnabled = true;
-try { const v = localStorage.getItem(VIBRATION_KEY); if (v === '0' || v === '1') isVibrationEnabled = v === '1'; } catch (e) {}
-let lastVibrateAt = 0;
-function vibrate(pattern, force) {
-  if (!isVibrationEnabled) return;
-  try {
-    if (!('vibrate' in navigator)) return;
-    const now = performance.now();
-    if (!force && now - lastVibrateAt < 50) return;
-    lastVibrateAt = now;
-    navigator.vibrate(pattern);
-  } catch (e) {}
-}
-// One hook for every game event: playSound() already fires for all of
-// them, so mapping sound type -> haptic pattern here covers wake-ups,
-// hits, pickups, deposits, achievements, etc. with no per-site edits.
-// Called at the TOP of playSound(), before the mute check — haptics
-// are separate from sound, so muted players still feel them.
-const VIBRATION_PATTERNS = {
-  alert: [40],
-  awake: [120, 60, 120],
-  death: [200, 80, 200, 80, 300],
-  shield_break: [100, 40, 100],
-  bonk: [80],
-  pickup: [25],
-  deposit: [30, 30, 30],
-  levelup: [50, 50, 100],
-  ice: [60, 40, 60],
-  slow: [30],
-  squawk: [40, 30, 40],
-  bird_flutter: [40, 30, 40],
-  guitar_riff: [40, 40, 40, 40],
-  roomba_reveal: [80, 50, 80],
-  dock_beep: [20],
-};
-function vibrateForSound(type) {
-  const pattern = VIBRATION_PATTERNS[type];
-  if (!pattern) return;
-  vibrate(pattern, type === 'death' || type === 'awake');
-}
 let bgmInterval = null;
 let bgmStep = 0;
 let cutsceneBgmStep = 0;
@@ -1153,7 +1227,6 @@ function syncSettingsUI() {
   const lbl = isMuted ? 'SOUND: OFF' : 'SOUND: ON';
   if (settingsMuteBtn) settingsMuteBtn.textContent = lbl;
   if (muteBtn) muteBtn.textContent = lbl;
-  if (settingsVibrationBtn) settingsVibrationBtn.textContent = isVibrationEnabled ? 'VIBRATION: ON' : 'VIBRATION: OFF';
   document.querySelectorAll('.controls-mode-btn').forEach((b) => { b.classList.toggle('active', b.dataset.controlsMode === touchControlsMode); });
   if (controlsModeDesc) {
     controlsModeDesc.textContent = touchControlsMode === 'on' ? 'ON: joystick + DROP / USE always show, even on a PC layout.' : touchControlsMode === 'off' ? 'OFF: touch controls never show, even on a tablet.' : 'AUTO: touch controls show on touch devices, hidden on keyboard + mouse.';
@@ -1297,7 +1370,6 @@ function startBackgroundMusic() {
 }
 
 function playSound(type) {
-  vibrateForSound(type);
   if (isMuted || !audioCtx) return;
   const now = audioCtx.currentTime;
 
@@ -8140,7 +8212,6 @@ window.addEventListener('orientationchange', () => {
 });
 
 function startGame() {
-  vibrate([20, 30, 20]);
   // First watch of this cutscene: Restart must not bypass it — resetGame() hides
   // the shell and beginMapCutscene() would treat it as seen-this-session,
   // so a restart mid-cutscene would skip it. Stay in the cutscene.
@@ -8609,19 +8680,13 @@ function toggleSound() {
   if (isMuted) stopVacuumSound();
   applyVolume(); syncSettingsUI();
 }
-if (muteBtn) muteBtn.addEventListener('click', () => { vibrate([12]); toggleSound(); });
-if (settingsMuteBtn) settingsMuteBtn.addEventListener('click', () => { vibrate([12]); toggleSound(); });
-if (settingsVibrationBtn) settingsVibrationBtn.addEventListener('click', () => {
-  isVibrationEnabled = !isVibrationEnabled;
-  try { localStorage.setItem(VIBRATION_KEY, isVibrationEnabled ? '1' : '0'); } catch (e) {}
-  syncSettingsUI();
-  if (isVibrationEnabled) { try { navigator.vibrate([30]); } catch (e) {} }
-});
+if (muteBtn) muteBtn.addEventListener('click', () => { toggleSound(); });
+if (settingsMuteBtn) settingsMuteBtn.addEventListener('click', () => { toggleSound(); });
 if (openSettingsBtn && settingsModal) {
-  openSettingsBtn.addEventListener('click', () => { vibrate([12]); initAudio(); syncSettingsUI(); settingsModal.classList.add('active'); });
+  openSettingsBtn.addEventListener('click', () => { initAudio(); syncSettingsUI(); settingsModal.classList.add('active'); });
 }
-if (closeSettingsBtn && settingsModal) closeSettingsBtn.addEventListener('click', () => { vibrate([12]); settingsModal.classList.remove('active'); });
-if (doneSettingsBtn && settingsModal) doneSettingsBtn.addEventListener('click', () => { vibrate([12]); settingsModal.classList.remove('active'); });
+if (closeSettingsBtn && settingsModal) closeSettingsBtn.addEventListener('click', () => { settingsModal.classList.remove('active'); });
+if (doneSettingsBtn && settingsModal) doneSettingsBtn.addEventListener('click', () => { settingsModal.classList.remove('active'); });
 if (settingsVolumeSlider) settingsVolumeSlider.addEventListener('input', () => { initAudio(); setVolume(parseInt(settingsVolumeSlider.value, 10) / 100); });
 document.querySelectorAll('.controls-mode-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -8629,7 +8694,6 @@ document.querySelectorAll('.controls-mode-btn').forEach((btn) => {
     if (mode !== 'auto' && mode !== 'on' && mode !== 'off') return;
     touchControlsMode = mode;
     try { localStorage.setItem(CONTROLS_MODE_KEY, mode); } catch (e) {}
-    vibrate([12]);
     applyTouchControlsMode();
   });
 });
