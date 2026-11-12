@@ -720,6 +720,11 @@ button.version-badge {
   border-color: #f59e0b;
   background: #3a2b1f;
 }
+.cheat-action.cheat-on {
+  border-color: #ef4444;
+  background: #4a1d1d;
+  color: #fca5a5;
+}
 
 @media (max-width: 560px) {
   .cheat-grid {

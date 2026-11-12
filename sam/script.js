@@ -1683,14 +1683,21 @@ let itemTemplates = MAP_CONFIGS.bedroom.templates;
 let carpetSpots = MAP_CONFIGS.bedroom.spots;
 
 // Top-left corner Guitar Easter Egg (above the Oak Wardrobe)
+// 60s cooldown between riffs — standing on it can no longer spam all 7.
+// The green ring is hidden until you step on the guitar, then it stays
+// visible showing progress until the cooldown refreshes, at which point
+// it is removed again. It is transparent except for the progress arc.
+const GUITAR_COOLDOWN_SECONDS = 60;
 const guitarEasterEgg = {
   x: 68,
   y: 164,
   radius: 26,
   cooldown: 0,
+  cooldownDuration: GUITAR_COOLDOWN_SECONDS,
   playingTimer: 0,
   speedBoostUsed: false,
-  riffsThisGame: 0
+  riffsThisGame: 0,
+  ringVisible: false
 };
 
 // Sam's position on the pillow / sofa / sun lounger
@@ -1720,6 +1727,22 @@ const QTE_BLOCK_START = 0.38;
 const QTE_BLOCK_END = 0.78;
 const QTE_PERFECT_START = 0.48;
 const QTE_PERFECT_END = 0.70;
+// First-lunge tutorial: once per page load, not forever.
+// Deliberately in-memory only — no localStorage. Refreshing the page
+// reloads the script, resets this flag, and brings the tutorial back,
+// so you get reminded again if you've forgotten. Within one page load
+// it still only shows on the first lunge.
+// When active, Sam lunges slightly slower, STOPS dead when he reaches
+// the GOLD perfect window, and stays stopped until you press SPACE
+// (or use the stick / ice) — so you can't die during the tutorial, you
+// just have to press at the right time. A vignette marks it as the test.
+// Only shows if the player actually watched the intro (bedroom)
+// cutscene — skipping it means they're not first-time, so no tutorial.
+let lungeTutorialSeen = false;
+let lungeTutorialActive = false;
+let lungeTutorialFrozen = false;
+const LUNGE_TUTORIAL_SPEED = 0.85;
+let introCutsceneWatched = false;
 let transitionTimer = 0;
 let pendingMapTransition = null;
 let loungeRoombaReleased = false;
@@ -2001,13 +2024,6 @@ function csLoungeRoom(c) {
   c.fillStyle = '#5b3a1e';
   c.fillRect(160, 484, 8, 32);
   c.fillRect(245, 484, 8, 32);
-  // bay window on the TOP wall, between the bin and the TV unit
-  // (playable: 190,56, 260x20) — it sits in the wall ABOVE the bay sofa,
-  // NOT behind the right sofa. csGarden() smashes this same window.
-  csRR(c, 255, 38, 145, 20, 3, '#7dd3fc', '#e7e5e4', 3);
-  c.strokeStyle = '#e7e5e4'; c.lineWidth = 2;
-  c.beginPath(); c.moveTo(327, 38); c.lineTo(327, 58); c.stroke();
-  c.beginPath(); c.moveTo(255, 48); c.lineTo(400, 48); c.stroke();
   // sofa 1: TOP-LEFT bay sofa (playable: 185,88, 265x78)
   csRR(c, 175, 58, 212, 62, 12, '#334155', '#0f172a', 3);
   csRR(c, 235, 72, 110, 34, 6, '#64748b');
@@ -2162,13 +2178,10 @@ function csLounge(c, t) {
     csPlayer(c, 490 - shove * 60, 320 + shove * 30, t, { scale: 2.2, face: t < 3.3 ? 0 : Math.PI, cadence: 8 });
     // Sam climbs out of the WEST side of the bed, stomps to the BOTTOM door
     if (left) {
-      // Sam climbs out of the WEST side of the bed, stomps to the BOTTOM door.
-      // The path ends dead-centre on the doorway (x=205) — the old path
-      // ended at x=260, so he walked into the wall east of the door frame.
       let sx, sy;
-      if (t < 3.9) { const p = csSeg(t, 2.8, 3.9); sx = csLerp(545, 340, p); sy = csLerp(280, 380, p); }
-      else if (t < 4.5) { const p = csSeg(t, 3.9, 4.5); sx = csLerp(340, 270, p); sy = csLerp(380, 450, p); }
-      else { const p = csSeg(t, 4.5, 5.3); sx = csLerp(270, 205, p); sy = csLerp(450, 525, p); }
+      if (t < 3.9) { const p = csSeg(t, 2.8, 3.9); sx = csLerp(560, 380, p); sy = csLerp(280, 360, p); }
+      else if (t < 4.5) { const p = csSeg(t, 3.9, 4.5); sx = csLerp(380, 260, p); sy = csLerp(360, 430, p); }
+      else { const p = csSeg(t, 4.5, 5.3); sx = 260; sy = csLerp(430, 530, p); }
       csSam(c, sx, sy, t, { walk: true, mode: 'WARNING', cadence: 13, rot: Math.sin(t * 13) * 0.06 });
     }
     csText(c, '💢', 820, 110, '#ef4444', 56, csSeg(t, 2.1, 2.3) * (1 - csSeg(t, 2.9, 3.2)));
@@ -2186,15 +2199,12 @@ function csLounge(c, t) {
       csSam(c, csLerp(205, 640, p), 440, t, { walk: true, mode: 'WARNING', cadence: 13, rot: Math.sin(t * 13) * 0.06 });
     } else if (t < 7.6) {
       const p = csEase(csSeg(t, 7.0, 7.6));
-      // flop onto the right sofa, head EAST (rot +90deg), like in-game.
-      // He lands with his head centred on the middle cushion (y=217) —
-      // the old landing at y=280 put his head in the seam between the
-      // middle and bottom cushions.
-      csSam(c, csLerp(640, 795, p), csLerp(440, 217, p) - Math.sin(p * Math.PI) * 60, t, {
+      // flop onto the right sofa, head EAST (rot +90deg), like in-game
+      csSam(c, csLerp(640, 795, p), csLerp(440, 280, p) - Math.sin(p * Math.PI) * 60, t, {
         rot: p * Math.PI / 2, mode: 'WARNING', sy: 1 - Math.sin(p * Math.PI) * 0.12
       });
     } else {
-      csSam(c, 795, 217, t, { rot: Math.PI / 2, mode: 'SLEEPING', sx: 1 + Math.sin(t * 2.2) * 0.015 });
+      csSam(c, 795, 280, t, { rot: Math.PI / 2, mode: 'SLEEPING', sx: 1 + Math.sin(t * 2.2) * 0.015 });
       csZzz(c, 760, 230, t);
     }
     csText(c, 'FLOP!', 560, 210, '#fde68a', 34, csSeg(t, 7.5, 7.6) * (1 - csSeg(t, 8.0, 8.4)), 3, t);
@@ -2267,25 +2277,22 @@ function csGarden(c, t) {
     const shk = t > 3.6 && t < 4.1 ? 9 : 0;
     if (shk) c.translate(Math.sin(t * 90) * shk, Math.cos(t * 77) * shk);
     csLoungeRoom(c);
-    // The bay window is already drawn by csLoungeRoom() on the TOP wall,
-    // between the bin and the TV unit. When Sam smashes it, draw the
-    // broken pane + shards over that SAME window — never a window
-    // behind the right sofa.
-    if (t >= 3.6) {
-      csRR(c, 255, 38, 145, 20, 3, '#17120f', '#e7e5e4', 3);
+    // window (right wall, above Sam's sofa)
+    const broken = t >= 3.6;
+    csRR(c, 896, 220, 28, 200, 3, broken ? '#17120f' : '#7dd3fc', '#e7e5e4', 5);
+    if (broken) {
       c.fillStyle = '#e0f2fe';
-      [[262, 40, 14, 10], [300, 40, 10, 12], [350, 40, 12, 10], [382, 40, 10, 12]].forEach(([x, y, w, h]) => {
+      [[900, 226, 12, 24], [900, 300, 12, 26], [900, 380, 12, 30], [912, 250, 8, 20]].forEach(([x, y, w, h]) => {
         c.beginPath(); c.moveTo(x, y); c.lineTo(x + w, y + h / 2); c.lineTo(x, y + h); c.closePath(); c.fill();
       });
       const tau = t - 3.6;
       c.fillStyle = 'rgba(224,242,254,0.9)';
       for (let i = 0; i < 16; i++) {
-        // shards burst UP and OUT through the top-wall window
-        const a = -Math.PI / 2 + (i / 15 - 0.5) * Math.PI * 0.9;
+        const a = Math.PI / 2 + (i / 15) * Math.PI;
         const sp = 130 + ((i * 47) % 120);
         c.globalAlpha = csClamp(1 - tau / 0.7);
         c.save();
-        c.translate(327 + Math.cos(a) * sp * tau, 48 + Math.sin(a) * sp * tau * 1.4);
+        c.translate(910 + Math.cos(a) * sp * tau, 320 + Math.sin(a) * sp * tau * 1.6);
         c.rotate(i + tau * 9);
         c.fillRect(-5, -2, 10, 4);
         c.restore();
@@ -2298,35 +2305,28 @@ function csGarden(c, t) {
     if (t < 2.2) {
       const mode = t < 1.0 ? 'SLEEPING' : t < 1.8 ? 'WARNING' : 'AWAKE';
       const shake = t > 1.0 ? Math.sin(t * 45) * 0.04 : 0;
-      // lying on the RIGHT sofa, head EAST (rot +90deg), head centred on
-      // the middle cushion (y=217) — same spot as the lounge cutscene's
-      // flop, not the old y=280 in the seam between cushions
-      csSam(c, 795, 217, t, { rot: Math.PI / 2 + shake, mode, sx: 1 + Math.sin(t * 2.2) * 0.015 });
+      // lying on the RIGHT sofa, head EAST (rot +90deg), like in-game
+      csSam(c, 795, 280, t, { rot: Math.PI / 2 + shake, mode, sx: 1 + Math.sin(t * 2.2) * 0.015 });
       if (t < 1.0) csZzz(c, 760, 230, t);
-    } else if (t < 2.8) {
-      const p = csEase(csSeg(t, 2.2, 2.8));
-      csSam(c, csLerp(795, 770, p), csLerp(217, 237, p) - Math.sin(p * Math.PI) * 40, t, {
+    } else if (t < 2.9) {
+      const p = csEase(csSeg(t, 2.2, 2.9));
+      csSam(c, csLerp(795, 820, p), csLerp(280, 300, p) - Math.sin(p * Math.PI) * 40, t, {
         rot: csLerp(Math.PI / 2, 0, p), mode: 'AWAKE', fists: true
       });
     } else if (t < 3.6) {
-      // Sam runs across the room and LEAPS over the coffee table,
-      // landing on the bay sofa under the top-wall window.
-      const p = csSeg(t, 2.8, 3.6);
-      const rx = csLerp(770, 327, p);
-      const ry = csLerp(237, 110, p) - Math.sin(p * Math.PI) * 60;
-      csSam(c, rx, ry, t, { walk: true, mode: 'AWAKE', cadence: 20, fists: true, scale: 2.4 });
+      const p = csSeg(t, 2.9, 3.6);
+      csSam(c, csLerp(820, 880, p), 300, t, { walk: true, mode: 'AWAKE', cadence: 20, fists: true, scale: 2.4 });
     } else {
-      // ...and smashes UP through that window.
       const p = csEase(csSeg(t, 3.6, 4.0));
-      csSam(c, 327, csLerp(110, 30, p), t, { mode: 'AWAKE', fists: true, scale: csLerp(2.4, 3.2, p), rot: p * 0.9 });
+      csSam(c, csLerp(880, 950, p), 300, t, { mode: 'AWAKE', fists: true, scale: csLerp(2.4, 3.2, p), rot: p * 0.9 });
     }
-    if (t > 1.8 && t < 2.9) csSteam(c, 795, 187, t);
+    if (t > 1.8 && t < 2.9) csSteam(c, 795, 250, t);
     if (t > 1.8 && t < 3.6) {
       c.fillStyle = `rgba(220,38,38,${0.16 * csSeg(t, 1.8, 2.2)})`;
       c.fillRect(0, 0, CS_W, CS_H);
     }
     csText(c, 'AAARGH!!', 480, 120, '#fca5a5', 54, csSeg(t, 2.0, 2.15) * (1 - csSeg(t, 3.2, 3.6)), 5, t);
-    csText(c, 'SMASH!', 470, 140, '#fde68a', 44, csSeg(t, 3.6, 3.7) * (1 - csSeg(t, 4.0, 4.3)), 4, t);
+    csText(c, 'SMASH!', 780, 220, '#fde68a', 44, csSeg(t, 3.6, 3.7) * (1 - csSeg(t, 4.0, 4.3)), 4, t);
     c.restore();
     csFade(c, csSeg(t, 3.9, 4.3));
     return;
@@ -2336,23 +2336,17 @@ function csGarden(c, t) {
   csGardenScene(c, t);
   const landAt = 5.8;
   if (t < landAt) {
-    // Sam bursts out of the broken window (centre 102,300) and flies to
-    // the lounger. The flight ends EXACTLY on the landing spot (the
-    // squash position, 795,247) — the old flight ended at (760,260)
-    // while he landed at (795,280), so he visibly jumped ~40px on impact.
     const p = csSeg(t, 4.5, landAt);
-    const x = csLerp(120, 795, p);
-    const y = csLerp(300, 247, p) - Math.sin(p * Math.PI) * 90;
+    const x = csLerp(150, 760, p);
+    const y = csLerp(300, 260, p) - Math.sin(p * Math.PI) * 90;
     csSam(c, x, y, t, { mode: 'AWAKE', fists: true, scale: 2.2 + Math.sin(p * Math.PI) * 0.6, rot: p * 1.2 });
   } else {
     const tau = t - landAt;
     // dust puff where he lands on the lounger
     if (tau < 0.6) {
       for (let i = 0; i < 6; i++) {
-        // dust puffs at Sam's feet (anchor 233 + feet 46 = 279), not
-        // 100px below him on the empty lower lounger
         c.fillStyle = `rgba(180,160,130,${csClamp(1 - tau / 0.6) * 0.7})`;
-        c.beginPath(); c.arc(745 + i * 20, 285 + Math.sin(i * 2.1) * 8, 5 + tau * 22, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(740 + i * 22, 380 + Math.sin(i * 2.1) * 10, 5 + tau * 22, 0, Math.PI * 2); c.fill();
       }
     }
     // Sam on the lounger: head on the pillow at the top, body down it.
@@ -2360,11 +2354,7 @@ function csGarden(c, t) {
     // cutscene has to leave him — not in water, not on a float.
     const settle = csEase(csSeg(t, landAt, landAt + 0.5));
     const mode = t < 7.8 ? 'AWAKE' : 'SLEEPING';
-    // He lands with his head centred on the lounger pillow (centre
-    // 795,202: the head sits 31px above the anchor at this scale, so the
-    // anchor is 233). The old landing at 280 had his head half off the
-    // pillow, below it.
-    csSam(c, 795, 233 + (1 - settle) * 14, t, {
+    csSam(c, 795, 280 + (1 - settle) * 14, t, {
       rot: (1 - settle) * 0.4, mode, sx: 1 + Math.sin(t * 2.2) * 0.015
     });
     if (t >= 7.8) csZzz(c, 760, 200, t);
@@ -2419,7 +2409,15 @@ function beginMapCutscene(mapId) {
   return true;
 }
 
-function endMapCutscene() {
+function endMapCutscene(watched = false) {
+  // Capture before clearing: only a natural finish of the intro counts
+  // as "watched". Skips (click / Space / Esc / Enter / menu / map switch)
+  // call this with watched=false, so they never unlock the tutorial.
+  const finishedMap = cutsceneMap;
+  const wasInCutscene = gameState === 'CUTSCENE';
+  if (wasInCutscene && watched && finishedMap === 'bedroom') {
+    introCutsceneWatched = true;
+  }
   hideCutsceneShell();
   cutsceneMap = null;
   cutsceneTimer = 0;
@@ -2430,6 +2428,8 @@ function endMapCutscene() {
     gameState = 'PLAYING';
     // A cutscene that actually played gets its closing cadence (see the
     // outro branch in startBackgroundMusic) instead of a hard cut.
+    // This fires for watched AND skipped endings — the tutorial's
+    // watched flag above is separate, and stays skip-gated.
     cutsceneOutroStep = 0;
     cutsceneOutroTick = 0;
   }
@@ -2439,7 +2439,7 @@ function drawMapCutscene() {
   if (gameState !== 'CUTSCENE' || !cutsceneCanvas) return;
   const t = (performance.now() - cutsceneStartTime) / 1000;
   if (t >= (CUTSCENE_DURATIONS[cutsceneMap] || 10)) {
-    endMapCutscene();
+    endMapCutscene(true);
     return;
   }
   const c = cutsceneCanvas.getContext('2d');
@@ -3106,6 +3106,8 @@ function resetGame() {
   unlockedStick = false;
   unlockedRoomba = false;
   spacePhraseCooldown = 0;
+  lungeTutorialActive = false;
+  lungeTutorialFrozen = false;
   mapSwapBannerTimer = 0;
   randomSwapTimer = 30.0 + Math.random() * 30.0; // Random mode interval: 30s to 60s!
 
@@ -3122,8 +3124,10 @@ function resetGame() {
   player.speedBoostTimer = 0;
   guitarEasterEgg.speedBoostUsed = false;
   guitarEasterEgg.cooldown = 0;
+  guitarEasterEgg.cooldownDuration = GUITAR_COOLDOWN_SECONDS;
   guitarEasterEgg.playingTimer = 0;
   guitarEasterEgg.riffsThisGame = 0;
+  guitarEasterEgg.ringVisible = false;
 
   windowBird.state = 'OUTSIDE';
   windowBird.x = 560;
@@ -3221,28 +3225,36 @@ function checkScoreMilestones() {
 }
 
 function triggerGuitarRiff() {
-  guitarEasterEgg.cooldown = 1.35;
+  guitarEasterEgg.cooldown = GUITAR_COOLDOWN_SECONDS;
+  guitarEasterEgg.cooldownDuration = GUITAR_COOLDOWN_SECONDS;
   guitarEasterEgg.playingTimer = 1.3;
   guitarEasterEgg.riffsThisGame = (guitarEasterEgg.riffsThisGame || 0) + 1;
+  guitarEasterEgg.ringVisible = true;
   playSound('guitar_riff');
 
+  // The speed boost still applies on the first riff, but nothing tells
+  // the player that — they should just feel it. Same flavour text every
+  // time, so the first riff doesn't look special either.
   if (!guitarEasterEgg.speedBoostUsed) {
     guitarEasterEgg.speedBoostUsed = true;
     player.speedBoostTimer = 6.0;
-    spawnFloatingText(
-      `GUITAR RIFF (${guitarEasterEgg.riffsThisGame}/7)! +6s SPEED BOOST!`,
-      guitarEasterEgg.x + 105,
-      guitarEasterEgg.y - 12,
-      '#34d399'
-    );
-  } else {
-    spawnFloatingText(
-      `*SICK GUITAR RIFF!* (${guitarEasterEgg.riffsThisGame}/7)`,
-      guitarEasterEgg.x + 85,
-      guitarEasterEgg.y - 12,
-      '#f472b6'
-    );
   }
+  const guitarFlavourLines = [
+    'Nice riff!',
+    'Sweet lick!',
+    'That was clean!',
+    'Smooth!',
+    'Nice one!',
+    'Ooh, nice riff!',
+    'That slapped!'
+  ];
+  const guitarFlavour = guitarFlavourLines[Math.floor(Math.random() * guitarFlavourLines.length)];
+  spawnFloatingText(
+    guitarFlavour,
+    guitarEasterEgg.x + 105,
+    guitarEasterEgg.y - 12,
+    '#f472b6'
+  );
 
   if (guitarEasterEgg.riffsThisGame >= 7) {
     unlockAchievement('guitar_5');
@@ -3409,9 +3421,9 @@ function spawnFloatingText(text, x, y, color = '#ffffff') {
   });
   if (line) lines.push(line);
   const lifetime = Math.min(4.5, Math.max(2.0, 1.5 + text.length / 22));
-  if (floatingTexts.length >= MAX_FLOATING_TEXTS) {
-    floatingTexts.shift();
-  }
+  // Only one floating message on screen at a time — a new message
+  // replaces the old one instead of stacking up to 4-5 at once.
+  floatingTexts.length = 0;
   floatingTexts.push({
     text,
     lines,
@@ -3428,7 +3440,7 @@ function spawnFloatingText(text, x, y, color = '#ffffff') {
 const floatingTextCooldowns = new Map();
 const FLOATING_TEXT_COOLDOWN_MS = 1100;
 const FLOATING_TEXT_GLOBAL_COOLDOWN_MS = 320;
-const MAX_FLOATING_TEXTS = 4;
+const MAX_FLOATING_TEXTS = 1;
 let lastFloatingTextTime = -Infinity;
 
 function dismissBird() {
@@ -3544,12 +3556,21 @@ window.addEventListener('keydown', (e) => {
 
   // Quick-Time Event (QTE) Forcefield Trigger when Sam is charging at you!
   if (isSpace && gameState === 'KILL_ANIM' && sam.qteActive && !sam.qteFailed) {
+    // Tutorial: Sam hasn't stopped in GOLD yet — early SPACE does nothing.
+    // You actually have to wait for the stop and press at the right time.
+    // (Stick [E] and ice still work any time — only SPACE is gated.)
+    if (lungeTutorialActive && !lungeTutorialFrozen) {
+      return;
+    }
     const dist = Math.hypot(player.x - sam.attackX, player.y - sam.attackY);
     const progress = 1 - dist / sam.attackStartDist;
 
     // Blue is the smaller safe block window; gold is the exact perfect window.
-    if (progress >= QTE_BLOCK_START && progress <= QTE_BLOCK_END) {
-      const isPerfectBlock = progress >= QTE_PERFECT_START && progress <= QTE_PERFECT_END;
+    // Tutorial frozen: Sam is stopped in GOLD, so any SPACE now counts as
+    // perfect, even if you moved a bit after he stopped.
+    const tutorialPerfect = lungeTutorialActive && lungeTutorialFrozen;
+    if (tutorialPerfect || (progress >= QTE_BLOCK_START && progress <= QTE_BLOCK_END)) {
+      const isPerfectBlock = tutorialPerfect || (progress >= QTE_PERFECT_START && progress <= QTE_PERFECT_END);
       if (isPerfectBlock) {
         player.lives = Math.min(3, player.lives + 1);
         if (currentMap === 'lounge' && loungeRoombaReleased) {
@@ -3753,6 +3774,16 @@ function triggerSamKill(title, reason) {
   sam.attackStartDist = Math.max(120, Math.hypot(player.x - samHead.x, player.y - samHead.y));
   sam.qteActive = player.lives > 0;
   sam.qteFailed = false;
+  // First lunge this page load + intro watched: tutorial. Mark seen
+  // straight away so it only happens once per load, even if this lunge
+  // ends in death. Refreshing the page resets the flag and brings it back.
+  // If the intro was skipped, don't start it — and don't mark seen, so
+  // a later watched intro (e.g. after a refresh) can still trigger it.
+  if (!lungeTutorialSeen && introCutsceneWatched) {
+    lungeTutorialSeen = true;
+    lungeTutorialActive = true;
+    lungeTutorialFrozen = false;
+  }
   deathTitleEl.textContent = title;
   deathReasonEl.textContent = reason;
   finalScoreEl.textContent = formatCash(score);
@@ -3764,6 +3795,11 @@ function triggerSamKill(title, reason) {
 }
 
 function update(dt) {
+  // Tutorial freeze only lives inside a lunge — any exit clears it.
+  if (gameState !== 'KILL_ANIM' && lungeTutorialActive) {
+    lungeTutorialActive = false;
+    lungeTutorialFrozen = false;
+  }
   // Update floating notifications in all active states
   for (let i = floatingTexts.length - 1; i >= 0; i--) {
     const ft = floatingTexts[i];
@@ -3860,12 +3896,29 @@ function update(dt) {
       (sam.qteActive && !sam.qteFailed) || player.hasStick
         ? Math.min(680, Math.max(485 + difficultyTier * 24, sam.attackStartDist * 1.05))
         : Math.min(860, 720 + difficultyTier * 18);
-    if (dist <= 30) {
+    // Tutorial: once Sam reaches the GOLD perfect window, he stops dead
+    // and stays stopped until you press SPACE (or use stick / ice).
+    // That way you can't die during the tutorial — you just have to
+    // press at the right time. Latching on >= PERFECT_START (not just
+    // inside the window) so a big frame step can't jump clean over it.
+    if (lungeTutorialActive && !lungeTutorialFrozen) {
+      const tutorialProgress = 1 - dist / sam.attackStartDist;
+      if (tutorialProgress >= QTE_PERFECT_START) {
+        lungeTutorialFrozen = true;
+      }
+    }
+    if (lungeTutorialActive && lungeTutorialFrozen) {
+      // Frozen in perfect — Sam doesn't move, and walking into him
+      // can't kill you during the tutorial. Waiting on your SPACE.
+    } else if (dist <= 30) {
       gameState = 'GAMEOVER';
       gameoverOverlay.classList.add('active');
     } else {
-      sam.attackX += (dx / dist) * lungeSpeed * dt;
-      sam.attackY += (dy / dist) * lungeSpeed * dt;
+      // Tutorial lunge is slightly slower, so there's time to read the
+      // three lines and see the ring turn gold before Sam stops.
+      const tutorialSlow = lungeTutorialActive ? LUNGE_TUTORIAL_SPEED : 1;
+      sam.attackX += (dx / dist) * lungeSpeed * dt * tutorialSlow;
+      sam.attackY += (dy / dist) * lungeSpeed * dt * tutorialSlow;
     }
     return;
   }
@@ -4046,6 +4099,10 @@ function update(dt) {
   }
   if (guitarEasterEgg.cooldown > 0) {
     guitarEasterEgg.cooldown = Math.max(0, guitarEasterEgg.cooldown - dt);
+    // Refreshed — remove the ring until the guitar is stepped on again.
+    if (guitarEasterEgg.cooldown <= 0) {
+      guitarEasterEgg.ringVisible = false;
+    }
   }
   if (guitarEasterEgg.playingTimer > 0) {
     guitarEasterEgg.playingTimer = Math.max(0, guitarEasterEgg.playingTimer - dt);
@@ -4291,10 +4348,14 @@ function update(dt) {
   // Check if player walked into the top-left corner and touched the Guitar Easter Egg (Bedroom only)!
   if (
     currentMap === 'bedroom' &&
-    guitarEasterEgg.cooldown <= 0 &&
     Math.hypot(player.x - guitarEasterEgg.x, player.y - guitarEasterEgg.y) < player.radius + guitarEasterEgg.radius
   ) {
-    triggerGuitarRiff();
+    if (guitarEasterEgg.cooldown <= 0) {
+      triggerGuitarRiff();
+    } else {
+      // Stepping on it mid-cooldown reveals the progress ring.
+      guitarEasterEgg.ringVisible = true;
+    }
   }
 
   // Check if stepping in a purple goo slow hazard
@@ -4574,11 +4635,23 @@ function update(dt) {
 
       if (sam.timer <= 0) {
         sam.state = 'WARNING';
+        // No fake-out chains while you're first playing: a second peek
+        // immediately after the first is a higher-difficulty trick.
+        // The first 10 items (tier 0-1) are always single peeks, so you
+        // learn the one-peek rhythm first. Tier 2+ unlocks double peeks,
+        // tier 4+ unlocks triple peeks, as before.
         const triplePeekChance =
           difficultyTier >= 4 ? Math.min(0.28, 0.04 + (difficultyTier - 4) * 0.06) : 0;
         const doublePeekChance = Math.min(0.68, 0.16 + difficultyTier * 0.07);
         const chainRoll = Math.random();
-        const chainLength = chainRoll < triplePeekChance ? 3 : chainRoll < triplePeekChance + doublePeekChance ? 2 : 1;
+        const chainLength =
+          difficultyTier < 2
+            ? 1
+            : chainRoll < triplePeekChance
+            ? 3
+            : chainRoll < triplePeekChance + doublePeekChance
+            ? 2
+            : 1;
         sam.peekChainRemaining = chainLength - 1;
         sam.isTriplePeek = chainLength === 3;
         sam.isDoublePeek = chainLength === 2;
@@ -4804,6 +4877,32 @@ function drawBedroom() {
   ctx.lineTo(1.5, 9);
   ctx.stroke();
   ctx.restore();
+
+  // --- GUITAR 60s COOLDOWN RING ---
+  // Hidden until you step on the guitar, so it never gives the spot away.
+  // Once triggered it stays visible for the whole cooldown — step off and
+  // it keeps showing progress — then it is removed when the cooldown
+  // refreshes. Only the green progress arc is drawn — no track, no
+  // background circle, the rest of the ring is fully transparent.
+  // progress 0 = just riffed, 1 = ready to riff again. No numbers shown.
+  // Not rotated with the guitar, so the ring stays a clean circle around it.
+  if (guitarEasterEgg.ringVisible && guitarEasterEgg.cooldown > 0) {
+    const guitarCooldownTotal = guitarEasterEgg.cooldownDuration || GUITAR_COOLDOWN_SECONDS;
+    const guitarCooldownProgress = Math.min(1, Math.max(0, 1 - guitarEasterEgg.cooldown / guitarCooldownTotal));
+    if (guitarCooldownProgress > 0) {
+      ctx.save();
+      ctx.translate(guitarEasterEgg.x, guitarEasterEgg.y);
+      const guitarRingRadius = 44;
+      const guitarRingStart = -Math.PI / 2;
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(0, 0, guitarRingRadius, guitarRingStart, guitarRingStart + guitarCooldownProgress * Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
 
   // Staggered Picture Frames at Different Heights on the Wall Left of the Bay Window
   // Each frame contains a low-fi abstract mini photo (landscape, portrait silhouette)
@@ -6657,21 +6756,8 @@ function drawRoombaIntroVignette() {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Dramatic warning banner at top during the Roomba's slow entrance
-  ctx.globalAlpha = roomba.vignetteAlpha;
-  ctx.fillStyle = 'rgba(220, 38, 38, 0.92)';
-  ctx.beginPath();
-  ctx.roundRect(canvas.width / 2 - 235, 22, 470, 44, 12);
-  ctx.fill();
-  ctx.strokeStyle = '#fca5a5';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 16px Outfit, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('WARNING: THE WANDERING ROOMBA HAS ENTERED!', canvas.width / 2, 44);
+  // No WARNING banner here anymore — you can see the Roomba entering.
+  // The vignette above is the only signal, and it fades on its own.
   ctx.restore();
 }
 
@@ -6954,107 +7040,14 @@ function drawSam() {
   }
   ctx.restore();
 
-  // Top status banners
-  if (gameState === 'KILL_ANIM' && player.hasStick) {
-    const pulse = 1 + Math.sin(performance.now() * 0.025) * 0.04;
-    ctx.save();
-    ctx.translate(canvas.width / 2, 46);
-    ctx.scale(pulse, pulse);
-    ctx.fillStyle = '#eab308';
-    ctx.strokeStyle = '#0c0a09';
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.roundRect(-340, -34, 680, 68, 8);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#000';
-    ctx.font = '900 32px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('PRESS [SPACE] NOW! (USE STICK)', 0, 2);
-    ctx.restore();
-  } else if (gameState === 'KILL_ANIM' && sam.qteActive && !sam.qteFailed) {
-    const dist = Math.hypot(player.x - sam.attackX, player.y - sam.attackY);
-    const progress = 1 - dist / sam.attackStartDist;
-    const inSweetSpot = progress >= QTE_BLOCK_START && progress <= QTE_BLOCK_END;
-    const inPerfectSpot = progress >= QTE_PERFECT_START && progress <= QTE_PERFECT_END;
-    const hasIceOnFloor = powerups.some((p) => p.type === 'ice' && p.scatterProgress >= 1);
-    const pulse = 1 + Math.sin(performance.now() * 0.028) * 0.045;
-    ctx.save();
-    ctx.translate(canvas.width / 2, 48);
-    ctx.scale(pulse, pulse);
-    ctx.fillStyle = inPerfectSpot ? '#a16207' : inSweetSpot ? '#0284c7' : '#dc2626';
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.roundRect(-370, -36, 740, 72, 8);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = '900 34px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(
-      inPerfectSpot
-        ? '>>> PERFECT BLOCK! <<<'
-        : inSweetSpot
-        ? '>>> PRESS [SPACE] NOW! <<<'
-        : 'SAM LUNGING — PRESS [SPACE]!',
-      0,
-      -6
-    );
-    ctx.font = '700 14px "IBM Plex Mono", monospace';
-    ctx.fillStyle = '#fde047';
-    ctx.fillText(
-      inPerfectSpot
-        ? 'PERFECT WINDOW — KEEP YOUR SHIELD!'
-        : hasIceOnFloor
-        ? 'USE SHIELD WITH [SPACE] — OR TOUCH THE ICE CUBE ON FLOOR!'
-        : 'HIT [SPACE] INSIDE THE BLUE RING TO BLOCK SAM!',
-      0,
-      21
-    );
-    ctx.restore();
-  } else if (mapSwapBannerTimer > 0) {
-    ctx.fillStyle = '#a855f7';
-    ctx.strokeStyle = '#0c0a09';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(canvas.width / 2 - 220, 16, 440, 36, 4);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = '700 15px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(mapSwapBannerText, canvas.width / 2, 34);
-  } else if (sam.knockoutTimer > 0) {
-    ctx.fillStyle = '#eab308';
-    ctx.strokeStyle = '#0c0a09';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(canvas.width / 2 - 190, 16, 380, 36, 4);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#000';
-    ctx.font = '700 15px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('SAM IS KNOCKED OUT', canvas.width / 2, 34);
-  } else if (sam.iceTimer > 0) {
-    ctx.fillStyle = '#0284c7';
-    ctx.strokeStyle = '#0c0a09';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(canvas.width / 2 - 190, 16, 380, 36, 4);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = '700 15px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(`SAM IS FROZEN SOLID (${sam.iceTimer.toFixed(1)}s)`, canvas.width / 2, 34);
-  } else if (sam.state === 'WARNING') {
+  // No top status banners anymore — they flashed past too fast to read,
+  // and you can see what Sam is doing anyway (stirring, lunging, frozen,
+  // knocked out, map changing). The Sam Cam sidebar still shows his state.
+  // The only banner-style exception is the one-time lunge tutorial, drawn
+  // separately by drawLungeTutorial().
+  // Small '!' badge above Sam while he is stirring — not a banner, just
+  // a quiet marker you can see on Sam himself.
+  if (sam.state === 'WARNING') {
     const bounce = Math.sin(performance.now() * 0.035) * 5;
     const badgeX = drawX - 65;
     const badgeY = drawY - 50 + bounce;
@@ -7072,38 +7065,6 @@ function drawSam() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('!', badgeX, badgeY + 2);
-
-    ctx.fillStyle = '#eab308';
-    ctx.strokeStyle = '#0c0a09';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(canvas.width / 2 - 195, 16, 390, 36, 4);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#000';
-    ctx.font = '700 15px "Space Grotesk", sans-serif';
-    ctx.fillText(
-      sam.isTriplePeek
-        ? '! TRIPLE PEEK — MOVE OUT OF THE RED ZONE!'
-        : sam.isDoublePeek
-        ? '! DOUBLE PEEK — MOVE OUT OF THE RED ZONE!'
-        : '! SAM IS STIRRING — MOVE OUT OF THE RED ZONE!',
-      canvas.width / 2,
-      34
-    );
-  } else if (sam.state === 'AWAKE') {
-    ctx.fillStyle = '#dc2626';
-    ctx.strokeStyle = '#0c0a09';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(canvas.width / 2 - 195, 16, 390, 36, 4);
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#fff';
-    ctx.font = '700 15px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('SAM IS WATCHING — DO NOT MOVE!', canvas.width / 2, 34);
   }
 
   // Floating Zzz particles
@@ -7151,6 +7112,9 @@ function drawPlayer() {
 
   // --- STICK PROMPT OR ACTIVE QTE FORCEFIELD TIMING RINGS (When Sam Is Charging At You) ---
   if (gameState === 'KILL_ANIM' && player.hasStick) {
+    // Yellow circle only — no PRESS banner. You can see Sam lunging and
+    // you have the stick; the first-lunge tutorial (once ever) is the
+    // only place the key is spelled out.
     ctx.save();
     ctx.beginPath();
     ctx.arc(0, 0, 42, 0, Math.PI * 2);
@@ -7159,20 +7123,6 @@ function drawPlayer() {
     ctx.lineWidth = 4;
     ctx.strokeStyle = '#facc15';
     ctx.stroke();
-
-    ctx.fillStyle = '#eab308';
-    ctx.strokeStyle = '#0c0a09';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(-145, -94, 290, 42, 6);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.font = '900 22px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#000000';
-    ctx.fillText('PRESS [SPACE]!', 0, -73);
     ctx.restore();
   } else if (gameState === 'KILL_ANIM' && sam.qteActive && !sam.qteFailed) {
     const dist = Math.hypot(player.x - sam.attackX, player.y - sam.attackY);
@@ -7219,28 +7169,15 @@ function drawPlayer() {
     });
     ctx.setLineDash([]);
 
-    // HUGE overhead banner prompt directly above player
-    ctx.fillStyle = inPerfectSpot ? '#a16207' : inSweetSpot ? '#0284c7' : '#b91c1c';
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(-155, -96, 310, 44, 6);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.font = '900 24px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(
-      inPerfectSpot ? 'PERFECT — PRESS [SPACE]!' : inSweetSpot ? 'PRESS [SPACE] NOW!' : 'PRESS [SPACE]!',
-      0,
-      -74
-    );
+    // No overhead banner here anymore — the rings themselves are the
+    // timing tell (blue = block, gold = perfect). The first-lunge
+    // tutorial (once ever) is the only place the timing is spelled out.
     ctx.restore();
   }
 
-  // --- GUITAR RIFF SPEED BOOST AURA (When Active) ---
+  // --- GUITAR RIFF AURA (When Active) ---
+  // Visual only — no text telling the player they have a boost or how
+  // long is left. They should just feel it.
   if (player.speedBoostTimer > 0) {
     ctx.save();
     ctx.strokeStyle = '#34d399';
@@ -7250,11 +7187,6 @@ function drawPlayer() {
     ctx.ellipse(0, 14, 24, 12, 0, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
-
-    ctx.font = '700 10px "IBM Plex Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#34d399';
-    ctx.fillText(`BOOST ${player.speedBoostTimer.toFixed(1)}s`, 0, 32);
     ctx.restore();
   }
 
@@ -7437,14 +7369,10 @@ function drawWindowBird() {
 }
 
 function drawFloatingTexts() {
-  const occupied = [];
+  // Only one message can exist at a time (see spawnFloatingText), so
+  // there is no stacking / vertical-slot logic here anymore.
   const padding = 8;
   const lineHeight = 16;
-  const boxesOverlap = (a, b) =>
-    a.left < b.right &&
-    a.right > b.left &&
-    a.top < b.bottom &&
-    a.bottom > b.top;
 
   floatingTexts.forEach((ft) => {
     ctx.save();
@@ -7455,33 +7383,7 @@ function drawFloatingTexts() {
     ctx.shadowColor = 'rgba(0,0,0,0.85)';
     ctx.shadowBlur = 3;
     const lines = ft.lines || [ft.text];
-    const width = Math.max(...lines.map((line) => ctx.measureText(line).width)) + padding * 2;
-    const height = lines.length * lineHeight + padding * 2;
-    let renderY = ft.y;
-    let box = {
-      left: ft.x - width / 2,
-      right: ft.x + width / 2,
-      top: renderY - height / 2,
-      bottom: renderY + height / 2
-    };
-
-    // Keep each message in a free vertical slot at its current x-position.
-    // This prevents stacked gameplay events from becoming unreadable.
-    for (let attempt = 0; attempt < 18 && occupied.some((other) => boxesOverlap(box, other)); attempt++) {
-      renderY -= height + padding;
-      box = {
-        left: ft.x - width / 2,
-        right: ft.x + width / 2,
-        top: renderY - height / 2,
-        bottom: renderY + height / 2
-      };
-    }
-    if (box.top < 8) {
-      renderY += 2 * (8 - box.top);
-      box.top = renderY - height / 2;
-      box.bottom = renderY + height / 2;
-    }
-    occupied.push(box);
+    const renderY = Math.max(ft.y, 8 + (lines.length * lineHeight + padding * 2) / 2);
 
     const firstLineY = renderY - ((lines.length - 1) * lineHeight) / 2;
     lines.forEach((line, index) => {
@@ -7489,6 +7391,138 @@ function drawFloatingTexts() {
     });
     ctx.restore();
   });
+}
+
+// First-lunge tutorial: the ONLY banner-style text left in the game.
+// Static — it never pulses, flashes, or changes with the lunge progress,
+// so it can actually be read. Sam lunges slightly slower, then stops in
+// GOLD (see update()) so you have time to read it and press. Shown once
+// per page load, and only if the intro cutscene was watched — refreshing
+// the page brings it back.
+//
+// Styled to match the rest of the UI exactly (styles.css tokens + the
+// in-canvas SHIELDS badge): flat #211d1a panel, 2px #3d362f border,
+// 6px radius, hard 0 4px 0 #0c0a09 shadow, #f3ede2 text, #3d362f divider,
+// and the <kbd> style for SPACE — dark #2c2622, 1px #574d43 border, 3px
+// radius, IBM Plex Mono. No gradients, no soft glow, no gold border,
+// no gold heading, no decorative ring dot. The only gold is the word
+// "gold" itself, in the UI warning colour #eab308.
+function drawLungeTutorial() {
+  if (!lungeTutorialActive || gameState !== 'KILL_ANIM') return;
+  ctx.save();
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+
+  // Vignette marks this lunge as the test one — darkened edges, clear
+  // centre, so you can tell this isn't a normal lunge. Kept: it's a
+  // fullscreen effect, not part of the card's UI.
+  const vignette = ctx.createRadialGradient(
+    cx, cy, Math.min(canvas.width, canvas.height) * 0.32,
+    cx, cy, Math.max(canvas.width, canvas.height) * 0.72
+  );
+  vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  vignette.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Exactly three lines, nothing else — as a hub-panel card.
+  const panelW = 700;
+  const panelH = 138;
+  const panelX = cx - panelW / 2;
+  const panelY = 96;
+
+  // Hard shadow, like .hub-panel / .hud-bar: 0 4px 0 #0c0a09.
+  // Drawn as an offset solid rect, not a blurred shadow.
+  ctx.fillStyle = '#0c0a09';
+  ctx.beginPath();
+  ctx.roundRect(panelX, panelY + 4, panelW, panelH, 6);
+  ctx.fill();
+
+  // Flat panel, like .hub-panel: #211d1a, 2px #3d362f, 6px radius.
+  ctx.fillStyle = '#211d1a';
+  ctx.strokeStyle = '#3d362f';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(panelX, panelY, panelW, panelH, 6);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Line 1 — plain heading, UI text colour, not gold.
+  ctx.fillStyle = '#f3ede2';
+  ctx.font = '700 19px "Space Grotesk", sans-serif';
+  ctx.fillText('Sam is lunging at you.', cx, panelY + 28);
+
+  // Divider, like .hub-section-header: 1px #3d362f.
+  ctx.strokeStyle = '#3d362f';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(panelX + 24, panelY + 50);
+  ctx.lineTo(panelX + panelW - 24, panelY + 50);
+  ctx.stroke();
+
+  // Line 2 — "Press [SPACE] to use shield and block." with SPACE as a
+  // <kbd> exactly like styles.css: #2c2622 bg, 1px #574d43 border,
+  // 3px radius, IBM Plex Mono, #f3ede2 text.
+  const line2Y = panelY + 80;
+  const pre2 = 'Press ';
+  const keyLabel = 'SPACE';
+  const post2 = ' to use shield and block.';
+  ctx.font = '700 12px "IBM Plex Mono", monospace';
+  const keyW = ctx.measureText(keyLabel).width + 12;
+  ctx.font = '700 17px "Space Grotesk", sans-serif';
+  const pre2W = ctx.measureText(pre2).width;
+  const post2W = ctx.measureText(post2).width;
+  const total2W = pre2W + keyW + 6 + post2W;
+  let x2 = cx - total2W / 2;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#f3ede2';
+  ctx.fillText(pre2, x2, line2Y);
+  x2 += pre2W;
+  const keyH = 22;
+  const keyY = line2Y - keyH / 2;
+  ctx.fillStyle = '#2c2622';
+  ctx.strokeStyle = '#574d43';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(x2, keyY, keyW, keyH, 3);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#f3ede2';
+  ctx.font = '700 12px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(keyLabel, x2 + keyW / 2, line2Y + 1);
+  x2 += keyW + 6;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#f3ede2';
+  ctx.font = '700 17px "Space Grotesk", sans-serif';
+  ctx.fillText(post2, x2, line2Y);
+
+  // Line 3 — "gold" in the UI warning colour, rest in UI text colour.
+  // No decorative ring dot: the rest of the UI doesn't do that.
+  const line3Y = panelY + 112;
+  const part1 = 'If you use a shield when the ring is ';
+  const goldWord = 'gold';
+  const part2 = ', you keep it.';
+  ctx.font = '700 15px "Space Grotesk", sans-serif';
+  const part1W = ctx.measureText(part1).width;
+  const goldW = ctx.measureText(goldWord).width;
+  const part2W = ctx.measureText(part2).width;
+  const total3W = part1W + goldW + part2W;
+  let x3 = cx - total3W / 2;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#f3ede2';
+  ctx.fillText(part1, x3, line3Y);
+  x3 += part1W;
+  ctx.fillStyle = '#eab308';
+  ctx.fillText(goldWord, x3, line3Y);
+  x3 += goldW;
+  ctx.fillStyle = '#f3ede2';
+  ctx.fillText(part2, x3, line3Y);
+
+  ctx.restore();
 }
 
 // Main Game Loop
@@ -7509,6 +7543,7 @@ function loop(now) {
   drawSam();
   drawRoombaIntroVignette();
   drawMapCutscene();
+  drawLungeTutorial();
   drawFloatingTexts();
 
   requestAnimationFrame(loop);
@@ -7836,7 +7871,7 @@ function drawTutorialSlide() {
     cleaner(300, 205, 1.6);
     bubble('SPACE', 300, 92, '#38bdf8');
     c.font = '700 19px "Space Grotesk", sans-serif';
-    c.fillText('Press SPACE inside the blue timing ring', 380, 325);
+    c.fillText('Press SPACE inside the timing ring to use a shield', 380, 325);
   } else if (tutorialSlideIndex === 4) {
     scene();
     item(240, 195, 'ice');
@@ -7858,7 +7893,7 @@ function drawTutorialSlide() {
     bubble('SPACE TO SHOO', 205, 92, '#f59e0b');
     bubble('WATCH ROOMBA', 555, 92, '#38bdf8');
     c.font = '700 19px "Space Grotesk", sans-serif';
-    c.fillText('Birds block you; the Roomba changes your route', 380, 325);
+    c.fillText('Birds fling your items (drop the item to prevent this) and the roomba flings you!', 380, 325);
   }
 
   if (tutorialSlideTitle) tutorialSlideTitle.textContent = tutorialSlides[tutorialSlideIndex].title;
