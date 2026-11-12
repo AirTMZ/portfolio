@@ -1941,7 +1941,15 @@ kbd {
 }
 
 
-/* Phone-only block screen */
+/* Phone-only block screen.
+   Why this is written this way: the page underneath is a desktop layout
+   (game canvas 1160px, hub up to 1380px, shell up to 1580px). If that
+   wide content stays in layout on a phone, the browser's layout viewport
+   stays wide, the fixed block gets sized to that wide layout, and the
+   phone shows a zoomed-in crop — you have to pinch out to find the block.
+   So on phones the game is removed from layout entirely (display: none),
+   and the block is sized to the phone's actual viewport (dvw/dvh), not
+   the page. Text uses clamp() so it scales to a small screen. */
 #mobile-block {
   display: none;
 }
@@ -1949,22 +1957,45 @@ kbd {
 html.is-phone #mobile-block {
   position: fixed;
   inset: 0;
+  /* Fallbacks first, dynamic viewport units second (URL bar aware). */
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
   z-index: 100000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  /* Safe-area padding so notches / home bars don't clip the card. */
+  padding-top: max(24px, env(safe-area-inset-top));
+  padding-right: max(24px, env(safe-area-inset-right));
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  padding-left: max(24px, env(safe-area-inset-left));
   background: var(--bg-dark);
   color: var(--text-light);
   text-align: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
+/* The wide desktop layout must not stretch the layout viewport on phones. */
+html.is-phone,
 html.is-phone body {
+  width: 100%;
+  max-width: 100%;
   overflow: hidden;
 }
 
+html.is-phone body > :not(#mobile-block) {
+  display: none !important;
+}
+
 .mobile-block-card {
+  width: min(420px, 100%);
   max-width: 420px;
+  /* margin: auto (not just flex centring) so a short landscape phone can
+     still scroll to the top instead of clipping it. */
+  margin: auto;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -1972,20 +2003,55 @@ html.is-phone body {
 }
 
 .mobile-block-icon {
-  font-size: 64px;
+  font-size: clamp(48px, 14vw, 64px);
   line-height: 1;
 }
 
 .mobile-block-card h1 {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 24px;
+  font-size: clamp(20px, 6vw, 24px);
   line-height: 1.25;
   color: var(--accent);
+  text-wrap: balance;
 }
 
 .mobile-block-card p {
-  font-size: 18px;
+  font-size: clamp(16px, 4.5vw, 18px);
+  line-height: 1.5;
   color: var(--text-dim);
+  text-wrap: balance;
+}
+
+/* CSS-only fallback if the head JS that sets html.is-phone fails or is
+   blocked: same block, same game-hidden rule, via media queries alone.
+   Portrait phones (narrow + coarse) and landscape phones (short + coarse)
+   both match. Desktop narrow windows (fine pointer) do not. */
+@media (max-width: 820px) and (pointer: coarse) and (hover: none), (max-height: 500px) and (pointer: coarse) and (hover: none) {
+  #mobile-block {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: max(24px, env(safe-area-inset-top));
+    padding-right: max(24px, env(safe-area-inset-right));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    padding-left: max(24px, env(safe-area-inset-left));
+    background: var(--bg-dark);
+    color: var(--text-light);
+    text-align: center;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body > :not(#mobile-block) {
+    display: none !important;
+  }
 }
 
 
