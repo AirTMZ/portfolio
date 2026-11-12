@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DON'T WAKE SAM — 2D Stealth Tidying Game</title>
+  <title>DON'T WAKE SAM</title>
+  <link rel="icon" href="sleep.ico">
   <link rel="stylesheet" href="styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
   <script>
     (function () {
       var root = document.documentElement;
@@ -26,6 +30,7 @@
     })();
   </script>
 </head>
+
 <body>
   <!-- Phone-only block screen (shown via html.is-phone) -->
   <div id="mobile-block" role="alert">
@@ -140,9 +145,11 @@
       <!-- Footer with Version Number -->
       <footer class="start-footer">
         <div class="footer-left">
-          <button class="version-badge" id="version-cheat-trigger" type="button">v2.6.0 // ANIMATED ROOMS &amp; BALANCED TIMER</button>
+          <button class="version-badge" id="version-cheat-trigger" type="button">v2.6.0 // ANIMATED ROOMS &amp; BALANCED
+            TIMER</button>
           <span class="footer-divider">•</span>
-          <span>CONTROLS: <kbd>WASD</kbd> / <kbd>ARROWS</kbd> MOVE &nbsp;|&nbsp; <kbd>SPACE</kbd> SHIELD / SHOO BIRD &nbsp;|&nbsp; <kbd>E</kbd> STICK &nbsp;|&nbsp; <kbd>Q</kbd> DROP</span>
+          <span>CONTROLS: <kbd>WASD</kbd> / <kbd>ARROWS</kbd> MOVE &nbsp;|&nbsp; <kbd>SPACE</kbd> SHIELD / SHOO BIRD
+            &nbsp;|&nbsp; <kbd>E</kbd> STICK &nbsp;|&nbsp; <kbd>Q</kbd> DROP</span>
         </div>
       </footer>
     </div>
@@ -155,7 +162,8 @@
         </div>
         <p class="cheat-copy">Enter the developer password to open test controls.</p>
         <form id="cheat-auth-form">
-          <input id="cheat-password-input" class="cheat-input" type="password" autocomplete="off" placeholder="PASSWORD" aria-label="Developer password">
+          <input id="cheat-password-input" class="cheat-input" type="password" autocomplete="off" placeholder="PASSWORD"
+            aria-label="Developer password">
           <button class="cta-btn" type="submit">UNLOCK TEST MENU</button>
         </form>
         <div class="cheat-error" id="cheat-auth-error"></div>
@@ -303,7 +311,8 @@
           </div>
         </button>
 
-        <button class="map-card locked" data-map="lounge" id="map-btn-lounge" title="Unlock at $1,000 in Bedroom ($75/item)">
+        <button class="map-card locked" data-map="lounge" id="map-btn-lounge"
+          title="Unlock at $1,000 in Bedroom ($75/item)">
           <div class="map-thumb">
             <canvas class="map-thumb-canvas" data-thumb="lounge" width="145" height="90"></canvas>
             <span class="lock-pill" id="lock-pill-lounge">LOCKED</span>
@@ -314,7 +323,8 @@
           </div>
         </button>
 
-        <button class="map-card locked" data-map="garden" id="map-btn-garden" title="Unlock at $1,500 in Lounge ($100/item)">
+        <button class="map-card locked" data-map="garden" id="map-btn-garden"
+          title="Unlock at $1,500 in Lounge ($100/item)">
           <div class="map-thumb">
             <canvas class="map-thumb-canvas" data-thumb="garden" width="145" height="90"></canvas>
             <span class="lock-pill" id="lock-pill-garden">LOCKED</span>
@@ -325,7 +335,8 @@
           </div>
         </button>
 
-        <button class="map-card random-card locked" id="random-mode-btn" title="Randomly swaps unlocked maps every 30-60s">
+        <button class="map-card random-card locked" id="random-mode-btn"
+          title="Randomly swaps unlocked maps every 30-60s">
           <div class="random-icon">⇄</div>
           <div class="map-meta">
             <span class="map-title">RANDOM MODE</span>
@@ -451,4 +462,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>
