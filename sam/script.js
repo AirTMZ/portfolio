@@ -7894,9 +7894,12 @@ function updateTouchButtons() {
 function enterFullscreen() {
   // True fullscreen hides the browser search bar / tabs on mobile/tablet,
   // so the playable window is not tiny. Must be called from a user gesture
-  // (Start Shift / Play Again / Restart). Android Chrome / Edge support it.
-  // iOS Safari has no document fullscreen — it will fall through to the
+  // (Start Shift / Play Again / Restart / guard button / hub Fullscreen).
+  // Android Chrome / Edge support it.
+  // iOS Safari has no document fullscreen — it falls through to the
   // scroll-to-hide fallback below, and 100dvh still gives the most space.
+  // On iOS the real fix is Share -> Add to Home Screen (see guard hint),
+  // or Play Anyway — the guard no longer blocks short landscape at all.
   // PC: NEVER fullscreen. isTouchDevice() is false on a keyboard+mouse PC
   // (pointer fine, no touch), so we return and the game stays windowed.
   try {
@@ -7908,7 +7911,11 @@ function enterFullscreen() {
       const p = req.call(el, { navigationUI: 'hide' });
       if (p && p.catch) p.catch(() => {});
     } else {
+      // No fullscreen API (iOS Safari): scroll is the only way Safari
+      // collapses its bars, and one scroll often isn't enough — the bar
+      // re-appears on the next paint. Scroll twice, a frame apart.
       window.scrollTo(0, 1);
+      setTimeout(() => { try { window.scrollTo(0, 1); } catch (e) {} }, 100);
     }
     if (screen.orientation && screen.orientation.lock) {
       // Lock after fullscreen engages; if it fails (not fullscreen yet on
@@ -7917,6 +7924,74 @@ function enterFullscreen() {
     }
   } catch (e) {}
 }
+// ---- Aspect-guard escape hatch (phone fix) ---------------------------
+// Before this, the guard could trap phone players: it covered the whole
+// screen, and the ONLY fullscreen trigger (Start Shift) was underneath it.
+// So a phone in landscape with its address bar still showing could never
+// hide the bar, could never clear the guard, could never start.
+// The guard now has its own buttons, wired here:
+//  - GO FULLSCREEN: tries real fullscreen (Android). If that works the
+//    viewport grows and the CSS guard hides itself. If it doesn't (iOS,
+//    no fullscreen API) and we're already landscape, we dismiss anyway —
+//    the player chose to play with the bar showing rather than be stuck.
+//  - PLAY ANYWAY: dismisses the guard for this session, but ONLY when
+//    actually landscape (w > h). In portrait it refuses and asks to rotate,
+//    so portrait players don't get a squished game by accident.
+// Dismissal is session-only and reversible: rotating back to portrait
+// re-shows the guard (see refreshGuardDismissed).
+const aspectGuardEl = document.getElementById('aspect-guard');
+const guardFullscreenBtn = document.getElementById('guard-fullscreen-btn');
+const guardPlayAnywayBtn = document.getElementById('guard-play-anyway-btn');
+const guardIosHintEl = document.getElementById('guard-ios-hint');
+const guardAnywayNoteEl = document.getElementById('guard-anyway-note');
+const hubFullscreenBtn = document.getElementById('open-fullscreen-btn');
+function isIOSDevice() {
+  try {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 0);
+  } catch (e) { return false; }
+}
+if (guardIosHintEl && isIOSDevice()) guardIosHintEl.hidden = false;
+function isGuardLandscape() {
+  return window.innerWidth > window.innerHeight;
+}
+function refreshGuardDismissed() {
+  if (!aspectGuardEl) return;
+  // Only stay dismissed while landscape. Back to portrait -> guard returns.
+  if (aspectGuardEl.classList.contains('guard-dismissed') && !isGuardLandscape()) {
+    aspectGuardEl.classList.remove('guard-dismissed');
+  }
+}
+function dismissGuardForSession() {
+  if (aspectGuardEl) aspectGuardEl.classList.add('guard-dismissed');
+}
+if (guardFullscreenBtn) {
+  guardFullscreenBtn.addEventListener('click', () => {
+    initAudio();
+    enterFullscreen();
+    // Give fullscreen ~400ms to engage (Android). If we're landscape by
+    // then — with or without fullscreen (iOS has none) — stop blocking.
+    // If we're still portrait, leave the guard up: rotating is the fix.
+    setTimeout(() => { if (isGuardLandscape()) dismissGuardForSession(); }, 400);
+  });
+}
+if (guardPlayAnywayBtn) {
+  guardPlayAnywayBtn.addEventListener('click', () => {
+    if (isGuardLandscape()) {
+      dismissGuardForSession();
+    } else if (guardAnywayNoteEl) {
+      guardAnywayNoteEl.hidden = false;
+      guardAnywayNoteEl.textContent = 'Still portrait — rotate your phone sideways first, then tap Play Anyway.';
+    }
+  });
+}
+if (hubFullscreenBtn) {
+  hubFullscreenBtn.addEventListener('click', () => { initAudio(); enterFullscreen(); });
+}
+window.addEventListener('resize', refreshGuardDismissed);
+window.addEventListener('orientationchange', () => setTimeout(refreshGuardDismissed, 250));
+document.addEventListener('fullscreenchange', refreshGuardDismissed);
+
 function startGame() {
   // First watch of this cutscene: Restart must not bypass it — resetGame() hides
   // the shell and beginMapCutscene() would treat it as seen-this-session,

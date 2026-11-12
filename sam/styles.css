@@ -25,6 +25,7 @@ body {
   background-color: var(--bg-dark);
   color: var(--text-light);
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2052,11 +2053,19 @@ kbd {
 }
 
 /* Guard is based on viewport SHAPE, not pointer type. That is the whole
-   point: a PC window dragged narrow (portrait / near-square / very
-   short) and a phone in portrait in DevTools responsive mode (which
-   still reports a mouse pointer) both get told the aspect is wrong.
-   Landscape phones, tablets, and normal PC windows never see it. */
-@media (orientation: portrait), (max-aspect-ratio: 11/10), (max-height: 280px) {
+   point: a PC window dragged narrow (portrait / near-square) and a phone
+   in portrait in DevTools responsive mode (which still reports a mouse
+   pointer) both get told the aspect is wrong.
+   Landscape phones, tablets, and normal PC windows never see it.
+   DELIBERATELY NO max-height CHECK: a phone in landscape WITH its browser
+   address bar / tabs still showing is only ~240-280px tall (e.g. iPhone
+   SE landscape 375px minus ~110px of Safari chrome = ~265px). The old
+   (max-height: 280px) rule therefore fired even when the player WAS
+   sideways, and trapped them: fullscreen (the only way to hide the bar)
+   could only be triggered from Start Shift, which this overlay covered.
+   Short-but-landscape is handled by the existing .compact-game layout
+   instead of being blocked. */
+@media (orientation: portrait), (max-aspect-ratio: 11/10) {
   #aspect-guard {
     position: fixed;
     inset: 0;
@@ -2133,6 +2142,74 @@ kbd {
   }
   .guard-desktop-msg {
     display: none;
+  }
+}
+
+/* Guard's own escape hatch (see index.html). Touch only — desktop never
+   needs it, and the guard never traps a desktop player the same way. */
+.guard-touch-only {
+  display: none;
+}
+@media (pointer: coarse) {
+  .guard-touch-only {
+    display: flex;
+  }
+}
+.guard-actions {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: min(320px, 100%);
+  margin-top: 4px;
+}
+.guard-fullscreen-btn,
+.guard-anyway-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  padding: 0.85rem 1rem;
+  border-radius: 7px;
+  border: 2px solid #0c0a09;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.guard-fullscreen-btn {
+  background: var(--warning);
+  color: #0c0a09;
+  box-shadow: 0 4px 0 #0c0a09;
+}
+.guard-fullscreen-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #0c0a09;
+}
+.guard-anyway-btn {
+  background: transparent;
+  color: var(--text-light);
+  border-color: var(--panel-border);
+  box-shadow: none;
+}
+.guard-ios-hint {
+  color: var(--text-dim);
+}
+.guard-anyway-note {
+  color: var(--warning);
+}
+/* JS dismissal: "Play Anyway" in landscape. Must beat the media query
+   above, hence !important. JS removes it again if the player rotates
+   back to portrait, so portrait is never silently allowed. */
+#aspect-guard.guard-dismissed {
+  display: none !important;
+}
+/* Hub fullscreen button: touch only. On desktop there is no browser
+   address bar eating the game, so it would just be clutter. */
+#open-fullscreen-btn {
+  display: none;
+}
+@media (pointer: coarse) {
+  #open-fullscreen-btn {
+    display: inline-flex;
   }
 }
 

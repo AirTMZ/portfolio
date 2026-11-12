@@ -60,14 +60,31 @@
   <!-- Aspect guard: game needs a landscape window. Shown by CSS only,
        based on viewport SHAPE, not pointer type, so it also catches a PC
        window dragged narrow and DevTools portrait mode. Fixed overlay —
-       never in flow, so it can never push the game down like a banner. -->
+       never in flow, so it can never push the game down like a banner.
+       PHONE FIX: the guard used to also fire on (max-height: 280px), but a
+       phone in landscape WITH its browser address bar showing is only
+       ~240-280px tall — so it blocked players who were already sideways,
+       before they could reach the Start button that triggers fullscreen.
+       The height check is gone (see styles.css). The guard now also carries
+       its OWN fullscreen / play-anyway buttons, so it can never trap the
+       player again: fullscreen must be reachable from the guard itself,
+       not only from behind it. -->
   <div id="aspect-guard" role="alert" aria-live="polite">
     <div class="rotate-card">
       <div class="rotate-icon">↻</div>
       <h1>WINDOW TOO NARROW</h1>
       <p>DON'T WAKE SAM plays in landscape.</p>
-      <p class="rotate-sub guard-touch-msg">Rotate your device sideways to keep playing.</p>
+      <p class="rotate-sub guard-touch-msg">Rotate your device sideways to keep playing. Already sideways? Your browser's address bar is eating the height — tap below to hide it.</p>
       <p class="rotate-sub guard-desktop-msg">Widen this window — drag it wider until this message goes away.</p>
+      <!-- Touch only (CSS hides this on desktop). These buttons are the fix
+           for the chicken-and-egg: previously fullscreen could only be
+           triggered from Start Shift, which this overlay covered. -->
+      <div class="guard-actions guard-touch-only">
+        <button id="guard-fullscreen-btn" type="button" class="guard-fullscreen-btn">⛶ GO FULLSCREEN</button>
+        <button id="guard-play-anyway-btn" type="button" class="guard-anyway-btn">PLAY ANYWAY &rarr;</button>
+        <p class="rotate-sub guard-ios-hint" id="guard-ios-hint" hidden>On iPhone, Safari can't fullscreen a website. Tap Share &rarr; Add to Home Screen for true fullscreen, or tap Play Anyway to play with the bar showing.</p>
+        <p class="rotate-sub guard-anyway-note" id="guard-anyway-note" hidden></p>
+      </div>
     </div>
   </div>
 
@@ -122,6 +139,9 @@
           </button>
           <button class="hub-nav-btn" id="open-settings-btn">
             <span class="btn-icon">⚙</span> SETTINGS
+          </button>
+          <button class="hub-nav-btn" id="open-fullscreen-btn" type="button" title="Hide the browser address bar">
+            <span class="btn-icon">⛶</span> FULLSCREEN
           </button>
         </div>
       </header>
