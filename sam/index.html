@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DON'T WAKE SAM — 2D Stealth Tidying Game</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      var root = document.documentElement;
+      function check() {
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        var portrait = h > w;
+        var veryWide = w / h >= 1.9;
+        var touchOnly = window.matchMedia && window.matchMedia('(pointer: coarse) and (hover: none)').matches;
+        // Portrait = phone. Landscape phones are very wide, so there the touch check separates them from ultrawide monitors.
+        root.classList.toggle('is-phone', portrait || (veryWide && touchOnly));
+      }
+      check();
+      window.addEventListener('resize', check);
+      window.addEventListener('orientationchange', check);
+    })();
+  </script>
+</head>
+<body>
+  <!-- Phone-only block screen (shown via html.is-phone) -->
+  <div id="mobile-block" role="alert">
+    <div class="mobile-block-card">
+      <div class="mobile-block-icon">📵</div>
+      <h1>CAN'T BE PLAYED ON A PHONE</h1>
+      <p>DON'T WAKE SAM needs a keyboard.</p>
+      <p>Please switch to a computer to play.</p>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- FULL-SCREEN START MENU HUB                                            -->
+  <!-- ===================================================================== -->
+  <div class="start-screen active" id="start-overlay">
+    <div class="start-hub-container">
+      <!-- Top Header Bar -->
+      <header class="start-header">
+        <div class="start-brand">
+          <h1>DON'T WAKE SAM</h1>
+        </div>
+
+        <div class="start-wallet-bar">
+          <div class="wallet-pill">
+            <span class="wallet-label">SPENDABLE CASH</span>
+            <strong class="wallet-amount" id="start-wallet-val">$0</strong>
+          </div>
+          <div class="wallet-pill best-pill">
+            <span class="wallet-label">BEST SHIFT</span>
+            <strong class="wallet-amount" id="start-best-val">$0</strong>
+          </div>
+        </div>
+
+        <div class="start-nav-actions">
+          <button class="hub-nav-btn" id="open-tutorial-btn">
+            <span class="btn-icon">?</span> TUTORIAL
+          </button>
+          <button class="hub-nav-btn" id="open-achievements-btn">
+            <span class="btn-icon">★</span> ACHIEVEMENTS <span class="ach-pill-count" id="start-ach-count">0/10</span>
+          </button>
+          <button class="hub-nav-btn" id="open-outfits-btn">
+            <span class="btn-icon">👕</span> OUTFITS
+          </button>
+          <button class="hub-nav-btn" id="start-mute-btn">SOUND: ON</button>
+        </div>
+      </header>
+
+      <!-- Center Stage: Map Switcher Above, Start Shift Centered at the Bottom -->
+      <div class="start-center-stage">
+        <section class="hub-panel maps-center-panel">
+          <div class="hub-section-header">
+            <span>SELECT LOCATION (MAP SWITCHER)</span>
+            <span class="section-hint">Pay Rates: Bedroom $50/item • Lounge $75/item • Backyard $100/item</span>
+          </div>
+
+          <div class="start-map-grid">
+            <button class="start-map-card active" data-map="bedroom" id="start-map-bedroom">
+              <div class="start-map-thumb">
+                <canvas class="map-thumb-canvas" data-thumb="bedroom" width="290" height="180"></canvas>
+              </div>
+              <div class="start-map-info">
+                <strong>1. SAM'S BEDROOM ($50 / ITEM)</strong>
+                <span class="start-map-status" id="start-map-sub-bedroom">SELECTED</span>
+              </div>
+            </button>
+
+            <button class="start-map-card locked" data-map="lounge" id="start-map-lounge">
+              <div class="start-map-thumb">
+                <canvas class="map-thumb-canvas" data-thumb="lounge" width="290" height="180"></canvas>
+                <span class="lock-pill" id="start-lock-lounge">LOCKED</span>
+              </div>
+              <div class="start-map-info">
+                <strong>2. THE LOUNGE ($75 / ITEM)</strong>
+                <span class="start-map-status" id="start-map-sub-lounge">EARN $1,000 IN BEDROOM</span>
+              </div>
+            </button>
+
+            <button class="start-map-card locked" data-map="garden" id="start-map-garden">
+              <div class="start-map-thumb">
+                <canvas class="map-thumb-canvas" data-thumb="garden" width="290" height="180"></canvas>
+                <span class="lock-pill" id="start-lock-garden">LOCKED</span>
+              </div>
+              <div class="start-map-info">
+                <strong>3. THE BACKYARD ($100 / ITEM)</strong>
+                <span class="start-map-status" id="start-map-sub-garden">EARN $1,500 IN LOUNGE</span>
+              </div>
+            </button>
+
+            <button class="start-map-card random-map-card locked" id="start-random-btn">
+              <div class="start-random-icon">⇄</div>
+              <div class="start-map-info">
+                <strong>RANDOM SHUFFLE MODE</strong>
+                <span class="map-desc-line">Swaps unlocked maps every 30–60s mid-run!</span>
+                <span class="start-map-status" id="start-random-sub">UNLOCK 2 MAPS FIRST</span>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <!-- Bottom Centered Start Shift Section -->
+        <section class="start-launch-bottom">
+          <div class="launch-sam-avatar">
+            <canvas id="start-sam-canvas" width="128" height="96"></canvas>
+          </div>
+          <div class="launch-cta-wrap">
+            <h2>Ready for your shift?</h2>
+            <button id="start-btn" class="cta-btn start-shift-btn">▶ START CLEANING SHIFT</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- Footer with Version Number -->
+      <footer class="start-footer">
+        <div class="footer-left">
+          <button class="version-badge" id="version-cheat-trigger" type="button">v2.6.0 // ANIMATED ROOMS &amp; BALANCED TIMER</button>
+          <span class="footer-divider">•</span>
+          <span>CONTROLS: <kbd>WASD</kbd> / <kbd>ARROWS</kbd> MOVE &nbsp;|&nbsp; <kbd>SPACE</kbd> SHIELD / SHOO BIRD &nbsp;|&nbsp; <kbd>E</kbd> STICK &nbsp;|&nbsp; <kbd>Q</kbd> DROP</span>
+        </div>
+      </footer>
+    </div>
+
+    <div class="hub-submodal" id="cheat-auth-modal">
+      <div class="submodal-card cheat-card">
+        <div class="submodal-header">
+          <h2>DEVELOPER ACCESS</h2>
+          <button class="submodal-close-btn" id="close-cheat-auth-btn">✕ CLOSE</button>
+        </div>
+        <p class="cheat-copy">Enter the developer password to open test controls.</p>
+        <form id="cheat-auth-form">
+          <input id="cheat-password-input" class="cheat-input" type="password" autocomplete="off" placeholder="PASSWORD" aria-label="Developer password">
+          <button class="cta-btn" type="submit">UNLOCK TEST MENU</button>
+        </form>
+        <div class="cheat-error" id="cheat-auth-error"></div>
+      </div>
+    </div>
+
+    <div class="hub-submodal" id="cheat-menu-modal">
+      <div class="submodal-card cheat-card">
+        <div class="submodal-header">
+          <div>
+            <h2>DEVELOPER TEST MENU</h2>
+            <span class="submodal-sub">Local progress controls — testing only</span>
+          </div>
+          <button class="submodal-close-btn" id="close-cheat-menu-btn">✕ CLOSE</button>
+        </div>
+        <div class="cheat-grid">
+          <button class="cheat-action" data-cheat-action="unlock-maps">UNLOCK ALL MAPS</button>
+          <button class="cheat-action" data-cheat-action="lock-maps">REMOVE MAP UNLOCKS</button>
+          <button class="cheat-action" data-cheat-action="unlock-achievements">UNLOCK ALL ACHIEVEMENTS</button>
+          <button class="cheat-action" data-cheat-action="clear-achievements">REMOVE ACHIEVEMENTS</button>
+          <button class="cheat-action" data-cheat-action="max-money">SET MONEY TO $99,999</button>
+          <button class="cheat-action" data-cheat-action="clear-money">SET MONEY TO $0</button>
+          <button class="cheat-action" data-cheat-action="unlock-outfits">UNLOCK ALL OUTFITS</button>
+          <button class="cheat-action" data-cheat-action="clear-outfits">REMOVE OUTFITS</button>
+          <button class="cheat-action" data-cheat-action="enforce-roomba">ENFORCE ROOMBA</button>
+        </div>
+        <div class="cheat-outfit-row">
+          <label for="cheat-outfit-select">EQUIP OUTFIT</label>
+          <select id="cheat-outfit-select" class="cheat-input"></select>
+          <button class="cheat-action" data-cheat-action="equip-outfit">EQUIP SELECTED</button>
+        </div>
+        <div class="cheat-status" id="cheat-status"></div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- TUTORIAL SUB-MODAL (Behind Tutorial Button on Start Screen)         -->
+    <!-- =================================================================== -->
+    <div class="hub-submodal" id="tutorial-modal">
+      <div class="submodal-card tutorial-card">
+        <div class="submodal-header">
+          <h2>HOW TO PLAY // FIELD MANUAL</h2>
+          <button class="submodal-close-btn" id="close-tutorial-btn">✕ CLOSE</button>
+        </div>
+
+        <div class="tutorial-body">
+          <div class="tutorial-carousel">
+            <div class="tutorial-slide-caption">
+              <strong id="tutorial-slide-title"></strong>
+              <span id="tutorial-slide-step"></span>
+            </div>
+            <canvas id="tutorial-slide-canvas" width="760" height="360"></canvas>
+            <div class="tutorial-carousel-controls">
+              <button class="tutorial-nav-btn" id="tutorial-prev-btn" type="button">← PREVIOUS</button>
+              <div class="tutorial-dots" id="tutorial-dots"></div>
+              <button class="tutorial-nav-btn" id="tutorial-next-btn" type="button">NEXT →</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="cta-btn" id="got-it-tutorial-btn">DONE — BACK TO MENU</button>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- ACHIEVEMENTS SUB-MODAL (Only viewable from Start Screen!)           -->
+    <!-- =================================================================== -->
+    <div class="hub-submodal" id="achievements-modal">
+      <div class="submodal-card achievements-modal-card">
+        <div class="submodal-header">
+          <div>
+            <h2>CHALLENGE ACHIEVEMENTS</h2>
+            <span class="submodal-sub">Complete difficult objectives instead of simply playing</span>
+          </div>
+
+          <div class="ach-modal-right">
+            <span class="ach-counter" id="ach-counter">0 / 10</span>
+            <button class="submodal-close-btn" id="close-achievements-btn">✕ CLOSE</button>
+          </div>
+        </div>
+
+        <div class="ach-modal-list" id="ach-list">
+          <!-- Populated dynamically by script.js -->
+        </div>
+
+        <button class="cta-btn" id="done-achievements-btn">BACK TO MENU</button>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- OUTFITS SUB-MODAL (Behind Outfits Button near Achievements!)        -->
+    <!-- =================================================================== -->
+    <div class="hub-submodal" id="outfits-modal">
+      <div class="submodal-card outfits-modal-card">
+        <div class="submodal-header">
+          <div>
+            <h2>CHARACTER OUTFITS // WARDROBE</h2>
+            <span class="submodal-sub">Preview an outfit, then click it again to confirm your purchase</span>
+          </div>
+          <div class="ach-modal-right">
+            <span class="ach-counter" id="outfits-wallet-inline">$0</span>
+            <button class="submodal-close-btn" id="close-outfits-btn">✕ CLOSE</button>
+          </div>
+        </div>
+
+        <div class="wardrobe-showcase">
+          <div class="outfit-preview-box">
+            <canvas id="outfit-preview-canvas" width="120" height="120"></canvas>
+            <span class="equipped-tag" id="outfit-preview-name">CLASSIC HOODIE</span>
+          </div>
+          <div class="outfit-showcase-meta">
+            <h3 id="outfit-detail-title">Classic Hoodie</h3>
+            <p id="outfit-detail-desc">Standard-issue indigo stealth hoodie with a dark beanie. Ready for tiptoeing.</p>
+            <div class="outfit-status-note" id="outfit-status-note">✓ CURRENTLY EQUIPPED</div>
+          </div>
+        </div>
+
+        <div class="outfit-grid" id="outfit-grid">
+          <!-- Populated dynamically by script.js -->
+        </div>
+
+        <button class="cta-btn" id="done-outfits-btn">BACK TO MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- IN-GAME SHELL                                                         -->
+  <!-- ===================================================================== -->
+  <div class="game-shell">
+    <header class="hud-bar">
+      <div class="brand">
+        <h1>DON'T WAKE SAM</h1>
+        <span class="brand-sub">INFINITE STEALTH TIDYING</span>
+      </div>
+
+      <div class="map-selector-bar" id="map-selector-bar">
+        <button class="map-card active" data-map="bedroom" id="map-btn-bedroom" title="Map 1: Sam's Bedroom ($50/item)">
+          <div class="map-thumb">
+            <canvas class="map-thumb-canvas" data-thumb="bedroom" width="145" height="90"></canvas>
+          </div>
+          <div class="map-meta">
+            <span class="map-title">1. BEDROOM</span>
+            <span class="map-sub" id="map-sub-bedroom">ACTIVE</span>
+          </div>
+        </button>
+
+        <button class="map-card locked" data-map="lounge" id="map-btn-lounge" title="Unlock at $1,000 in Bedroom ($75/item)">
+          <div class="map-thumb">
+            <canvas class="map-thumb-canvas" data-thumb="lounge" width="145" height="90"></canvas>
+            <span class="lock-pill" id="lock-pill-lounge">LOCKED</span>
+          </div>
+          <div class="map-meta">
+            <span class="map-title">2. THE LOUNGE</span>
+            <span class="map-sub" id="map-sub-lounge">$1,000</span>
+          </div>
+        </button>
+
+        <button class="map-card locked" data-map="garden" id="map-btn-garden" title="Unlock at $1,500 in Lounge ($100/item)">
+          <div class="map-thumb">
+            <canvas class="map-thumb-canvas" data-thumb="garden" width="145" height="90"></canvas>
+            <span class="lock-pill" id="lock-pill-garden">LOCKED</span>
+          </div>
+          <div class="map-meta">
+            <span class="map-title">3. BACKYARD</span>
+            <span class="map-sub" id="map-sub-garden">$1,500 (LOUNGE)</span>
+          </div>
+        </button>
+
+        <button class="map-card random-card locked" id="random-mode-btn" title="Randomly swaps unlocked maps every 30-60s">
+          <div class="random-icon">⇄</div>
+          <div class="map-meta">
+            <span class="map-title">RANDOM MODE</span>
+            <span class="map-sub" id="random-mode-sub">NEED 2 MAPS</span>
+          </div>
+        </button>
+      </div>
+
+      <div class="controls-hud">
+        <button id="menu-btn" class="hud-btn menu-hud-btn" title="Return to Main Menu">MAIN MENU</button>
+        <button id="mute-btn" class="hud-btn" title="Toggle Audio">SOUND: ON</button>
+        <button id="restart-btn" class="hud-btn">RESTART</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <div class="canvas-wrapper" id="canvas-wrapper">
+        <canvas id="game-canvas" width="1160" height="720"></canvas>
+        <div class="cutscene-shell" id="cutscene-shell" aria-label="Cutscene">
+          <div class="cutscene-frame">
+            <canvas id="cutscene-canvas" class="cutscene-canvas" width="960" height="540"></canvas>
+          </div>
+          <div class="cutscene-skip-label">PRESS SPACE / ENTER / ESC TO SKIP</div>
+        </div>
+
+        <!-- Map Unlock Notification Toast -->
+        <div class="map-unlock-toast" id="map-unlock-toast">
+          <div class="toast-content">
+            <span class="toast-tag">NEW MAP UNLOCKED!</span>
+            <strong id="toast-map-name">THE LOUNGE IS NOW AVAILABLE</strong>
+          </div>
+          <button class="toast-switch-btn" id="toast-switch-btn">TRY MAP NOW</button>
+        </div>
+
+        <!-- Achievement Unlocked Notification Toast (Live during gameplay!) -->
+        <div class="achievement-toast" id="achievement-toast">
+          <div class="ach-toast-badge">★</div>
+          <div class="ach-toast-body">
+            <span class="ach-toast-tag">ACHIEVEMENT UNLOCKED</span>
+            <strong id="ach-toast-title">FIRST TIDY</strong>
+            <span id="ach-toast-desc">Clear your first batch of 5 items</span>
+          </div>
+        </div>
+
+        <!-- Death / Game Over Overlay -->
+        <div class="overlay" id="gameover-overlay">
+          <div class="modal-card death-card">
+            <div class="jumpscare-portrait">
+              <canvas id="gameover-sam-canvas" width="136" height="136"></canvas>
+            </div>
+            <h2 class="death-title" id="death-title">YOU WOKE SAM UP.</h2>
+            <p class="death-reason" id="death-reason">You moved while his eyes were open.</p>
+            <div class="score-summary">
+              <div>SHIFT CASH <strong id="final-score">$0</strong></div>
+              <div>BEST SHIFT <strong id="final-highscore">$0</strong></div>
+              <div>SORTED <strong id="final-level">0</strong></div>
+            </div>
+            <div class="gameover-actions">
+              <button id="retry-btn" class="cta-btn danger-btn">Play Again</button>
+              <button id="gameover-menu-btn" class="cta-btn secondary-cta-btn">Main Menu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Sam Monitor & Cash Scoreboard Sidebar -->
+      <aside class="sam-sidebar">
+        <div class="scoreboard-card">
+          <div class="score-row">
+            <div class="score-box cash-box">
+              <span class="score-label">SHIFT CASH</span>
+              <span class="score-val cash-val" id="score-val">$0</span>
+            </div>
+            <div class="score-box highlight">
+              <span class="score-label">BEST SHIFT</span>
+              <span class="score-val" id="highscore-val">$0</span>
+            </div>
+          </div>
+          <div class="score-row">
+            <div class="score-box">
+              <span class="score-label">SORTED</span>
+              <span class="score-val" id="level-val">0</span>
+            </div>
+            <div class="score-box timer-box" id="timer-box">
+              <span class="score-label">TIMER</span>
+              <span class="score-val" id="timer-val">20.0s</span>
+            </div>
+          </div>
+          <div class="bank-strip">
+            <span>TOTAL BANK:</span>
+            <strong id="sidebar-wallet-val">$0</strong>
+          </div>
+        </div>
+
+        <div class="sam-cam-card" id="sam-cam-card">
+          <div class="cam-header">
+            <span class="rec-dot"></span>
+            <span>BABY MONITOR // CH-01</span>
+          </div>
+          <div class="cam-viewport">
+            <canvas id="cam-sprite-canvas" width="240" height="132"></canvas>
+            <div class="cam-alert" id="cam-alert">!</div>
+            <div class="cam-ice" id="cam-ice">ICED</div>
+            <div class="cam-zzz" id="cam-zzz">Zzz</div>
+          </div>
+          <div class="cam-status-bar" id="cam-status-bar">
+            <strong id="sam-state-text">DEEP SLEEP</strong>
+          </div>
+        </div>
+
+        <div class="legend-card">
+          <div class="key-tip">
+            <div><kbd>WASD</kbd> / <kbd>Arrows</kbd> Move</div>
+            <div><kbd>SPACE</kbd> Shield / Shoo bird</div>
+            <div><kbd>E</kbd> Use knockout Stick</div>
+            <div><kbd>Q</kbd> Drop held item</div>
+            <div><kbd>ICE CUBE</kbd> Run into it while Sam lunges!</div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
