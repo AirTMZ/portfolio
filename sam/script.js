@@ -189,6 +189,7 @@ const doneSettingsBtn = document.getElementById('done-settings-btn');
 const settingsVolumeSlider = document.getElementById('settings-volume-slider');
 const settingsVolumeVal = document.getElementById('settings-volume-val');
 const settingsMuteBtn = document.getElementById('settings-mute-btn');
+const settingsVibrationBtn = document.getElementById('settings-vibration-btn');
 const controlsModeDesc = document.getElementById('controls-mode-desc');
 const touchControlsEl = document.getElementById('touch-controls');
 const joystickZone = document.getElementById('joystick-zone');
@@ -942,6 +943,54 @@ let isMuted = false;
 try { isMuted = localStorage.getItem(MUTED_KEY) === '1'; } catch (e) {}
 let touchControlsMode = 'auto';
 try { const m = localStorage.getItem(CONTROLS_MODE_KEY); if (m === 'on' || m === 'off' || m === 'auto') touchControlsMode = m; } catch (e) {}
+
+// --- VIBRATION (haptics) ---
+// navigator.vibrate is Android-only (iOS Safari ignores it), so on PC /
+// iPhone this is a silent no-op. Default ON so phone players feel it
+// out of the box; toggle lives in Settings next to SOUND. Saved like
+// volume. Throttled to 50ms so pickup spam can't become a buzz storm;
+// death / awake bypass the throttle because they must always land.
+const VIBRATION_KEY = 'dont_wake_sam_vibration_v1';
+let isVibrationEnabled = true;
+try { const v = localStorage.getItem(VIBRATION_KEY); if (v === '0' || v === '1') isVibrationEnabled = v === '1'; } catch (e) {}
+let lastVibrateAt = 0;
+function vibrate(pattern, force) {
+  if (!isVibrationEnabled) return;
+  try {
+    if (!('vibrate' in navigator)) return;
+    const now = performance.now();
+    if (!force && now - lastVibrateAt < 50) return;
+    lastVibrateAt = now;
+    navigator.vibrate(pattern);
+  } catch (e) {}
+}
+// One hook for every game event: playSound() already fires for all of
+// them, so mapping sound type -> haptic pattern here covers wake-ups,
+// hits, pickups, deposits, achievements, etc. with no per-site edits.
+// Called at the TOP of playSound(), before the mute check — haptics
+// are separate from sound, so muted players still feel them.
+const VIBRATION_PATTERNS = {
+  alert: [40],
+  awake: [120, 60, 120],
+  death: [200, 80, 200, 80, 300],
+  shield_break: [100, 40, 100],
+  bonk: [80],
+  pickup: [25],
+  deposit: [30, 30, 30],
+  levelup: [50, 50, 100],
+  ice: [60, 40, 60],
+  slow: [30],
+  squawk: [40, 30, 40],
+  bird_flutter: [40, 30, 40],
+  guitar_riff: [40, 40, 40, 40],
+  roomba_reveal: [80, 50, 80],
+  dock_beep: [20],
+};
+function vibrateForSound(type) {
+  const pattern = VIBRATION_PATTERNS[type];
+  if (!pattern) return;
+  vibrate(pattern, type === 'death' || type === 'awake');
+}
 let bgmInterval = null;
 let bgmStep = 0;
 let cutsceneBgmStep = 0;
@@ -986,9 +1035,117 @@ function applyTouchControlsMode() {
   updateCompactLayout(); syncSettingsUI(); updateCutsceneSkipLabel(); updateTouchButtons();
 }
 function updateCompactLayout() {
-  const w = window.innerWidth, h = window.innerHeight;
+  // Effective size = stage size. When force-landscape is on, the stage is
+  // rotated, so effective width = viewport height, height = viewport width.
+  // Without this, a portrait phone (375x667) would never count as
+  // "landscape short" even though the game is displayed 667x375.
+  const rotated = document.documentElement.classList.contains('force-landscape');
+  const w = rotated ? window.innerHeight : window.innerWidth;
+  const h = rotated ? window.innerWidth : window.innerHeight;
   const isLandscapeShort = w > h && h <= 620;
   document.body.classList.toggle('compact-game', isLandscapeShort);
+}
+
+// --- TITLE SCREEN: MOBILE-ONLY JS BACKUP ---
+// The stylesheet has 16+ class-only title rules fighting over the same
+// elements. The ID-based CSS block at the end of styles.css should win,
+// but if it ever loses (cached CSS, a new rule, a browser quirk) this
+// sizes the title in exact pixels from the real stage size. Inline
+// !important beats any stylesheet rule, so this is the final word.
+// Runs ONLY on phones (same narrow scope as the CSS: portrait phone via
+// force-landscape, or landscape phone <=500px tall). PC / tablet return
+// early and any inline styles from a previous phone size are cleared,
+// so PC / tablet always use plain CSS.
+function fixMobileTitle() {
+  if (!titleScreen || titleScreenDismissed) return;
+  const coarse = isMobileCoarse();
+  const rotated = document.documentElement.classList.contains('force-landscape');
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const isPortraitPhone = rotated && Math.min(vw, vh) <= 500 && Math.max(vw, vh) <= 950;
+  const isLandscapePhone = !rotated && coarse && vw > vh && vh <= 500 && vw <= 950;
+  const titleCard = titleScreen.querySelector('.title-card');
+  const titleLogo = titleScreen.querySelector('.title-logo');
+  if (!isPortraitPhone && !isLandscapePhone) {
+    const props = ['display', 'flex-direction', 'align-items', 'justify-content', 'overflow', 'padding', 'box-sizing', 'position', 'width', 'max-width', 'height', 'max-height', 'margin', 'gap', 'text-align', 'min-height', 'min-width', 'flex', 'left', 'top', 'translate', 'line-height', 'font-size', 'aspect-ratio', 'object-fit'];
+    [titleScreen, titleCard, titleLogo, titleAnimCanvas].forEach((el) => {
+      if (!el) return;
+      props.forEach((p) => el.style.removeProperty(p));
+    });
+    titleScreen.querySelectorAll('.title-line').forEach((el) => props.forEach((p) => el.style.removeProperty(p)));
+    return;
+  }
+  const stageW = rotated ? vh : vw;
+  const stageH = rotated ? vw : vh;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const dontPx = clamp(stageH * 0.08, 20, 45);
+  const wakePx = clamp(stageH * 0.12, 30, 67);
+  const samPx = clamp(stageH * 0.17, 42, 96);
+  const logoH = (dontPx + wakePx + samPx) * 0.92;
+  const availH = Math.max(80, stageH - 16 - logoH - 4);
+  const canvasW = Math.min(720, stageW * 0.92, availH * (920 / 340));
+  const canvasH = canvasW / (920 / 340);
+  const set = (el, prop, val) => { if (el) el.style.setProperty(prop, val, 'important'); };
+  if (titleScreen.classList.contains('active')) set(titleScreen, 'display', 'flex');
+  set(titleScreen, 'flex-direction', 'column');
+  set(titleScreen, 'align-items', 'center');
+  set(titleScreen, 'justify-content', 'center');
+  set(titleScreen, 'overflow', 'hidden');
+  set(titleScreen, 'padding', '0.5rem');
+  set(titleScreen, 'box-sizing', 'border-box');
+  if (titleCard) {
+    set(titleCard, 'display', 'flex');
+    set(titleCard, 'flex-direction', 'column');
+    set(titleCard, 'align-items', 'center');
+    set(titleCard, 'justify-content', 'center');
+    set(titleCard, 'position', 'static');
+    set(titleCard, 'width', '100%');
+    set(titleCard, 'max-width', '800px');
+    set(titleCard, 'height', '100%');
+    set(titleCard, 'max-height', '100%');
+    set(titleCard, 'margin', '0 auto');
+    set(titleCard, 'padding', '0');
+    set(titleCard, 'gap', '0.25rem');
+    set(titleCard, 'text-align', 'center');
+    set(titleCard, 'box-sizing', 'border-box');
+    set(titleCard, 'min-height', '0');
+    set(titleCard, 'min-width', '0');
+  }
+  if (titleLogo) {
+    set(titleLogo, 'position', 'static');
+    set(titleLogo, 'left', 'auto');
+    set(titleLogo, 'top', 'auto');
+    set(titleLogo, 'translate', 'none');
+    set(titleLogo, 'flex', '0 0 auto');
+    set(titleLogo, 'width', '100%');
+    set(titleLogo, 'max-width', '800px');
+    set(titleLogo, 'margin', '0 auto');
+    set(titleLogo, 'text-align', 'center');
+    set(titleLogo, 'line-height', '0.92');
+  }
+  const lineSizes = { 'title-line-dont': dontPx, 'title-line-wake': wakePx, 'title-line-sam': samPx };
+  titleScreen.querySelectorAll('.title-line').forEach((el) => {
+    set(el, 'text-align', 'center');
+    set(el, 'width', '100%');
+    set(el, 'margin', '0 auto');
+    for (const cls in lineSizes) if (el.classList.contains(cls)) set(el, 'font-size', lineSizes[cls] + 'px');
+  });
+  if (titleAnimCanvas) {
+    set(titleAnimCanvas, 'position', 'static');
+    set(titleAnimCanvas, 'left', 'auto');
+    set(titleAnimCanvas, 'right', 'auto');
+    set(titleAnimCanvas, 'top', 'auto');
+    set(titleAnimCanvas, 'bottom', 'auto');
+    set(titleAnimCanvas, 'translate', 'none');
+    set(titleAnimCanvas, 'flex', '0 0 auto');
+    set(titleAnimCanvas, 'min-height', '0');
+    set(titleAnimCanvas, 'min-width', '0');
+    set(titleAnimCanvas, 'width', Math.round(canvasW) + 'px');
+    set(titleAnimCanvas, 'height', Math.round(canvasH) + 'px');
+    set(titleAnimCanvas, 'max-width', '100%');
+    set(titleAnimCanvas, 'max-height', '100%');
+    set(titleAnimCanvas, 'margin', '0 auto');
+    set(titleAnimCanvas, 'object-fit', 'contain');
+  }
 }
 function syncSettingsUI() {
   if (settingsVolumeSlider) settingsVolumeSlider.value = String(Math.round(masterVolume * 100));
@@ -996,6 +1153,7 @@ function syncSettingsUI() {
   const lbl = isMuted ? 'SOUND: OFF' : 'SOUND: ON';
   if (settingsMuteBtn) settingsMuteBtn.textContent = lbl;
   if (muteBtn) muteBtn.textContent = lbl;
+  if (settingsVibrationBtn) settingsVibrationBtn.textContent = isVibrationEnabled ? 'VIBRATION: ON' : 'VIBRATION: OFF';
   document.querySelectorAll('.controls-mode-btn').forEach((b) => { b.classList.toggle('active', b.dataset.controlsMode === touchControlsMode); });
   if (controlsModeDesc) {
     controlsModeDesc.textContent = touchControlsMode === 'on' ? 'ON: joystick + DROP / USE always show, even on a PC layout.' : touchControlsMode === 'off' ? 'OFF: touch controls never show, even on a tablet.' : 'AUTO: touch controls show on touch devices, hidden on keyboard + mouse.';
@@ -1139,6 +1297,7 @@ function startBackgroundMusic() {
 }
 
 function playSound(type) {
+  vibrateForSound(type);
   if (isMuted || !audioCtx) return;
   const now = audioCtx.currentTime;
 
@@ -7891,115 +8050,103 @@ function updateTouchButtons() {
   if (touchUseSub && touchUseSub.textContent !== sub) touchUseSub.textContent = sub;
   touchDropBtn.classList.toggle('touch-disabled', !player?.holding);
 }
-function enterFullscreen() {
-  // True fullscreen hides the browser search bar / tabs on mobile/tablet,
-  // so the playable window is not tiny. Must be called from a user gesture
-  // (Start Shift / Play Again / Restart / guard button / hub Fullscreen).
-  // Android Chrome / Edge support it.
-  // iOS Safari has no document fullscreen — it falls through to the
-  // scroll-to-hide fallback below, and 100dvh still gives the most space.
-  // On iOS the real fix is Share -> Add to Home Screen (see guard hint),
-  // or Play Anyway — the guard no longer blocks short landscape at all.
-  // PC: NEVER fullscreen. isTouchDevice() is false on a keyboard+mouse PC
-  // (pointer fine, no touch), so we return and the game stays windowed.
+function lockLandscape() {
+  // Orientation lock only works AFTER fullscreen, only on Android.
+  // iOS has none — the CSS rotation (force-landscape) is what shows
+  // landscape there. Never throws: a failed lock must not break the game.
   try {
-    if (typeof isTouchDevice === 'function' ? !isTouchDevice() : !(window.matchMedia && window.matchMedia('(pointer: coarse)').matches)) return;
-    if (document.fullscreenElement) return;
-    const el = document.documentElement;
-    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-    if (req) {
-      const p = req.call(el, { navigationUI: 'hide' });
-      if (p && p.catch) p.catch(() => {});
-    } else {
-      // No fullscreen API (iOS Safari): scroll is the only way Safari
-      // collapses its bars, and one scroll often isn't enough — the bar
-      // re-appears on the next paint. Scroll twice, a frame apart.
-      window.scrollTo(0, 1);
-      setTimeout(() => { try { window.scrollTo(0, 1); } catch (e) {} }, 100);
-    }
     if (screen.orientation && screen.orientation.lock) {
-      // Lock after fullscreen engages; if it fails (not fullscreen yet on
-      // this browser), the catch keeps the game starting anyway.
-      setTimeout(() => { try { screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }, 300);
+      const p = screen.orientation.lock('landscape');
+      if (p && p.catch) p.catch(() => {});
     }
   } catch (e) {}
 }
-// ---- Aspect-guard escape hatch (phone fix) ---------------------------
-// Before this, the guard could trap phone players: it covered the whole
-// screen, and the ONLY fullscreen trigger (Start Shift) was underneath it.
-// So a phone in landscape with its address bar still showing could never
-// hide the bar, could never clear the guard, could never start.
-// The guard now has its own buttons, wired here:
-//  - GO FULLSCREEN: tries real fullscreen (Android). If that works the
-//    viewport grows and the CSS guard hides itself. If it doesn't (iOS,
-//    no fullscreen API) and we're already landscape, we dismiss anyway —
-//    the player chose to play with the bar showing rather than be stuck.
-//  - PLAY ANYWAY: dismisses the guard for this session, but ONLY when
-//    actually landscape (w > h). In portrait it refuses and asks to rotate,
-//    so portrait players don't get a squished game by accident.
-// Dismissal is session-only and reversible: rotating back to portrait
-// re-shows the guard (see refreshGuardDismissed).
-const aspectGuardEl = document.getElementById('aspect-guard');
-const guardFullscreenBtn = document.getElementById('guard-fullscreen-btn');
-const guardPlayAnywayBtn = document.getElementById('guard-play-anyway-btn');
-const guardIosHintEl = document.getElementById('guard-ios-hint');
-const guardAnywayNoteEl = document.getElementById('guard-anyway-note');
-const hubFullscreenBtn = document.getElementById('open-fullscreen-btn');
-function isIOSDevice() {
+let lastIosHideBarsAt = 0;
+let lastFullscreenAttemptAt = 0;
+function isMobileCoarse() {
+  try { return !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches); } catch (e) { return false; }
+}
+function enterFullscreen() {
+  // AUTO-ENFORCE (Android): fullscreen + landscape lock, no prompt.
+  // Called on the very first tap anywhere (listeners below) and from
+  // Start Shift / Play Again / Restart. Browsers require a gesture for
+  // fullscreen — the first tap IS that gesture, so it feels automatic.
+  // PC / touch laptop: never (coarse pointer only).
+  // iOS: no fullscreen API — the CSS rotation already shows landscape,
+  // this just does the scroll-to-hide-bars fallback.
   try {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 0);
+    if (!isMobileCoarse()) return;
+    if (document.fullscreenElement) { lockLandscape(); return; }
+    const nowA = Date.now();
+    if (nowA - lastFullscreenAttemptAt < 400) return; // one tap = pointerdown+click, don't triple-fire
+    lastFullscreenAttemptAt = nowA;
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (req) {
+      const pr = req.call(el, { navigationUI: 'hide' });
+      if (pr && pr.then) pr.then(() => lockLandscape()).catch(() => {});
+      else setTimeout(lockLandscape, 300);
+    } else {
+      const now = Date.now();
+      if (now - lastIosHideBarsAt > 2000) {
+        lastIosHideBarsAt = now;
+        window.scrollTo(0, 1);
+        setTimeout(() => { try { window.scrollTo(0, 1); } catch (e) {} }, 100);
+      }
+    }
+  } catch (e) {}
+}
+// ---- FORCE-LANDSCAPE: rotate the whole game when held portrait --------
+// The bug in the screenshot: DevTools / iPhone held portrait showed the
+// hub laid out as PORTRAIT (tall, cut off on the right). orientation.lock
+// can't fix that on iOS (no API) or in DevTools (no lock) — so we rotate
+// the game itself. html.force-landscape on <html> makes #landscape-stage
+// (styles.css) rotate 90° and makes all the landscape layout rules apply
+// via class instead of viewport orientation. The player then just turns
+// the phone clockwise (top to the right) and it lines up.
+// - Set before first paint by the inline <script> in <head> (no flash).
+// - Kept in sync here on resize / orientationchange / fullscreenchange.
+// - Coarse pointer only: a narrow desktop window must NOT rotate.
+// - When the phone IS landscape, the class comes off and the game is
+//   just normal landscape — no rotation, no duplication.
+function updateForceLandscape() {
+  try {
+    const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    const portrait = window.innerWidth < window.innerHeight;
+    const should = coarse && portrait;
+    document.documentElement.classList.toggle('force-landscape', should);
+    return should;
   } catch (e) { return false; }
 }
-if (guardIosHintEl && isIOSDevice()) guardIosHintEl.hidden = false;
-function isGuardLandscape() {
-  return window.innerWidth > window.innerHeight;
-}
-function refreshGuardDismissed() {
-  if (!aspectGuardEl) return;
-  // Only stay dismissed while landscape. Back to portrait -> guard returns.
-  if (aspectGuardEl.classList.contains('guard-dismissed') && !isGuardLandscape()) {
-    aspectGuardEl.classList.remove('guard-dismissed');
-  }
-}
-function dismissGuardForSession() {
-  if (aspectGuardEl) aspectGuardEl.classList.add('guard-dismissed');
-}
-if (guardFullscreenBtn) {
-  guardFullscreenBtn.addEventListener('click', () => {
-    initAudio();
-    enterFullscreen();
-    // Give fullscreen ~400ms to engage (Android). If we're landscape by
-    // then — with or without fullscreen (iOS has none) — stop blocking.
-    // If we're still portrait, leave the guard up: rotating is the fix.
-    setTimeout(() => { if (isGuardLandscape()) dismissGuardForSession(); }, 400);
-  });
-}
-if (guardPlayAnywayBtn) {
-  guardPlayAnywayBtn.addEventListener('click', () => {
-    if (isGuardLandscape()) {
-      dismissGuardForSession();
-    } else if (guardAnywayNoteEl) {
-      guardAnywayNoteEl.hidden = false;
-      guardAnywayNoteEl.textContent = 'Still portrait — rotate your phone sideways first, then tap Play Anyway.';
-    }
-  });
-}
-if (hubFullscreenBtn) {
-  hubFullscreenBtn.addEventListener('click', () => { initAudio(); enterFullscreen(); });
-}
-window.addEventListener('resize', refreshGuardDismissed);
-window.addEventListener('orientationchange', () => setTimeout(refreshGuardDismissed, 250));
-document.addEventListener('fullscreenchange', refreshGuardDismissed);
+updateForceLandscape();
+window.addEventListener('resize', updateForceLandscape);
+window.addEventListener('orientationchange', () => setTimeout(updateForceLandscape, 250));
+// Title mobile fix: run on load + every resize / rotation.
+fixMobileTitle();
+window.addEventListener('resize', fixMobileTitle);
+window.addEventListener('orientationchange', () => setTimeout(fixMobileTitle, 250));
+document.addEventListener('fullscreenchange', () => {
+  updateForceLandscape();
+  if (document.fullscreenElement) lockLandscape();
+});
+// AUTO-ENFORCE fullscreen (Android): ANY tap / key does it. Listeners stay
+// for the session, so swiping out of fullscreen + tapping again puts the
+// player straight back in. Already fullscreen? enterFullscreen() no-ops.
+['pointerdown', 'keydown'].forEach((type) => {
+  document.addEventListener(type, () => { enterFullscreen(); }, { passive: true });
+});
+window.addEventListener('orientationchange', () => {
+  if (document.fullscreenElement) setTimeout(lockLandscape, 250);
+});
 
 function startGame() {
+  vibrate([20, 30, 20]);
   // First watch of this cutscene: Restart must not bypass it — resetGame() hides
   // the shell and beginMapCutscene() would treat it as seen-this-session,
   // so a restart mid-cutscene would skip it. Stay in the cutscene.
   if (gameState === 'CUTSCENE' && !canSkipCutscene(currentMap)) return;
   initAudio();
-  enterFullscreen();
-  try { if (screen.orientation && screen.orientation.lock && document.fullscreenElement) { screen.orientation.lock('landscape').catch(() => {}); } } catch (e) {}
+  enterFullscreen(); // fullscreen + landscape lock, automatic
   startOverlay.classList.remove('active');
   gameoverOverlay.classList.remove('active');
   resetGame();
@@ -8462,13 +8609,19 @@ function toggleSound() {
   if (isMuted) stopVacuumSound();
   applyVolume(); syncSettingsUI();
 }
-if (muteBtn) muteBtn.addEventListener('click', toggleSound);
-if (settingsMuteBtn) settingsMuteBtn.addEventListener('click', toggleSound);
+if (muteBtn) muteBtn.addEventListener('click', () => { vibrate([12]); toggleSound(); });
+if (settingsMuteBtn) settingsMuteBtn.addEventListener('click', () => { vibrate([12]); toggleSound(); });
+if (settingsVibrationBtn) settingsVibrationBtn.addEventListener('click', () => {
+  isVibrationEnabled = !isVibrationEnabled;
+  try { localStorage.setItem(VIBRATION_KEY, isVibrationEnabled ? '1' : '0'); } catch (e) {}
+  syncSettingsUI();
+  if (isVibrationEnabled) { try { navigator.vibrate([30]); } catch (e) {} }
+});
 if (openSettingsBtn && settingsModal) {
-  openSettingsBtn.addEventListener('click', () => { initAudio(); syncSettingsUI(); settingsModal.classList.add('active'); });
+  openSettingsBtn.addEventListener('click', () => { vibrate([12]); initAudio(); syncSettingsUI(); settingsModal.classList.add('active'); });
 }
-if (closeSettingsBtn && settingsModal) closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('active'));
-if (doneSettingsBtn && settingsModal) doneSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('active'));
+if (closeSettingsBtn && settingsModal) closeSettingsBtn.addEventListener('click', () => { vibrate([12]); settingsModal.classList.remove('active'); });
+if (doneSettingsBtn && settingsModal) doneSettingsBtn.addEventListener('click', () => { vibrate([12]); settingsModal.classList.remove('active'); });
 if (settingsVolumeSlider) settingsVolumeSlider.addEventListener('input', () => { initAudio(); setVolume(parseInt(settingsVolumeSlider.value, 10) / 100); });
 document.querySelectorAll('.controls-mode-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -8476,6 +8629,7 @@ document.querySelectorAll('.controls-mode-btn').forEach((btn) => {
     if (mode !== 'auto' && mode !== 'on' && mode !== 'off') return;
     touchControlsMode = mode;
     try { localStorage.setItem(CONTROLS_MODE_KEY, mode); } catch (e) {}
+    vibrate([12]);
     applyTouchControlsMode();
   });
 });

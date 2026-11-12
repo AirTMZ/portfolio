@@ -3,6 +3,10 @@
 
 <head>
   <meta charset="UTF-8" />
+  <script>/* Before first paint: if this is a touch phone held portrait, mark the page
+       force-landscape so CSS rotates the whole game 90° (see styles.css).
+       Without this the page would flash portrait for one frame. script.js
+       keeps the class in sync on resize / orientationchange. */try{if(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches&&window.innerWidth<window.innerHeight){document.documentElement.classList.add('force-landscape');}}catch(e){}</script>
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>DON'T WAKE SAM</title>
@@ -10,43 +14,30 @@
   <link rel="stylesheet" href="styles.css" />
   <!-- ROUND 9 INLINE (mobile only) — title fix duplicated here so it applies even if styles.css is cached. Desktop keeps centred title. -->
   <style>
+    /* Title in short landscape: CENTRED flex, never absolute left/right.
+       The old absolute layout put the logo at left:6% and the Sam canvas
+       at right:2% — one wrong width and Sam clipped off the right edge
+       (screenshot). Flow layout cannot clip: logo on top, canvas below,
+       both centred, canvas capped by BOTH width and height. */
     @media (max-height: 620px) and (orientation: landscape),
     (pointer: coarse) and (orientation: landscape) {
-      .title-screen {
-        display: block !important
-      }
-
-      .title-screen .title-card {
-        display: block !important;
-        position: relative !important;
-        width: 100% !important;
-        max-width: none !important;
-        height: 100% !important;
-        padding: 0 !important;
-        text-align: left !important
-      }
-
-      .title-screen .title-card .title-logo {
-        position: absolute !important;
-        left: 6% !important;
-        top: 50% !important;
-        translate: 0 -50% !important;
-        text-align: left !important
-      }
-
-      .title-screen .title-card .title-logo .title-line {
-        text-align: left !important
-      }
-
-      .title-screen .title-card .title-anim-canvas {
-        position: absolute !important;
-        right: 2% !important;
-        bottom: 6% !important;
-        width: min(52vw, 560px) !important;
-        height: auto !important;
-        max-width: min(52vw, 560px) !important
-      }
+      .title-screen { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; overflow: hidden !important; padding: 0.5rem !important; }
+      .title-screen .title-card { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; position: static !important; width: 100% !important; max-width: 800px !important; height: 100% !important; max-height: 100% !important; margin: 0 auto !important; padding: 0.5rem !important; gap: 0.5rem !important; text-align: center !important; }
+      .title-screen .title-card .title-logo { position: static !important; left: auto !important; top: auto !important; translate: none !important; flex: 0 0 auto !important; width: 100% !important; margin: 0 auto !important; text-align: center !important; }
+      .title-screen .title-card .title-logo .title-line { text-align: center !important; }
+      .title-screen .title-card .title-anim-canvas { position: static !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; flex: 0 1 auto !important; width: min(720px, max(80vw, 80dvh)) !important; height: auto !important; max-width: min(720px, max(80vw, 80dvh)) !important; max-height: min(40dvh, 40dvw) !important; margin: 0 auto !important; object-fit: contain !important; }
     }
+  </style>
+  <!-- FORCE-LANDSCAPE title: same layout as the landscape rule above, but
+       driven by html.force-landscape (not viewport orientation), with
+       vh/vw swapped because the stage is rotated (stage height = 100vw). -->
+  <style>
+    /* Same centred title for rotated portrait (force-landscape). See above. */
+    html.force-landscape .title-screen { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; overflow: hidden !important; padding: 0.5rem !important; }
+    html.force-landscape .title-screen .title-card { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; position: static !important; width: 100% !important; max-width: 800px !important; height: 100% !important; max-height: 100% !important; margin: 0 auto !important; padding: 0.5rem !important; gap: 0.5rem !important; text-align: center !important; }
+    html.force-landscape .title-screen .title-card .title-logo { position: static !important; left: auto !important; top: auto !important; translate: none !important; flex: 0 0 auto !important; width: 100% !important; margin: 0 auto !important; text-align: center !important; }
+    html.force-landscape .title-screen .title-card .title-logo .title-line { text-align: center !important; }
+    html.force-landscape .title-screen .title-card .title-anim-canvas { position: static !important; left: auto !important; right: auto !important; top: auto !important; bottom: auto !important; flex: 0 1 auto !important; width: min(720px, max(80vw, 80dvh)) !important; height: auto !important; max-width: min(720px, max(80vw, 80dvh)) !important; max-height: min(40dvh, 40dvw) !important; margin: 0 auto !important; object-fit: contain !important; }
   </style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -57,38 +48,12 @@
 </head>
 
 <body>
-  <!-- Aspect guard: game needs a landscape window. Shown by CSS only,
-       based on viewport SHAPE, not pointer type, so it also catches a PC
-       window dragged narrow and DevTools portrait mode. Fixed overlay —
-       never in flow, so it can never push the game down like a banner.
-       PHONE FIX: the guard used to also fire on (max-height: 280px), but a
-       phone in landscape WITH its browser address bar showing is only
-       ~240-280px tall — so it blocked players who were already sideways,
-       before they could reach the Start button that triggers fullscreen.
-       The height check is gone (see styles.css). The guard now also carries
-       its OWN fullscreen / play-anyway buttons, so it can never trap the
-       player again: fullscreen must be reachable from the guard itself,
-       not only from behind it. -->
-  <div id="aspect-guard" role="alert" aria-live="polite">
-    <div class="rotate-card">
-      <div class="rotate-icon">↻</div>
-      <h1>WINDOW TOO NARROW</h1>
-      <p>DON'T WAKE SAM plays in landscape.</p>
-      <p class="rotate-sub guard-touch-msg">Rotate your device sideways to keep playing. Already sideways? Your browser's address bar is eating the height — tap below to hide it.</p>
-      <p class="rotate-sub guard-desktop-msg">Widen this window — drag it wider until this message goes away.</p>
-      <!-- Touch only (CSS hides this on desktop). These buttons are the fix
-           for the chicken-and-egg: previously fullscreen could only be
-           triggered from Start Shift, which this overlay covered. -->
-      <div class="guard-actions guard-touch-only">
-        <button id="guard-fullscreen-btn" type="button" class="guard-fullscreen-btn">⛶ GO FULLSCREEN</button>
-        <button id="guard-play-anyway-btn" type="button" class="guard-anyway-btn">PLAY ANYWAY &rarr;</button>
-        <p class="rotate-sub guard-ios-hint" id="guard-ios-hint" hidden>On iPhone, Safari can't fullscreen a website. Tap Share &rarr; Add to Home Screen for true fullscreen, or tap Play Anyway to play with the bar showing.</p>
-        <p class="rotate-sub guard-anyway-note" id="guard-anyway-note" hidden></p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================================== -->
+  <div id="landscape-stage">
+  <!-- No rotate guard. Portrait phones get the whole game rotated 90° via
+       #landscape-stage (styles.css) + html.force-landscape — it DISPLAYS
+       landscape while the phone is upright, then the player turns the
+       phone and it lines up. -->
+<!-- ===================================================================== -->
   <!-- TITLE SCREEN — shows on every page load / refresh, NOT on return -->
   <!-- to Main Menu. Auto-plays then auto-dismisses to the hub. The -->
   <!-- only text is "DON'T WAKE SAM". The canvas below it is the -->
@@ -139,9 +104,6 @@
           </button>
           <button class="hub-nav-btn" id="open-settings-btn">
             <span class="btn-icon">⚙</span> SETTINGS
-          </button>
-          <button class="hub-nav-btn" id="open-fullscreen-btn" type="button" title="Hide the browser address bar">
-            <span class="btn-icon">⛶</span> FULLSCREEN
           </button>
         </div>
       </header>
@@ -372,7 +334,7 @@
         <div class="submodal-header">
           <div>
             <h2>SETTINGS</h2>
-            <span class="submodal-sub">Sound + touch controls</span>
+            <span class="submodal-sub">Sound + vibration + touch controls</span>
           </div>
           <button class="submodal-close-btn" id="close-settings-btn">✕ CLOSE</button>
         </div>
@@ -386,7 +348,9 @@
             <strong id="settings-volume-val">80%</strong>
           </div>
           <button class="hub-nav-btn settings-mute-btn" id="settings-mute-btn" type="button">SOUND: ON</button>
+          <button class="hub-nav-btn settings-mute-btn" id="settings-vibration-btn" type="button">VIBRATION: ON</button>
           <p class="settings-note">Volume 0% also mutes. This controls all game sound.</p>
+          <p class="settings-note">Vibration is haptics on phones (buzz on wake-ups, hits, pickups). No effect on PC.</p>
         </div>
 
         <div class="settings-section">
@@ -601,6 +565,7 @@
     </main>
   </div>
 
+  </div><!-- /#landscape-stage -->
   <script src="script.js"></script>
   <!-- Fallback: if an old copy of script.js ever comes back (no mobile
      wiring, no SETTINGS handler), this tiny inline script still applies
@@ -617,7 +582,11 @@
         var showTouch = mode === 'on' || (mode !== 'off' && isTouch);
         document.body.classList.toggle('touch-controls-on', showTouch);
         function updateCompact() {
-          var w = window.innerWidth, hh = window.innerHeight;
+          // Effective size: if force-landscape is on, the stage is rotated,
+          // so effective width = viewport height, height = viewport width.
+          var rotated = document.documentElement.classList.contains('force-landscape');
+          var w = rotated ? window.innerHeight : window.innerWidth,
+              hh = rotated ? window.innerWidth : window.innerHeight;
           document.body.classList.toggle('compact-game', w > hh && hh <= 620);
         }
         updateCompact();
